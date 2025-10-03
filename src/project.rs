@@ -4,8 +4,28 @@ use napi::bindgen_prelude::Reference;
 use napi_derive::napi;
 use url::Url;
 use crate::project_detector::ProjectDetector;
-use glob::glob;
+use walkdir::WalkDir;
 
+/**
+ * {@linkcode Workspace} represents a `hvigor` project.
+ *
+ * Hvigor is a build task orchestration tool based on TypeScript, which mainly
+ * provides task management mechanisms, including task registration orchestration,
+ * project model management, configuration management, and provides specific
+ * processes and configurable settings for building and testing applications.
+ *
+ * @see https://developer.huawei.com/consumer/en/doc/harmonyos-guides/ide-hvigor
+ *
+ * ---
+ *
+ * {@linkcode Workspace} 代表一个`hvigor`工程。
+ *
+ * 编译构建工具 Hvigor 是一款基于TypeScript实现的构建任务编排工具，主要提供任务
+ * 管理机制，包括任务注册编排、工程模型管理、配置管理等关键能力，提供专用于构建
+ * 和测试应用的流程和可配置设置。
+ *
+ * @see https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-hvigor
+ */
 #[napi]
 pub struct Project {
   build_profile_content: String,
@@ -20,21 +40,17 @@ impl Project {
    * Create a new project.
    *
    * @param project_detector - The project detector.
-   * @param directory_uri - The directory URI.
+   * @param directory_uri - The directory URI, must be a valid URL like `file://`.
    * @returns The project.
    */
   #[napi]
   pub fn create(project_detector: Reference<ProjectDetector>, directory_uri: String) -> Option<Project> {
     let workspace_folder = project_detector.get_workspace_folder();
-    let parsed_directory_url = Url::parse(&directory_uri);
-    if parsed_directory_url.is_err() {
-      return None;
-    }
-    let unwrapped_directory_url = match parsed_directory_url {
+    let parsed_directory_url = match Url::parse(&directory_uri) {
       Ok(url) => url,
-      Err(_) => return None,
+      Err(_) => return None
     };
-    let directory_file_path = match unwrapped_directory_url.to_file_path() {
+    let directory_file_path = match parsed_directory_url.to_file_path() {
       Ok(path) => match path.to_str() {
         Some(path) => path.to_string(),
         None => return None,
@@ -79,15 +95,15 @@ impl Project {
         build_profile_content,
         parsed_build_profile_content,
         project_detector,
-        project_folder: Arc::new(unwrapped_directory_url),
+        project_folder: Arc::new(parsed_directory_url),
       }
     )
   }
 
   /**
-   * Get the build profile content.
+   * Get the workspace-level `build-profile.json5` content.
    *
-   * @returns The build profile content.
+   * @returns The workspace-level `build-profile.json5` content.
    */
   #[napi]
   pub fn get_build_profile_content(&self) -> String {
@@ -95,9 +111,9 @@ impl Project {
   }
 
   /**
-   * Get the parsed build profile content.
+   * Get the parsed workspace-level `build-profile.json5` content.
    *
-   * @returns The parsed build profile content.
+   * @returns The parsed workspace-level `build-profile.json5` content.
    */
   #[napi(ts_return_type = "unknown")]
   pub fn get_parsed_build_profile_content(&self) -> serde_json::Value {
@@ -135,42 +151,42 @@ impl Project {
   pub fn find_all(env: Env, project_detector: Reference<ProjectDetector>) -> Vec<Project> {
     let mut projects = Vec::new();
     let workspace_folder = project_detector.get_workspace_folder_url();
-    let glob_pattern = match Path::join(Path::new(&workspace_folder.to_file_path().unwrap()), Path::new("**/build-profile.json5")).to_str() {
-      Some(path) => path.to_string(),
-      None => return projects,
-    };
-    let glob_result = match glob(&glob_pattern) {
-      Ok(result) => result,
+    let workspace_path = match workspace_folder.to_file_path() {
+      Ok(path) => path,
       Err(_) => return projects,
     };
 
-    for entry in glob_result {
-      let path = match entry {
-        Ok(p) => p,
+    for entry in WalkDir::new(&workspace_path)
+      .follow_links(false)
+      .into_iter()
+      .filter_entry(|e| {
+        !e.path().iter().any(|component| {
+          if let Some(component_str) = component.to_str() {
+            component_str == "node_modules" || component_str == "oh_modules"
+          } else {
+            false
+          }
+        })
+      })
+    {
+      let entry = match entry {
+        Ok(e) => e,
         Err(_) => continue,
       };
 
-      let metadata = match path.metadata() {
-        Ok(m) => m,
-        Err(_) => continue,
-      };
-      if metadata.is_file() != true {
+      if !entry.file_type().is_file() || entry.file_name() != "build-profile.json5" {
         continue;
       }
 
-      let directory_path = match path.parent() {
-        Some(p) => p,
-        None => continue,
-      };
+      let directory_path = entry.path().parent();
+      if directory_path.is_none() {
+        continue;
+      }
 
-      let directory_url = match Url::from_directory_path(directory_path) {
+      let directory_url = match Url::from_directory_path(directory_path.unwrap()) {
         Ok(url) => url.to_string(),
         Err(_) => continue,
       };
-
-      if directory_url.contains("oh_modules") || directory_url.contains("node_modules") {
-        continue;
-      }
 
       if let Some(project) = Project::create(project_detector.clone(env).unwrap(), directory_url) {
         projects.push(project);
