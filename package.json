@@ -1,0 +1,19 @@
+{
+  "name": "@arkts/project-detector",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "napi build --release --output-dir dist",
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "Naily Zero <zero@naily.cc>",
+  "license": "MIT",
+  "packageManager": "pnpm@10.13.1",
+  "devDependencies": {
+    "@types/node": "^24.6.2",
+    "vitest": "^3.2.4",
+    "vscode-uri": "^3.1.0"
+  }
+}
