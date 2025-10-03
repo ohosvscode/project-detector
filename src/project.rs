@@ -1,4 +1,4 @@
-use std::{fs, path::Path, sync::Arc};
+use std::{fs, path::Path};
 use napi::Env;
 use napi::bindgen_prelude::Reference;
 use napi_derive::napi;
@@ -31,11 +31,32 @@ pub struct Project {
   build_profile_content: String,
   parsed_build_profile_content: serde_json::Value,
   project_detector: Reference<ProjectDetector>,
-  project_folder: Arc<Url>
+  uri: Url
+}
+
+impl Project {
+  /**
+   * Get the project folder URL.
+   *
+   * @returns The project folder URL.
+   */
+  pub fn get_project_folder_url(&self) -> Url {
+    self.uri.clone()
+  }
 }
 
 #[napi]
 impl Project {
+  /**
+   * Get the project uri.
+   *
+   * @returns The project uri.
+   */
+  #[napi]
+  pub fn get_uri(&self) -> String {
+    self.uri.to_string()
+  }
+
   /**
    * Create a new project.
    *
@@ -43,14 +64,14 @@ impl Project {
    * @param directory_uri - The directory URI, must be a valid URL like `file://`.
    * @returns The project.
    */
-  #[napi]
+  #[napi(ts_return_type = "Project | undefined")]
   pub fn create(project_detector: Reference<ProjectDetector>, directory_uri: String) -> Option<Project> {
     let workspace_folder = project_detector.get_workspace_folder();
-    let parsed_directory_url = match Url::parse(&directory_uri) {
+    let uri = match Url::parse(&directory_uri) {
       Ok(url) => url,
       Err(_) => return None
     };
-    let directory_file_path = match parsed_directory_url.to_file_path() {
+    let directory_file_path = match uri.to_file_path() {
       Ok(path) => match path.to_str() {
         Some(path) => path.to_string(),
         None => return None,
@@ -95,7 +116,7 @@ impl Project {
         build_profile_content,
         parsed_build_profile_content,
         project_detector,
-        project_folder: Arc::new(parsed_directory_url),
+        uri,
       }
     )
   }
@@ -129,15 +150,6 @@ impl Project {
   #[napi]
   pub fn get_project_detector(&self, env: Env) -> Reference<ProjectDetector> {
     self.project_detector.clone(env).unwrap()
-  }
-
-  /**
-   * Get the project folder URL.
-   *
-   * @returns The project folder URL.
-   */
-  pub fn get_project_folder_url(&self) -> Arc<Url> {
-    self.project_folder.clone()
   }
 
   /**

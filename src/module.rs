@@ -1,4 +1,4 @@
-use std::{path::Path, sync::Arc};
+use std::path::Path;
 use std::fs;
 use crate::project::Project;
 use napi::{bindgen_prelude::Reference, Env};
@@ -32,15 +32,30 @@ use url::Url;
  */
 #[napi]
 pub struct Module {
-  module_folder: Arc<Url>,
+  uri: Url,
   project: Reference<Project>,
-  module_level_build_profile_content: String,
-  module_level_build_profile_parsed_content: serde_json::Value,
-  module_level_build_profile_path: String,
+  build_profile_content: String,
+  build_profile_parsed_content: serde_json::Value,
+  build_profile_path: String,
 }
 
 #[napi]
 impl Module {
+  pub fn get_module_folder_url(&self) -> Url {
+    self.uri.clone()
+  }
+}
+
+#[napi]
+impl Module {
+  /**
+   * Get the module uri.
+   *
+   * @returns The module uri.
+   */
+  pub fn get_uri(&self) -> String {
+    self.uri.to_string()
+  }
   /**
    * Create a new module.
    *
@@ -50,31 +65,31 @@ impl Module {
    */
   #[napi]
   pub fn create(env: Env, project: Reference<Project>, directory_uri: String) -> Option<Module> {
-    let parsed_directory_url = match Url::parse(&directory_uri) {
+    let uri = match Url::parse(&directory_uri) {
       Ok(url) => url,
       Err(_) => return None,
     };
-    let join_module_level_build_profile_path = match parsed_directory_url.clone().to_file_path() {
+    let build_profile_path = match uri.clone().to_file_path() {
       Ok(path) => match path.clone().to_str() {
         Some(path) => Path::join(Path::new(path), "build-profile.json5"),
         None => return None,
       },
       Err(_) => return None,
     };
-    let module_level_build_profile_content = match fs::read_to_string(join_module_level_build_profile_path.clone()) {
+    let build_profile_content = match fs::read_to_string(build_profile_path.clone()) {
       Ok(content) => content,
       Err(_) => return None,
     };
-    let module_level_build_profile_parsed_content = match serde_json5::from_str::<serde_json::Value>(&module_level_build_profile_content) {
+    let build_profile_parsed_content = match serde_json5::from_str::<serde_json::Value>(&build_profile_content) {
       Ok(value) => value,
       Err(_) => return None,
     };
 
-    let app_field_is_object = match module_level_build_profile_parsed_content.get("app") {
+    let app_field_is_object = match build_profile_parsed_content.get("app") {
       Some(value) => value.is_object(),
       None => false,
     };
-    let modules_field_is_array = match module_level_build_profile_parsed_content.get("modules") {
+    let modules_field_is_array = match build_profile_parsed_content.get("modules") {
       Some(value) => value.is_array(),
       None => false,
     };
@@ -83,18 +98,18 @@ impl Module {
       return None;
     }
 
-    let module_level_build_profile_path = match join_module_level_build_profile_path.to_str() {
+    let build_profile_path = match build_profile_path.to_str() {
       Some(path) => path.to_string(),
       None => return None,
     };
 
     Some(
       Module {
-        module_folder: Arc::new(Url::parse(&directory_uri).unwrap()),
+        uri,
         project: project.clone(env).unwrap(),
-        module_level_build_profile_content,
-        module_level_build_profile_parsed_content,
-        module_level_build_profile_path,
+        build_profile_content,
+        build_profile_parsed_content,
+        build_profile_path,
       }
     )
   }
@@ -145,20 +160,6 @@ impl Module {
   }
 
   /**
-   * Get the module folder.
-   *
-   * @returns The module folder.
-   */
-  #[napi]
-  pub fn get_module_folder(&self) -> String {
-    self.module_folder.to_string()
-  }
-
-  pub fn get_module_folder_url(&self) -> Arc<Url> {
-    self.module_folder.clone()
-  }
-
-  /**
    * Get the project.
    *
    * @returns The project.
@@ -169,17 +170,17 @@ impl Module {
   }
 
   #[napi]
-  pub fn get_module_level_build_profile_path(&self) -> String {
-    self.module_level_build_profile_path.clone()
+  pub fn get_build_profile_path(&self) -> String {
+    self.build_profile_path.clone()
   }
 
   #[napi(ts_return_type = "unknown")]
   pub fn get_parsed_build_profile_content(&self) -> serde_json::Value {
-    self.module_level_build_profile_parsed_content.clone()
+    self.build_profile_parsed_content.clone()
   }
 
   #[napi]
   pub fn get_build_profile_content(&self) -> String {
-    self.module_level_build_profile_content.clone()
+    self.build_profile_content.clone()
   }
 }
