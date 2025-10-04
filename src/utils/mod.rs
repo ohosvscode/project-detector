@@ -4,3 +4,6 @@ pub mod language_code;
 pub mod device_type;
 pub mod color_mode;
 pub mod mnc;
+pub mod region_code;
+pub mod orientation;
+pub mod screen_density;
