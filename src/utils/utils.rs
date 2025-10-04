@@ -20,7 +20,7 @@ pub enum QualifierType {
   DeviceType,
 }
 
-#[napi]
+#[napi(object)]
 pub struct Qualifier {
   /**
    * The type of the qualifier.
@@ -34,6 +34,17 @@ pub struct Qualifier {
 
 #[napi]
 pub struct Utils {}
+
+/// 限定词解析阶段（按照规范顺序）
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+enum QualifierStage {
+  MccMncOrLanguage = 0,  // 第一阶段：MCC_MNC 或语言相关
+  Orientation = 1,        // 第二阶段：横竖屏
+  DeviceType = 2,         // 第三阶段：设备类型
+  ColorMode = 3,          // 第四阶段：颜色模式
+  ScreenDensity = 4,      // 第五阶段：屏幕密度
+  Finished = 5,           // 完成
+}
 
 #[napi]
 impl Utils {
@@ -144,13 +155,13 @@ impl Utils {
    * 限定词的组合顺序：移动国家码_移动网络码-语言_文字_国家或地区-横竖屏-设备类型-颜色模式-屏幕密度。开发者可以根据应用的使用场景和设备特征，选择其中的一类或几类限定词组成目录名称。
    * 限定词的连接方式：移动国家码和移动网络码之间采用下划线（_）连接，语言、文字、国家或地区之间也采用下划线（_）连接，除此之外的其他限定词之间均采用中划线（-）连接。例如：`mcc460_mnc00-zh_Hant_CN`、`zh_CN-car-ldpi`。
    * 限定词的取值范围：每类限定词的取值必须符合限定词取值要求表中的条件，如表5。否则，将无法匹配目录中的资源文件。
+   * 
+   * **注意**：如果任何一个限定词无法识别或顺序错误，将返回空向量，表示整个限定词字符串无效。
    */
   #[napi]
   pub fn analyze_qualifier(qualifiers: String) -> Vec<Qualifier> {
-    let mut result = Vec::new();
-    
     if qualifiers.is_empty() {
-      return result;
+      return Vec::new();
     }
     
     // 按照中划线分割，获取所有部分
@@ -159,41 +170,155 @@ impl Utils {
       .filter(|part| !part.is_empty())
       .collect();
     
-    // 处理每个部分
+    let mut result = Vec::new();
+    let mut stage = QualifierStage::MccMncOrLanguage;
+    
+    // 处理每个部分，严格验证顺序
     for (index, part) in parts.iter().enumerate() {
       let is_first_part = index == 0;
-      Self::parse_qualifier_part(part, is_first_part, &mut result);
+      
+      match Self::parse_qualifier_part_with_stage(part, is_first_part, &mut stage, &mut result) {
+        Ok(_) => {},
+        Err(_) => {
+          // 解析失败或顺序错误，返回空向量
+          return Vec::new();
+        }
+      }
     }
     
     result
   }
   
-  /// 解析单个限定词部分
+  /// 根据当前阶段解析限定词部分
   /// 
-  /// # Arguments
-  /// * `part` - 要解析的部分
-  /// * `is_first_part` - 是否为第一部分（可能包含 MCC_MNC 或语言相关）
-  /// * `result` - 用于存储解析结果的向量
-  fn parse_qualifier_part(part: &str, is_first_part: bool, result: &mut Vec<Qualifier>) {
-    // 如果包含下划线，可能是复合限定词
-    if part.contains('_') {
-      if is_first_part && Self::try_parse_mcc_mnc(part, result) {
-        // MCC_MNC 成功解析
-        return;
+  /// # Returns
+  /// Ok(()) 如果成功解析；Err(()) 如果解析失败或顺序错误
+  fn parse_qualifier_part_with_stage(
+    part: &str,
+    is_first_part: bool,
+    stage: &mut QualifierStage,
+    result: &mut Vec<Qualifier>
+  ) -> Result<(), ()> {
+    // 第一部分特殊处理：可以从任何阶段开始
+    if is_first_part && *stage == QualifierStage::MccMncOrLanguage {
+      // 尝试解析复合限定词
+      if part.contains('_') {
+        if part.starts_with("mcc") && part.contains("_mnc") {
+          // MCC_MNC 解析
+          if Self::try_parse_mcc_mnc(part, result) {
+            *stage = QualifierStage::Orientation;
+            return Ok(());
+          } else {
+            return Err(());
+          }
+        } else {
+          // 语言/区域组合
+          if Self::parse_language_region(part, result) {
+            *stage = QualifierStage::Orientation;
+            return Ok(());
+          } else {
+            return Err(());
+          }
+        }
       }
-      // 尝试作为语言/区域组合解析
-      Self::parse_language_region(part, result);
-    } else {
-      // 单个限定词
-      Self::try_parse_single_qualifier(part, result);
+      
+      // 单个限定词：尝试按顺序找到合适的起始阶段
+      // 首先尝试作为语言或区域
+      if LanguageCode::is(part.to_string()) {
+        result.push(Qualifier {
+          qualifier_type: QualifierType::LanguageCode,
+          qualifier_value: part.to_string(),
+        });
+        *stage = QualifierStage::Orientation;
+        return Ok(());
+      }
+      
+      if RegionCode::is(part.to_string()) {
+        result.push(Qualifier {
+          qualifier_type: QualifierType::RegionCode,
+          qualifier_value: part.to_string(),
+        });
+        *stage = QualifierStage::Orientation;
+        return Ok(());
+      }
+      
+      // 不是语言/区域，尝试后续阶段（允许跳过前面的阶段）
+      return Self::try_parse_ordered_qualifier(part, stage, result);
     }
+    
+    // 后续部分按照固定顺序解析
+    if part.contains('_') {
+      // 语言相关 - 即使在 MCC_MNC 之后，也可以有语言部分
+      // 只要还没到达 Orientation 之后的阶段
+      if *stage <= QualifierStage::Orientation {
+        if Self::parse_language_region(part, result) {
+          *stage = QualifierStage::Orientation;
+          return Ok(());
+        }
+      }
+      return Err(()); // Orientation 之后的阶段不应该有下划线
+    }
+    
+    // 尝试按顺序解析单个限定词
+    Self::try_parse_ordered_qualifier(part, stage, result)
+  }
+  
+  /// 按照固定顺序解析单个限定词
+  fn try_parse_ordered_qualifier(
+    part: &str,
+    stage: &mut QualifierStage,
+    result: &mut Vec<Qualifier>
+  ) -> Result<(), ()> {
+    // 尝试按照当前阶段解析
+    
+    // 横竖屏阶段
+    if *stage <= QualifierStage::Orientation && Orientation::is(part.to_string()) {
+      result.push(Qualifier {
+        qualifier_type: QualifierType::Orientation,
+        qualifier_value: part.to_string(),
+      });
+      *stage = QualifierStage::DeviceType;
+      return Ok(());
+    }
+    
+    // 设备类型阶段
+    if *stage <= QualifierStage::DeviceType && DeviceType::is(part.to_string()) {
+      result.push(Qualifier {
+        qualifier_type: QualifierType::DeviceType,
+        qualifier_value: part.to_string(),
+      });
+      *stage = QualifierStage::ColorMode;
+      return Ok(());
+    }
+    
+    // 颜色模式阶段
+    if *stage <= QualifierStage::ColorMode && ColorMode::is(part.to_string()) {
+      result.push(Qualifier {
+        qualifier_type: QualifierType::ColorMode,
+        qualifier_value: part.to_string(),
+      });
+      *stage = QualifierStage::ScreenDensity;
+      return Ok(());
+    }
+    
+    // 屏幕密度阶段
+    if *stage <= QualifierStage::ScreenDensity && ScreenDensity::is(part.to_string()) {
+      result.push(Qualifier {
+        qualifier_type: QualifierType::ScreenDensity,
+        qualifier_value: part.to_string(),
+      });
+      *stage = QualifierStage::Finished;
+      return Ok(());
+    }
+    
+    // 无法识别或顺序错误
+    Err(())
   }
   
   /// 尝试解析 MCC_MNC 组合
   /// 
-  /// 格式: mcc<code>_mnc<code> 或 mcc<code>_mnc<code>_<language_parts>
+  /// 格式: `mcc【code】_mnc【code】` 或 `mcc【code】_mnc【code】_<language_parts>`
   /// 
-  /// # Returns
   /// 如果成功解析了 MCC_MNC，返回 true；否则返回 false
   fn try_parse_mcc_mnc(part: &str, result: &mut Vec<Qualifier>) -> bool {
     // 检查是否符合 MCC_MNC 格式
@@ -221,18 +346,27 @@ impl Utils {
       return false; // MCC 无效，不继续解析
     };
     
-    // 解析并验证 MNC
-    if MNC::is_code(mnc_part.to_string(), mcc_value) {
-      result.push(Qualifier {
-        qualifier_type: QualifierType::MNC,
-        qualifier_value: mnc_part.to_string(),
-      });
+    // 解析并验证 MNC（必须有效）
+    if !MNC::is_code(mnc_part.to_string(), mcc_value) {
+      // MNC 无效，回滚已添加的 MCC
+      result.pop();
+      return false;
     }
+    
+    result.push(Qualifier {
+      qualifier_type: QualifierType::MNC,
+      qualifier_value: mnc_part.to_string(),
+    });
     
     // 如果有额外的语言/区域部分，继续解析
     if parts.len() > 2 {
+      let initial_len = result.len();
       let remaining = parts[2..].join("_");
-      Self::parse_language_region(&remaining, result);
+      if !Self::parse_language_region(&remaining, result) {
+        // 语言/区域解析失败，回滚所有内容
+        result.truncate(initial_len - 2); // 回滚 MCC 和 MNC
+        return false;
+      }
     }
     
     true
@@ -242,104 +376,62 @@ impl Utils {
   /// 
   /// 格式: <language>_<script>_<region> 或其部分组合
   /// 例如: zh_Hant_CN, en_US, zh_CN
-  fn parse_language_region(part: &str, result: &mut Vec<Qualifier>) {
+  /// 
+  /// # Returns
+  /// 如果所有部分都能识别，返回 true；否则返回 false
+  fn parse_language_region(part: &str, result: &mut Vec<Qualifier>) -> bool {
     let parts: Vec<&str> = part
       .split('_')
       .filter(|p| !p.is_empty())
       .collect();
     
+    let initial_len = result.len();
+    
     for part in parts {
-      Self::classify_and_add_language_or_region(part, result);
+      if !Self::classify_and_add_language_or_region(part, result) {
+        // 遇到无法识别的部分，回滚已添加的内容
+        result.truncate(initial_len);
+        return false;
+      }
     }
+    
+    true
   }
   
   /// 分类并添加语言代码或区域代码
-  fn classify_and_add_language_or_region(part: &str, result: &mut Vec<Qualifier>) {
+  /// 
+  /// # Returns
+  /// 如果能够识别并添加，返回 true；否则返回 false
+  fn classify_and_add_language_or_region(part: &str, result: &mut Vec<Qualifier>) -> bool {
     // 两字母且是有效语言代码 -> 语言代码
     if part.len() == 2 && LanguageCode::is(part.to_string()) {
       result.push(Qualifier {
         qualifier_type: QualifierType::LanguageCode,
         qualifier_value: part.to_string(),
       });
+      return true;
     }
-    // 是有效的区域代码 -> 区域代码
+    // 是有效的区域代码（通常是2字母大写）-> 区域代码
     else if RegionCode::is(part.to_string()) {
       result.push(Qualifier {
         qualifier_type: QualifierType::RegionCode,
         qualifier_value: part.to_string(),
       });
-    }
-    // 其他情况（如文字代码 Hant, Hans）-> 作为语言代码
-    else {
-      result.push(Qualifier {
-        qualifier_type: QualifierType::LanguageCode,
-        qualifier_value: part.to_string(),
-      });
-    }
-  }
-  
-  /// 尝试解析单个限定词
-  /// 
-  /// 按照以下优先级检查：
-  /// 1. 屏幕方向 (vertical, horizontal)
-  /// 2. 设备类型 (phone, tablet, tv, car, wearable, 2in1)
-  /// 3. 颜色模式 (dark, light)
-  /// 4. 屏幕密度 (sdpi, mdpi, ldpi, xldpi, xxldpi, xxxldpi)
-  /// 5. 语言代码
-  /// 6. 区域代码
-  /// 
-  /// # Returns
-  /// 如果成功识别，返回 true；否则返回 false
-  fn try_parse_single_qualifier(part: &str, result: &mut Vec<Qualifier>) -> bool {
-    // 屏幕方向
-    if Orientation::is(part.to_string()) {
-      result.push(Qualifier {
-        qualifier_type: QualifierType::Orientation,
-        qualifier_value: part.to_string(),
-      });
       return true;
     }
-    
-    // 设备类型
-    if DeviceType::is(part.to_string()) {
-      result.push(Qualifier {
-        qualifier_type: QualifierType::DeviceType,
-        qualifier_value: part.to_string(),
-      });
-      return true;
-    }
-    
-    // 颜色模式
-    if ColorMode::is(part.to_string()) {
-      result.push(Qualifier {
-        qualifier_type: QualifierType::ColorMode,
-        qualifier_value: part.to_string(),
-      });
-      return true;
-    }
-    
-    // 屏幕密度
-    if ScreenDensity::is(part.to_string()) {
-      result.push(Qualifier {
-        qualifier_type: QualifierType::ScreenDensity,
-        qualifier_value: part.to_string(),
-      });
-      return true;
-    }
-    
-    // 语言代码
-    if LanguageCode::is(part.to_string()) {
+    // 3-4字母（可能是文字代码，如 Hant, Hans, Latn 等）-> 作为语言代码接受
+    // 这是为了支持 ISO 15924 script codes
+    else if part.len() >= 3 && part.len() <= 4 && part.chars().all(|c| c.is_alphabetic()) {
       result.push(Qualifier {
         qualifier_type: QualifierType::LanguageCode,
         qualifier_value: part.to_string(),
       });
       return true;
     }
-    
-    // 区域代码
-    if RegionCode::is(part.to_string()) {
+    // 其他有效的语言代码
+    else if LanguageCode::is(part.to_string()) {
       result.push(Qualifier {
-        qualifier_type: QualifierType::RegionCode,
+        qualifier_type: QualifierType::LanguageCode,
         qualifier_value: part.to_string(),
       });
       return true;
@@ -509,124 +601,117 @@ mod tests {
 
   #[test]
   fn test_analyze_qualifier_invalid_mcc() {
-    // 无效的 MCC 代码
+    // 无效的 MCC 代码 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("mcc9999-zh_CN".to_string());
-    // 无效的 MCC 不应该被识别，只识别语言和区域
-    assert_eq!(result.len(), 2);
-    assert!(matches!(result[0].qualifier_type, QualifierType::LanguageCode));
-    assert!(matches!(result[1].qualifier_type, QualifierType::RegionCode));
+    assert_eq!(result.len(), 0, "无效的 MCC 应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_invalid_mnc() {
-    // 无效的 MNC 代码
+    // 无效的 MNC 代码 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("mcc460_mnc9999-zh_CN".to_string());
-    // MCC 有效，但 MNC 无效
-    assert!(result.len() >= 1);
-    assert!(matches!(result[0].qualifier_type, QualifierType::MCC));
-    assert_eq!(result[0].qualifier_value, "mcc460");
-    // 无效的 MNC 不会被添加
+    assert_eq!(result.len(), 0, "无效的 MNC 应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_invalid_language() {
-    // 无效的语言代码
+    // 无效的语言代码 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("xyz".to_string());
-    // 不识别无效的语言代码，结果为空
-    assert_eq!(result.len(), 0);
+    assert_eq!(result.len(), 0, "无效的语言代码应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_invalid_device_type() {
-    // 无效的设备类型
+    // 无效的设备类型 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("zh_CN-superdevice-mdpi".to_string());
-    assert_eq!(result.len(), 3);
-    assert!(matches!(result[0].qualifier_type, QualifierType::LanguageCode));
-    assert!(matches!(result[1].qualifier_type, QualifierType::RegionCode));
-    // superdevice 无效，跳过
-    assert!(matches!(result[2].qualifier_type, QualifierType::ScreenDensity));
-    assert_eq!(result[2].qualifier_value, "mdpi");
+    assert_eq!(result.len(), 0, "包含无效设备类型应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_invalid_orientation() {
-    // 无效的屏幕方向
+    // 无效的屏幕方向 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("diagonal-phone".to_string());
-    // diagonal 无效，但 phone 有效
-    assert_eq!(result.len(), 1);
-    assert!(matches!(result[0].qualifier_type, QualifierType::DeviceType));
-    assert_eq!(result[0].qualifier_value, "phone");
+    assert_eq!(result.len(), 0, "无效的屏幕方向应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_invalid_color_mode() {
-    // 无效的颜色模式
+    // 无效的颜色模式 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("phone-blue-mdpi".to_string());
-    // blue 不是有效的颜色模式（只有 dark 和 light）
-    assert_eq!(result.len(), 2);
-    assert!(matches!(result[0].qualifier_type, QualifierType::DeviceType));
-    assert_eq!(result[0].qualifier_value, "phone");
-    // blue 无效，跳过
-    assert!(matches!(result[1].qualifier_type, QualifierType::ScreenDensity));
-    assert_eq!(result[1].qualifier_value, "mdpi");
+    assert_eq!(result.len(), 0, "无效的颜色模式应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_invalid_screen_density() {
-    // 无效的屏幕密度
+    // 无效的屏幕密度 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("phone-dark-ultra4k".to_string());
-    assert_eq!(result.len(), 2);
-    assert!(matches!(result[0].qualifier_type, QualifierType::DeviceType));
-    assert!(matches!(result[1].qualifier_type, QualifierType::ColorMode));
-    // ultra4k 无效，不被识别
+    assert_eq!(result.len(), 0, "无效的屏幕密度应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_wrong_order_device_before_orientation() {
     // 错误的顺序：设备类型在屏幕方向之前（正确应该是 vertical-phone）
+    // 顺序错误应该导致解析失败
     let result = Utils::analyze_qualifier("phone-vertical".to_string());
-    // 虽然顺序错误，但两个都是有效的限定词
+    assert_eq!(result.len(), 0, "顺序错误应该导致解析失败");
+  }
+
+  #[test]
+  fn test_analyze_qualifier_correct_order() {
+    // 正确的顺序
+    let result = Utils::analyze_qualifier("vertical-phone".to_string());
     assert_eq!(result.len(), 2);
-    // 由于我们的实现按顺序解析，phone 会被识别为设备类型
-    assert!(matches!(result[0].qualifier_type, QualifierType::DeviceType));
-    assert_eq!(result[0].qualifier_value, "phone");
-    assert!(matches!(result[1].qualifier_type, QualifierType::Orientation));
-    assert_eq!(result[1].qualifier_value, "vertical");
+    assert!(matches!(result[0].qualifier_type, QualifierType::Orientation));
+    assert_eq!(result[0].qualifier_value, "vertical");
+    assert!(matches!(result[1].qualifier_type, QualifierType::DeviceType));
+    assert_eq!(result[1].qualifier_value, "phone");
+  }
+
+  #[test]
+  fn test_analyze_qualifier_wrong_order_2in1_before_language() {
+    // 2in1-zh 顺序错误（设备类型不应该在语言之前）
+    let result = Utils::analyze_qualifier("2in1-zh".to_string());
+    assert_eq!(result.len(), 0, "设备类型在第一位应该失败");
+  }
+
+  #[test]
+  fn test_analyze_qualifier_correct_order_language_device() {
+    // zh-2in1 顺序正确
+    let result = Utils::analyze_qualifier("zh-2in1".to_string());
+    assert_eq!(result.len(), 2);
+    assert!(matches!(result[0].qualifier_type, QualifierType::LanguageCode));
+    assert_eq!(result[0].qualifier_value, "zh");
+    assert!(matches!(result[1].qualifier_type, QualifierType::DeviceType));
+    assert_eq!(result[1].qualifier_value, "2in1");
   }
 
   #[test]
   fn test_analyze_qualifier_mixed_valid_invalid() {
-    // 混合有效和无效的限定词
+    // 混合有效和无效的限定词 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("zh_CN-invalid-phone-wrongcolor-mdpi".to_string());
-    // 只有有效的会被识别
-    assert!(result.len() >= 3);
-    assert!(matches!(result[0].qualifier_type, QualifierType::LanguageCode));
-    assert!(matches!(result[1].qualifier_type, QualifierType::RegionCode));
-    // 包含 phone 和 mdpi
-    assert!(result.iter().any(|q| matches!(q.qualifier_type, QualifierType::DeviceType)));
-    assert!(result.iter().any(|q| matches!(q.qualifier_type, QualifierType::ScreenDensity)));
+    assert_eq!(result.len(), 0, "包含无效限定词应该导致解析失败");
   }
 
   #[test]
   fn test_analyze_qualifier_only_invalid() {
-    // 只有无效的限定词
+    // 只有无效的限定词 - 应该导致整个解析失败
     let result = Utils::analyze_qualifier("invalid-wrong-bad".to_string());
-    // 全部无效，结果为空
-    assert_eq!(result.len(), 0);
+    assert_eq!(result.len(), 0, "全部无效应该返回空向量");
   }
 
   #[test]
   fn test_analyze_qualifier_multiple_dashes() {
-    // 多个连续的中划线
+    // 多个连续的中划线（空部分会被过滤）
     let result = Utils::analyze_qualifier("zh_CN--phone".to_string());
-    assert!(result.len() >= 2);
+    assert_eq!(result.len(), 3);
     assert!(matches!(result[0].qualifier_type, QualifierType::LanguageCode));
     assert!(matches!(result[1].qualifier_type, QualifierType::RegionCode));
+    assert!(matches!(result[2].qualifier_type, QualifierType::DeviceType));
   }
 
   #[test]
   fn test_analyze_qualifier_trailing_dash() {
-    // 末尾有中划线
+    // 末尾有中划线（空部分会被过滤）
     let result = Utils::analyze_qualifier("zh_CN-phone-".to_string());
     assert_eq!(result.len(), 3);
     assert!(matches!(result[0].qualifier_type, QualifierType::LanguageCode));
@@ -636,9 +721,12 @@ mod tests {
 
   #[test]
   fn test_analyze_qualifier_leading_dash() {
-    // 开头有中划线
+    // 开头有中划线（空部分会被过滤）
     let result = Utils::analyze_qualifier("-zh_CN-phone".to_string());
-    assert!(result.len() >= 2);
+    assert_eq!(result.len(), 3);
+    assert!(matches!(result[0].qualifier_type, QualifierType::LanguageCode));
+    assert!(matches!(result[1].qualifier_type, QualifierType::RegionCode));
+    assert!(matches!(result[2].qualifier_type, QualifierType::DeviceType));
   }
 
   #[test]
@@ -665,19 +753,29 @@ mod tests {
 
   #[test]
   fn test_analyze_qualifier_mcc_without_mnc() {
-    // 只有 MCC 没有 MNC
+    // 只有 MCC 没有 MNC（mcc460 不符合 mcc_mnc 格式，会被当作普通字符串处理）
     let result = Utils::analyze_qualifier("mcc460-zh_CN".to_string());
-    // mcc460 单独出现时需要正确处理
-    assert!(result.len() >= 2);
+    // mcc460 单独出现无法识别为有效限定词
+    assert_eq!(result.len(), 0, "单独的 MCC 应该无法识别");
   }
 
   #[test]
   fn test_analyze_qualifier_duplicate_qualifiers() {
-    // 重复的限定词（不推荐但可能出现）
+    // 重复的限定词应该被拒绝（违反顺序规则）
     let result = Utils::analyze_qualifier("phone-phone".to_string());
-    // 会被识别两次
-    assert_eq!(result.len(), 2);
-    assert!(matches!(result[0].qualifier_type, QualifierType::DeviceType));
-    assert!(matches!(result[1].qualifier_type, QualifierType::DeviceType));
+    assert_eq!(result.len(), 0, "重复的限定词应该导致解析失败");
+  }
+  
+  #[test]
+  fn test_analyze_qualifier_correct_order_skip_stages() {
+    // 测试跳过某些阶段
+    let result1 = Utils::analyze_qualifier("zh-dark".to_string());
+    assert_eq!(result1.len(), 2); // 语言 + 颜色（跳过方向和设备）
+    
+    let result2 = Utils::analyze_qualifier("phone-mdpi".to_string());
+    assert_eq!(result2.len(), 2); // 设备 + 密度（跳过颜色）
+    
+    let result3 = Utils::analyze_qualifier("vertical-dark".to_string());
+    assert_eq!(result3.len(), 2); // 方向 + 颜色（跳过设备）
   }
 }

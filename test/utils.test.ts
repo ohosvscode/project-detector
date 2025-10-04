@@ -93,72 +93,83 @@ describe.sequential('Utils', (it) => {
     expect(wearableResult[0].qualifierValue).toBe('wearable')
   })
 
-  it('should handle invalid MCC code', () => {
+  it('should fail on invalid MCC code', () => {
     const result = Utils.analyzeQualifier('mcc9999-zh_CN')
-    // 无效的 MCC 不应被识别，只识别语言和区域
-    expect(result).toHaveLength(2)
-    expect(result[0].qualifierType).toBe(QualifierType.LanguageCode)
-    expect(result[1].qualifierType).toBe(QualifierType.RegionCode)
+    expect(result).toHaveLength(0)
   })
 
-  it('should handle invalid language code', () => {
+  it('should fail on invalid MNC code', () => {
+    const result = Utils.analyzeQualifier('mcc460_mnc9999-zh_CN')
+    expect(result).toHaveLength(0)
+  })
+
+  it('should fail on invalid language code', () => {
     const result = Utils.analyzeQualifier('xyz')
     expect(result).toHaveLength(0)
   })
 
-  it('should skip invalid device type', () => {
+  it('should fail on invalid device type', () => {
     const result = Utils.analyzeQualifier('zh_CN-superdevice-mdpi')
-    expect(result).toHaveLength(3)
-    expect(result[0].qualifierType).toBe(QualifierType.LanguageCode)
-    expect(result[1].qualifierType).toBe(QualifierType.RegionCode)
-    expect(result[2].qualifierType).toBe(QualifierType.ScreenDensity)
+    expect(result).toHaveLength(0)
   })
 
-  it('should skip invalid orientation', () => {
+  it('should fail on invalid orientation', () => {
     const result = Utils.analyzeQualifier('diagonal-phone')
-    expect(result).toHaveLength(1)
-    expect(result[0].qualifierType).toBe(QualifierType.DeviceType)
+    expect(result).toHaveLength(0)
   })
 
-  it('should skip invalid color mode', () => {
+  it('should fail on invalid color mode', () => {
     const result = Utils.analyzeQualifier('phone-blue-mdpi')
-    expect(result).toHaveLength(2)
-    expect(result[0].qualifierType).toBe(QualifierType.DeviceType)
-    expect(result[1].qualifierType).toBe(QualifierType.ScreenDensity)
+    expect(result).toHaveLength(0)
   })
 
-  it('should handle wrong order gracefully', () => {
-    // 错误的顺序：设备类型在屏幕方向之前（正确应该是 vertical-phone）
+  it('should fail on invalid screen density', () => {
+    const result = Utils.analyzeQualifier('phone-dark-ultra4k')
+    expect(result).toHaveLength(0)
+  })
+
+  it('should fail on wrong order (device before orientation)', () => {
+    // phone-vertical 顺序错误（设备在方向之前）
     const result = Utils.analyzeQualifier('phone-vertical')
+    expect(result).toHaveLength(0)
+  })
+
+  it('should pass on correct order (orientation before device)', () => {
+    // vertical-phone 顺序正确
+    const result = Utils.analyzeQualifier('vertical-phone')
     expect(result).toHaveLength(2)
-    expect(result[0].qualifierType).toBe(QualifierType.DeviceType)
-    expect(result[1].qualifierType).toBe(QualifierType.Orientation)
+    expect(result[0].qualifierType).toBe(QualifierType.Orientation)
+    expect(result[1].qualifierType).toBe(QualifierType.DeviceType)
   })
 
-  it('should handle mixed valid and invalid qualifiers', () => {
+  it('should fail on mixed valid and invalid qualifiers', () => {
     const result = Utils.analyzeQualifier('zh_CN-invalid-phone-wrongcolor-mdpi')
-    expect(result.length).toBeGreaterThanOrEqual(3)
-    const types = result.map(r => r.qualifierType)
-    expect(types).toContain(QualifierType.LanguageCode)
-    expect(types).toContain(QualifierType.RegionCode)
-    expect(types).toContain(QualifierType.DeviceType)
-    expect(types).toContain(QualifierType.ScreenDensity)
+    expect(result).toHaveLength(0)
   })
 
-  it('should handle only invalid qualifiers', () => {
+  it('should fail on only invalid qualifiers', () => {
     const result = Utils.analyzeQualifier('invalid-wrong-bad')
     expect(result).toHaveLength(0)
   })
 
   it('should handle multiple consecutive dashes', () => {
     const result = Utils.analyzeQualifier('zh_CN--phone')
-    expect(result.length).toBeGreaterThanOrEqual(2)
+    expect(result).toHaveLength(3)
     expect(result[0].qualifierType).toBe(QualifierType.LanguageCode)
     expect(result[1].qualifierType).toBe(QualifierType.RegionCode)
+    expect(result[2].qualifierType).toBe(QualifierType.DeviceType)
   })
 
   it('should handle trailing dash', () => {
     const result = Utils.analyzeQualifier('zh_CN-phone-')
+    expect(result).toHaveLength(3)
+    expect(result[0].qualifierType).toBe(QualifierType.LanguageCode)
+    expect(result[1].qualifierType).toBe(QualifierType.RegionCode)
+    expect(result[2].qualifierType).toBe(QualifierType.DeviceType)
+  })
+
+  it('should handle leading dash', () => {
+    const result = Utils.analyzeQualifier('-zh_CN-phone')
     expect(result).toHaveLength(3)
     expect(result[0].qualifierType).toBe(QualifierType.LanguageCode)
     expect(result[1].qualifierType).toBe(QualifierType.RegionCode)
@@ -179,10 +190,26 @@ describe.sequential('Utils', (it) => {
     expect(resultMixed[0].qualifierType).toBe(QualifierType.ColorMode)
   })
 
-  it('should handle duplicate qualifiers', () => {
+  it('should fail on duplicate qualifiers', () => {
+    // 重复的限定词应该被拒绝
     const result = Utils.analyzeQualifier('phone-phone')
-    expect(result).toHaveLength(2)
-    expect(result[0].qualifierType).toBe(QualifierType.DeviceType)
-    expect(result[1].qualifierType).toBe(QualifierType.DeviceType)
+    expect(result).toHaveLength(0)
+  })
+
+  it('should fail on single MCC without MNC', () => {
+    const result = Utils.analyzeQualifier('mcc460-zh_CN')
+    expect(result).toHaveLength(0)
+  })
+
+  it('should allow skipping stages', () => {
+    // 测试跳过某些阶段
+    const result1 = Utils.analyzeQualifier('zh-dark')
+    expect(result1).toHaveLength(2)
+    
+    const result2 = Utils.analyzeQualifier('phone-mdpi')
+    expect(result2).toHaveLength(2)
+    
+    const result3 = Utils.analyzeQualifier('vertical-dark')
+    expect(result3).toHaveLength(2)
   })
 })

@@ -1,13 +1,29 @@
 use std::fs;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
-use crate::product::Product;
+use crate::{product::Product, utils::utils::{Qualifier, Utils}};
 use url::Url;
 
 #[napi]
 pub struct Resource {
   uri: Url,
   product: Reference<Product>,
+}
+
+#[napi]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub enum ResourceQualifiedDirectoryType {
+  RawFile,
+  ResFile,
+  Base,
+  Qualified,
+}
+
+#[napi(object)]
+pub struct ResourceQualifiedDirectory {
+  pub uri: String,
+  pub qualifiers: Vec<Qualifier>,
+  pub directory_type: ResourceQualifiedDirectoryType,
 }
 
 #[napi]
@@ -53,10 +69,10 @@ impl Resource {
   /**
    * Get qualified directories.
    *
-   * @returns The qualified directories.
+   * @returns The qualified directories uris.
    */
   #[napi]
-  pub fn get_qualified_directories(&self) -> Vec<String> {
+  pub fn get_qualified_directories(&self) -> Vec<ResourceQualifiedDirectory> {
     let mut qualified_directories = Vec::new();
     let directory = match self.uri.to_file_path() {
       Ok(path) => path,
@@ -83,12 +99,34 @@ impl Resource {
         continue;
       }
 
+      let file_name = entry.file_name();
+      let qualifiers = Utils::analyze_qualifier(file_name.to_string_lossy().to_string());
+      let file_name_str = match file_name.to_str() {
+        Some(file_name) => file_name,
+        None => continue,
+      };
+
+      if file_name_str != "base" && file_name_str != "rawfile" && file_name_str != "resfile" && qualifiers.len() == 0 {
+        continue;
+      }
+      
       let directory_uri = match Url::from_directory_path(entry.path().to_string_lossy().to_string()) {
         Ok(url) => url,
         Err(_) => continue,
       };
 
-      qualified_directories.push(directory_uri.to_string());
+      qualified_directories.push(
+        ResourceQualifiedDirectory {
+          uri: directory_uri.to_string(),
+          qualifiers,
+          directory_type: match file_name_str {
+            "base" => ResourceQualifiedDirectoryType::Base,
+            "rawfile" => ResourceQualifiedDirectoryType::RawFile,
+            "resfile" => ResourceQualifiedDirectoryType::ResFile,
+            _ => ResourceQualifiedDirectoryType::Qualified,
+          },
+        }
+      );
     }
 
     qualified_directories

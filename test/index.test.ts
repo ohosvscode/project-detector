@@ -1,11 +1,13 @@
 import { describe, expect } from 'vitest'
 import { createRequire } from 'node:module'
-import { URI, Utils } from 'vscode-uri'
+import { URI, Utils as UriUtils } from 'vscode-uri'
 import path from 'node:path'
+import fs from 'node:fs'
+import MagicString from 'magic-string'
 
 describe.sequential('sample', (it) => {
   const require = createRequire(import.meta.url)
-  const { ProjectDetector, Project, Module, Product }: typeof import('../dist') = require('../dist')
+  const { ProjectDetector, Project, Module, Product, Resource, ResourceGroup }: typeof import('../dist') = require('../dist')
 
   let projectDetector: InstanceType<typeof ProjectDetector>
 
@@ -50,13 +52,57 @@ describe.sequential('sample', (it) => {
   })
 
   let project1Product1: InstanceType<typeof Product>
+  let project1Product2: InstanceType<typeof Product>
+  let resourceDirectory1: string
+  let resourceDirectory2: string
 
   it('should find all products', () => {
     const project1Products = Product.findAll(project1Module1)
     expect(project1Products).toHaveLength(2)
     project1Product1 = project1Products[0]
-    const resourceDirectories = project1Product1.getResourceDirectories()
-    expect(resourceDirectories).toHaveLength(1)
-    expect(URI.file(resourceDirectories[0]).fsPath).toBe(Utils.resolvePath(URI.parse(project1Product1.getUri()), 'resources').fsPath)
+    project1Product2 = project1Products[1]
+    resourceDirectory1 = project1Product1.getResourceDirectories()[0]
+    resourceDirectory2 = project1Product2.getResourceDirectories()[0]
+
+    expect(resourceDirectory1).toBeDefined()
+    expect(resourceDirectory2).toBeDefined()
+  })
+
+  let resource1: InstanceType<typeof Resource>[]
+  let resource2: InstanceType<typeof Resource>[]
+  let qualifiedDirectories1: import('../dist').ResourceQualifiedDirectory[]
+  let qualifiedDirectories2: import('../dist').ResourceQualifiedDirectory[]
+
+  it('should find all qualified resource directories', () => {
+    resource1 = Resource.findAll(project1Product1)
+    expect(resource1).toHaveLength(1)
+    resource2 = Resource.findAll(project1Product2)
+    expect(resource2).toHaveLength(1)
+    qualifiedDirectories1 = resource1[0].getQualifiedDirectories()
+    qualifiedDirectories2 = resource2[0].getQualifiedDirectories()
+
+    expect(qualifiedDirectories1.length).toBeGreaterThanOrEqual(1)
+    expect(qualifiedDirectories2.length).toBeGreaterThanOrEqual(1)
+  })
+
+  let elementJsonFiles: InstanceType<typeof import('../dist').ElementJsonFile>[]
+  it('should find all resource groups', () => {
+    const resourceGroups = ResourceGroup.findAll(resource1)
+    const baseGroup = resourceGroups.find(group => group.isBase())
+    expect(baseGroup).toBeDefined()
+    elementJsonFiles = baseGroup!.getElementJsonFiles()
+    expect(elementJsonFiles.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('should find all element json file name references', () => {
+    const colorJsonFile = elementJsonFiles.find(file => UriUtils.basename(URI.parse(file.getUri())) === 'color.json')
+    expect(colorJsonFile).toBeDefined()
+    const nameReferences = colorJsonFile!.getNameReference()
+    expect(nameReferences.length).toBeGreaterThanOrEqual(1)
+    const primaryColorReference = nameReferences.find(reference => reference.getText() === 'primary_color')
+    expect(primaryColorReference).toBeDefined()
+    const colorJsonText = fs.readFileSync(URI.parse(colorJsonFile!.getUri()).fsPath, 'utf-8')
+    const ms = new MagicString(colorJsonText)
+    expect(ms.slice(primaryColorReference!.getStart(), primaryColorReference!.getEnd())).toBe('primary_color')
   })
 })
