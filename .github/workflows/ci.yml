@@ -15,6 +15,9 @@ jobs:
       - name: Install dependencies
         uses: pnpm/action-setup@v2
 
+      - name: Install napi
+        run: pnpm -g @napi-rs/cli
+
       - name: Setup rust
         uses: actions-rs/toolchain@v1
         with:
