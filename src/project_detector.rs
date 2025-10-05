@@ -29,7 +29,7 @@ impl ProjectDetector {
    */
   #[napi]
   pub fn get_workspace_folder(&self) -> String {
-    self.workspace_folder.to_string()
+    path_clean::clean(&self.workspace_folder.to_string())
   }
 
   /**

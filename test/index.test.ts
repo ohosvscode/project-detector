@@ -7,7 +7,7 @@ import MagicString from 'magic-string'
 
 describe.sequential('sample', (it) => {
   const require = createRequire(import.meta.url)
-  const { ProjectDetector, Project, Module, Product, Resource, ResourceGroup }: typeof import('../dist') = require('../dist')
+  const { ProjectDetector, Project, Module, Product, Resource, ResourceGroup, ElementJsonFileNameReference }: typeof import('../dist') = require('../dist')
 
   let projectDetector: InstanceType<typeof ProjectDetector>
 
@@ -97,7 +97,7 @@ describe.sequential('sample', (it) => {
   it('should find all element json file name references', () => {
     const colorJsonFile = elementJsonFiles.find(file => UriUtils.basename(URI.parse(file.getUri())) === 'color.json')
     expect(colorJsonFile).toBeDefined()
-    const nameReferences = colorJsonFile!.getNameReference()
+    const nameReferences = ElementJsonFileNameReference.findAll(colorJsonFile!)
     expect(nameReferences.length).toBeGreaterThanOrEqual(1)
     const primaryColorReference = nameReferences.find(reference => reference.getText() === 'primary_color')
     expect(primaryColorReference).toBeDefined()

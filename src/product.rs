@@ -48,7 +48,7 @@ impl Product {
    */
   #[napi]
   pub fn get_uri(&self) -> String {
-    self.product_folder.to_string()
+    path_clean::clean(&self.product_folder.to_string())
   }
 
   #[napi(ts_return_type = "Product | undefined")]

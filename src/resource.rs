@@ -30,7 +30,7 @@ pub struct ResourceQualifiedDirectory {
 impl Resource {
   #[napi]
   pub fn get_uri(&self) -> String {
-    self.uri.to_string()
+    path_clean::clean(&self.uri.to_string())
   }
 
   #[napi]

@@ -54,7 +54,7 @@ impl Module {
    * @returns The module uri.
    */
   pub fn get_uri(&self) -> String {
-    self.uri.to_string()
+    path_clean::clean(&self.uri.to_string())
   }
   /**
    * Create a new module.
