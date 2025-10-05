@@ -1,0 +1,35 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        uses: pnpm/action-setup@v2
+
+      - name: Setup rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          components: rustfmt,clippy
+
+      - name: Install dependencies
+        run: cargo install cargo-udeps
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run rust tests
+        run: cargo test
+
+      - name: Run vitest
+        run: pnpm test
