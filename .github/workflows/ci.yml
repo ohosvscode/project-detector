@@ -12,20 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install dependencies
+      - name: Setup pnpm environment & install dependencies
         uses: pnpm/action-setup@v2
+        with:
+          run_install: true
 
-      - name: Install napi
+      - name: Install napi command line tool
         run: pnpm i -g @napi-rs/cli
 
-      - name: Setup rust
+      - name: Setup rust environment
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
           components: rustfmt,clippy
 
-      - name: Install dependencies
+      - name: Install rust dependencies
         run: cargo install cargo-udeps
 
       - name: Build
@@ -35,4 +37,4 @@ jobs:
         run: cargo test
 
       - name: Run vitest
-        run: pnpm test
+        run: pnpm test --coverage
