@@ -29,7 +29,7 @@ impl ProjectDetector {
    */
   #[napi]
   pub fn get_workspace_folder(&self) -> String {
-    path_clean::clean(&self.workspace_folder.to_string())
+    self.workspace_folder.to_string()
   }
 
   /**
@@ -50,8 +50,8 @@ mod tests {
   fn test_create() {
     let workspace_folder = "mock/workspace";
     let cwd = std::env::current_dir().unwrap();
-    let resolved_workspace_folder = std::path::Path::join(&cwd, workspace_folder).display().to_string();
-    let resolved_file_url = Url::parse(&format!("file://{}", resolved_workspace_folder)).unwrap();
+    let resolved_workspace_folder = std::path::Path::join(&cwd, workspace_folder);
+    let resolved_file_url = Url::from_file_path(&resolved_workspace_folder).unwrap();
     let project_detector = ProjectDetector::create(resolved_file_url.to_string());
     assert_eq!(project_detector.get_workspace_folder(), resolved_file_url.to_string());
   }
