@@ -1,9 +1,9 @@
-use std::{fs, path::Path};
-use napi::Env;
-use napi::bindgen_prelude::Reference;
-use napi_derive::napi;
-use url::Url;
 use crate::project_detector::ProjectDetector;
+use napi::bindgen_prelude::Reference;
+use napi::Env;
+use napi_derive::napi;
+use std::{fs, path::Path};
+use url::Url;
 use walkdir::WalkDir;
 
 /**
@@ -31,7 +31,7 @@ pub struct Project {
   build_profile_content: String,
   parsed_build_profile_content: serde_json::Value,
   project_detector: Reference<ProjectDetector>,
-  uri: Url
+  uri: Url,
 }
 
 impl Project {
@@ -69,7 +69,7 @@ impl Project {
     let workspace_folder = project_detector.get_workspace_folder();
     let uri = match Url::parse(&directory_uri) {
       Ok(url) => url,
-      Err(_) => return None
+      Err(_) => return None,
     };
     let directory_file_path = match uri.to_file_path() {
       Ok(path) => match path.to_str() {
@@ -82,7 +82,7 @@ impl Project {
       Some(path) => path.to_string(),
       None => return None,
     };
-    
+
     // build-profile.json5 file
     let build_profile_path = match Path::join(Path::new(&full_path), Path::new("build-profile.json5")).to_str() {
       Some(path) => path.to_string(),
@@ -111,14 +111,12 @@ impl Project {
       return None;
     }
 
-    Some(
-      Project {
-        build_profile_content,
-        parsed_build_profile_content,
-        project_detector,
-        uri,
-      }
-    )
+    Some(Project {
+      build_profile_content,
+      parsed_build_profile_content,
+      project_detector,
+      uri,
+    })
   }
 
   /**
@@ -168,19 +166,15 @@ impl Project {
       Err(_) => return projects,
     };
 
-    for entry in WalkDir::new(&workspace_path)
-      .follow_links(false)
-      .into_iter()
-      .filter_entry(|e| {
-        !e.path().iter().any(|component| {
-          if let Some(component_str) = component.to_str() {
-            component_str == "node_modules" || component_str == "oh_modules"
-          } else {
-            false
-          }
-        })
+    for entry in WalkDir::new(&workspace_path).follow_links(false).into_iter().filter_entry(|e| {
+      !e.path().iter().any(|component| {
+        if let Some(component_str) = component.to_str() {
+          component_str == "node_modules" || component_str == "oh_modules" || component_str.starts_with('.')
+        } else {
+          false
+        }
       })
-    {
+    }) {
       let entry = match entry {
         Ok(e) => e,
         Err(_) => continue,
