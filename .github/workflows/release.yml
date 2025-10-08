@@ -172,9 +172,6 @@ jobs:
         with:
           path: artifacts
 
-      - name: Create npm directories
-        run: pnpm exec napi create-npm-dirs
-
       - name: Move artifacts
         run: pnpm artifacts
 
@@ -196,7 +193,7 @@ jobs:
             if [ -d "$dir" ]; then
               echo "Publishing $dir"
               cd "$dir"
-              npm publish --access public
+              npm publish --access public --dry-run
               cd ../..
             fi
           done
@@ -205,6 +202,6 @@ jobs:
         shell: bash
 
       - name: Publish main package
-        run: npm publish --access public
+        run: npm publish --access public --dry-run
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

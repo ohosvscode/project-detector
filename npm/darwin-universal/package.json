@@ -1,0 +1,15 @@
+{
+  "name": "@arkts/project-detector-darwin-universal",
+  "version": "1.0.0",
+  "main": "project-detector.darwin-universal.node",
+  "files": [
+    "project-detector.darwin-universal.node"
+  ],
+  "description": "",
+  "keywords": [],
+  "author": "Naily Zero <zero@naily.cc>",
+  "license": "MIT",
+  "os": [
+    "darwin"
+  ]
+}

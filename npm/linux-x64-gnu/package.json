@@ -1,0 +1,21 @@
+{
+  "name": "@arkts/project-detector-linux-x64-gnu",
+  "version": "1.0.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "project-detector.linux-x64-gnu.node",
+  "files": [
+    "project-detector.linux-x64-gnu.node"
+  ],
+  "description": "",
+  "keywords": [],
+  "author": "Naily Zero <zero@naily.cc>",
+  "license": "MIT",
+  "os": [
+    "linux"
+  ],
+  "libc": [
+    "glibc"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@arkts/project-detector-darwin-x64",
+  "version": "1.0.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "project-detector.darwin-x64.node",
+  "files": [
+    "project-detector.darwin-x64.node"
+  ],
+  "description": "",
+  "keywords": [],
+  "author": "Naily Zero <zero@naily.cc>",
+  "license": "MIT",
+  "os": [
+    "darwin"
+  ]
+}
