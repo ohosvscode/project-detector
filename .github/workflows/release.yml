@@ -182,26 +182,23 @@ jobs:
         run: ls -R ./npm
         shell: bash
 
-      - name: Prepare publish
-        run: pnpm exec napi pre-publish -t npm
+      - name: Setup npm auth
+        run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish platform packages
         run: |
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
           npm config set provenance true
           for dir in npm/*; do
-            if [ -d "$dir" ]; then
+            if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
               echo "Publishing $dir"
               cd "$dir"
               npm publish --access public --dry-run
               cd ../..
             fi
           done
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         shell: bash
 
       - name: Publish main package
         run: npm publish --access public --dry-run
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
