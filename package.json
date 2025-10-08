@@ -3,15 +3,33 @@
   "type": "module",
   "version": "1.0.0",
   "packageManager": "pnpm@10.13.1",
-  "description": "",
+  "description": "A native Rust-based project detector for HarmonyOS/OpenHarmony projects",
   "author": "Naily Zero <zero@naily.cc>",
   "license": "MIT",
-  "keywords": [],
+  "homepage": "https://github.com/ohosvscode/project_detector#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ohosvscode/project_detector.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ohosvscode/project_detector/issues"
+  },
+  "keywords": [
+    "harmonyos",
+    "openharmony",
+    "arkts",
+    "project-detector",
+    "native",
+    "rust"
+  ],
   "main": "./out/index.js",
   "types": "./out/index.d.ts",
   "files": [
     "out"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "napi build --release --output-dir dist",
     "build:debug": "napi build --output-dir dist",
@@ -20,6 +38,18 @@
     "artifacts": "napi artifacts",
     "version": "napi version",
     "test": "vitest"
+  },
+  "optionalDependencies": {
+    "@arkts/project-detector-android-arm64": "workspace:*",
+    "@arkts/project-detector-darwin-arm64": "workspace:*",
+    "@arkts/project-detector-darwin-universal": "workspace:*",
+    "@arkts/project-detector-darwin-x64": "workspace:*",
+    "@arkts/project-detector-linux-arm-gnueabihf": "workspace:*",
+    "@arkts/project-detector-linux-arm64-gnu": "workspace:*",
+    "@arkts/project-detector-linux-x64-gnu": "workspace:*",
+    "@arkts/project-detector-win32-arm64-msvc": "workspace:*",
+    "@arkts/project-detector-win32-ia32-msvc": "workspace:*",
+    "@arkts/project-detector-win32-x64-msvc": "workspace:*"
   },
   "napi": {
     "binaryName": "project-detector",
