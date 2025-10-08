@@ -172,17 +172,39 @@ jobs:
         with:
           path: artifacts
 
+      - name: Create npm directories
+        run: napi create-npm-dirs
+
       - name: Move artifacts
         run: pnpm artifacts
+
+      - name: Build Node.js entry files
+        run: pnpm build:node
 
       - name: List packages
         run: ls -R ./npm
         shell: bash
 
-      - name: Publish
+      - name: Prepare publish
+        run: napi pre-publish -t npm
+
+      - name: Publish platform packages
         run: |
-          npm config set provenance true
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-          npm publish --access public
+          npm config set provenance true
+          for dir in npm/*; do
+            if [ -d "$dir" ]; then
+              echo "Publishing $dir"
+              cd "$dir"
+              npm publish --access public
+              cd ../..
+            fi
+          done
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        shell: bash
+
+      - name: Publish main package
+        run: npm publish --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

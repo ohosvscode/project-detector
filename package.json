@@ -7,16 +7,23 @@
   "author": "Naily Zero <zero@naily.cc>",
   "license": "MIT",
   "keywords": [],
-  "main": "dist/index.js",
+  "main": "./out/index.js",
+  "types": "./out/index.d.ts",
+  "files": [
+    "out"
+  ],
   "scripts": {
     "build": "napi build --release --output-dir dist",
     "build:debug": "napi build --output-dir dist",
+    "build:node": "tsdown",
     "universal": "napi universalize",
-    "prepublishOnly": "napi prepublish -t npm",
     "artifacts": "napi artifacts",
+    "version": "napi version",
     "test": "vitest"
   },
   "napi": {
+    "binaryName": "project-detector",
+    "packageName": "@arkts/project-detector",
     "targets": [
       "x86_64-apple-darwin",
       "x86_64-pc-windows-msvc",
@@ -37,6 +44,7 @@
     "@vitest/coverage-v8": "3.2.4",
     "eslint": "^9.37.0",
     "magic-string": "^0.30.19",
+    "tsdown": "^0.15.6",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4",
     "vscode-uri": "^3.1.0"
