@@ -27,9 +27,6 @@ jobs:
           profile: minimal
           components: rustfmt,clippy
 
-      - name: Install rust dependencies
-        run: cargo install cargo-udeps
-
       - name: Debug - Check mock directory structure
         run: |
           echo "=== Checking harmony-project-1 structure ==="
