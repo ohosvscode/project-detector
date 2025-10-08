@@ -14,10 +14,10 @@ impl DeviceType {
         let lower_device_type = s.to_lowercase();
         matches!(lower_device_type.as_str(), "phone" | "tablet" | "tv" | "car" | "wearable" | "2in1")
       }
-      DeviceTypeInput::DeviceType(dt) => {
+      DeviceTypeInput::DeviceType(device_type) => {
         // 如果传入的是 DeviceType 枚举，直接返回 true
         // 因为如果能够构造出 DeviceType，说明它是有效的
-        match dt {
+        match device_type {
           DeviceType::Phone | DeviceType::Tablet | DeviceType::Tv | DeviceType::Car | DeviceType::Wearable | DeviceType::TwoInOne => true,
         }
       }
