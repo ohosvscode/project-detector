@@ -96,11 +96,18 @@ jobs:
           done
         shell: bash
 
+      - name: Prepare artifact with dist structure
+        run: |
+          # 创建临时目录保持 dist 结构
+          mkdir -p artifact-staging/dist
+          cp -r dist/* artifact-staging/dist/
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: dist
+          path: artifact-staging/
           if-no-files-found: error
 
   universal-macOS:
@@ -143,17 +150,17 @@ jobs:
       - name: Combine binaries
         run: pnpm universal
 
-      - name: Move universal binary to dist
+      - name: Prepare universal artifact with dist structure
         run: |
-          mkdir -p dist
-          mv project-detector.darwin-universal.node dist/
+          mkdir -p artifact-staging/dist
+          mv project-detector.darwin-universal.node artifact-staging/dist/
         shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: bindings-universal-apple-darwin
-          path: dist
+          path: artifact-staging/
           if-no-files-found: error
 
   publish:
@@ -181,18 +188,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-
-      - name: Debug artifacts structure
-        run: |
-          echo "=== Artifacts directory structure ==="
-          ls -R artifacts/
-          echo ""
-          echo "=== Checking for dist directories ==="
-          find artifacts -name "dist" -type d
-          echo ""
-          echo "=== All .node files ==="
-          find artifacts -name "*.node"
-        shell: bash
 
       - name: Move artifacts
         run: pnpm artifacts
