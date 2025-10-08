@@ -126,8 +126,8 @@ jobs:
 
       - name: Move binaries to root
         run: |
-          cp artifacts/x64/index.node index.darwin-x64.node
-          cp artifacts/arm64/index.node index.darwin-arm64.node
+          cp artifacts/x64/project-detector.node index.darwin-x64.node
+          cp artifacts/arm64/project-detector.node index.darwin-arm64.node
         shell: bash
 
       - name: Combine binaries
