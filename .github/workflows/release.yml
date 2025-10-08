@@ -64,15 +64,14 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
+        with:
+          run_install: true
 
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -115,15 +114,14 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
+        with:
+          run_install: true
 
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -161,15 +159,14 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
+        with:
+          run_install: true
 
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Download macOS x64 artifact
         uses: actions/download-artifact@v4
@@ -206,15 +203,14 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
+        with:
+          run_install: true
 
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
