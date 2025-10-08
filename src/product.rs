@@ -143,12 +143,9 @@ impl Product {
       } else {
         target_directory_name.clone()
       };
-      let target_directory_path = match Path::join(&src_directory_path, &target_name).to_str() {
-        Some(path) => path.to_string(),
-        None => continue,
-      };
+      let target_directory_pathbuf = Path::join(&src_directory_path, &target_name);
 
-      let product_directory_path = match Url::from_directory_path(target_directory_path) {
+      let product_directory_path = match Url::from_directory_path(&target_directory_pathbuf) {
         Ok(url) => url.to_string(),
         Err(_) => continue,
       };
