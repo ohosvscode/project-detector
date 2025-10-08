@@ -3,7 +3,7 @@ import { describe, expect } from 'vitest'
 
 describe.sequential('utils', (it) => {
   const require = createRequire(import.meta.url)
-  const { Utils, QualifierType }: typeof import('../dist') = require('../dist')
+  const { Utils, QualifierType }: typeof import('../dist/index') = require('../dist/project-detector')
 
   it('should analyze empty qualifier', () => {
     const result = Utils.analyzeQualifier('')

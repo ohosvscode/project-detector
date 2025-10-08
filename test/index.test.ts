@@ -7,7 +7,7 @@ import { URI, Utils as UriUtils } from 'vscode-uri'
 
 describe.sequential('sample', (it) => {
   const require = createRequire(import.meta.url)
-  const { ProjectDetector, Project, Module, Product, Resource, ResourceGroup, ElementJsonFileNameReference }: typeof import('../dist') = require('../dist')
+  const { ProjectDetector, Project, Module, Product, Resource, ResourceGroup, ElementJsonFileNameReference }: typeof import('../dist/index') = require('../dist/project-detector')
 
   let projectDetector: InstanceType<typeof ProjectDetector>
 
