@@ -19,12 +19,7 @@
   ],
   "targets": [
     {
-      "name": "default",
-      "resource": {
-        "directories": [
-          "./resources"
-        ]
-      }
+      "name": "default"
     },
     {
       "name": "ohosTest"

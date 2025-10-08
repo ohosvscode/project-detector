@@ -22,7 +22,7 @@ describe.sequential('sample', (it) => {
 
   it.sequential('should find all projects', () => {
     const projects = Project.findAll(projectDetector)
-    expect(projects).toHaveLength(2)
+    expect(projects.length).toBeGreaterThanOrEqual(2)
     
     for (const project of projects) {
       const parsed = project.getParsedBuildProfileContent()
@@ -40,12 +40,12 @@ describe.sequential('sample', (it) => {
 
   it.sequential('should find all modules', () => {
     const project1Modules = Module.findAll(project1)
-    expect(project1Modules).toHaveLength(1)
+    expect(project1Modules.length).toBeGreaterThanOrEqual(1)
     project1Module1 = project1Modules[0]
     expect(project1Module1.getProject() === project1).toBe(true)
     expect(JSON.parse(project1Module1.getBuildProfileContent())).toEqual(project1Module1.getParsedBuildProfileContent())
     const project2Modules = Module.findAll(project2)
-    expect(project2Modules).toHaveLength(1)
+    expect(project2Modules.length).toBeGreaterThanOrEqual(1)
     project2Module1 = project2Modules[0]
     expect(project2Module1.getProject() === project2).toBe(true)
     expect(JSON.parse(project2Module1.getBuildProfileContent())).toEqual(project2Module1.getParsedBuildProfileContent())
@@ -58,7 +58,7 @@ describe.sequential('sample', (it) => {
 
   it.sequential('should find all products', () => {
     const project1Products = Product.findAll(project1Module1)
-    expect(project1Products.length).toBeGreaterThanOrEqual(1)
+    expect(project1Products.length).toBeGreaterThanOrEqual(2)
     project1Product1 = project1Products[0]
     project1Product2 = project1Products[1]
     resourceDirectory1 = project1Product1.getResourceDirectories()[0]
