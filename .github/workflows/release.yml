@@ -86,11 +86,21 @@ jobs:
         run: ${{ matrix.settings.build }}
         shell: bash
 
+      - name: Rename binary file
+        run: |
+          cd dist
+          for file in *.node; do
+            if [ -f "$file" ]; then
+              mv "$file" "project-detector.${{ matrix.settings.target }}.node"
+            fi
+          done
+        shell: bash
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.settings.target }}
-          path: dist/*.node
+          path: dist/project-detector.${{ matrix.settings.target }}.node
           if-no-files-found: error
 
   universal-macOS:
