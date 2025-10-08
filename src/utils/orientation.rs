@@ -1,6 +1,5 @@
 use strum_macros::EnumIter;
 
-
 ///
 /// Device screen orientation.
 ///
@@ -17,19 +16,15 @@ pub enum Orientation {
 impl Orientation {
   pub fn is<T: Into<OrientationInput>>(orientation: T) -> bool {
     match orientation.into() {
-      OrientationInput::String(s) => {
-        match s.to_lowercase().as_str() {
-          "vertical" => true,
-          "horizontal" => true,
-          _ => false,
-        }
-      }
-      OrientationInput::Orientation(o) => {
-        match o {
-          Orientation::Vertical => true,
-          Orientation::Horizontal => true,
-        }
-      }
+      OrientationInput::String(s) => match s.to_lowercase().as_str() {
+        "vertical" => true,
+        "horizontal" => true,
+        _ => false,
+      },
+      OrientationInput::Orientation(o) => match o {
+        Orientation::Vertical => true,
+        Orientation::Horizontal => true,
+      },
     }
   }
 }

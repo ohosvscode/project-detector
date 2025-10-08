@@ -1,7 +1,7 @@
-use napi_derive::napi;
-use napi::{bindgen_prelude::Reference, Env};
-use tree_sitter::{Parser, TreeCursor};
 use crate::element_json_file::ElementJsonFile;
+use napi::{bindgen_prelude::Reference, Env};
+use napi_derive::napi;
+use tree_sitter::{Parser, TreeCursor};
 
 #[napi]
 pub struct ElementJsonFileNameReference {
@@ -74,16 +74,10 @@ impl ElementJsonFileNameReference {
   }
 
   /// 递归查找 JSON 中所有 "name" 字段
-  fn find_name_fields(
-    cursor: &mut TreeCursor,
-    content: &str,
-    references: &mut Vec<ElementJsonFileNameReference>,
-    element_json_file: &Reference<ElementJsonFile>,
-    env: &Env,
-  ) {
+  fn find_name_fields(cursor: &mut TreeCursor, content: &str, references: &mut Vec<ElementJsonFileNameReference>, element_json_file: &Reference<ElementJsonFile>, env: &Env) {
     loop {
       let node = cursor.node();
-      
+
       // 检查是否是键值对节点
       if node.kind() == "pair" {
         // 获取 key 和 value 节点
@@ -95,18 +89,17 @@ impl ElementJsonFileNameReference {
                 // 确保值是字符串类型
                 if value_node.kind() == "string" {
                   let text = &content[value_node.start_byte()..value_node.end_byte()];
-                  
+
                   // 去掉引号
                   let actual_text = text.trim_matches('"');
                   let start = value_node.start_byte() as u32 + 1; // 跳过开头引号
-                  let end = value_node.end_byte() as u32 - 1;     // 跳过结尾引号
+                  let end = value_node.end_byte() as u32 - 1; // 跳过结尾引号
 
-                  references.push(
-                    ElementJsonFileNameReference::create(
-                      start,
-                      end,
-                      actual_text.to_string(),
-                      element_json_file.clone(*env).unwrap()
+                  references.push(ElementJsonFileNameReference::create(
+                    start,
+                    end,
+                    actual_text.to_string(),
+                    element_json_file.clone(*env).unwrap(),
                   ));
                 }
               }

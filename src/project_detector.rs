@@ -4,7 +4,7 @@ use url::Url;
 #[napi]
 #[derive(Clone)]
 pub struct ProjectDetector {
-  workspace_folder: Url
+  workspace_folder: Url,
 }
 
 #[napi]

@@ -1,8 +1,11 @@
 use std::{fs, path::Path};
 
+use crate::{
+  element_json_file::ElementJsonFile,
+  resource::{Resource, ResourceQualifiedDirectoryType},
+};
 use napi_derive::napi;
 use url::Url;
-use crate::{element_json_file::ElementJsonFile, resource::{Resource, ResourceQualifiedDirectoryType}};
 
 #[napi]
 #[derive(Debug)]
@@ -32,12 +35,10 @@ impl ResourceGroup {
             Err(_) => continue,
           };
 
-          resource_groups.push(
-            ResourceGroup {
-              uri,
-              is_base: qualified_directory.directory_type == ResourceQualifiedDirectoryType::Base,
-            }
-          )
+          resource_groups.push(ResourceGroup {
+            uri,
+            is_base: qualified_directory.directory_type == ResourceQualifiedDirectoryType::Base,
+          })
         }
       }
     }

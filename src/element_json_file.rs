@@ -1,6 +1,6 @@
-use url::Url;
 use napi_derive::napi;
 use std::fs;
+use url::Url;
 
 #[napi]
 #[derive(Clone)]
@@ -26,10 +26,7 @@ impl ElementJsonFile {
       Err(_) => return None,
     };
 
-    let element_json_file = ElementJsonFile { 
-      uri,
-      content,
-    };
+    let element_json_file = ElementJsonFile { uri, content };
 
     Some(element_json_file)
   }

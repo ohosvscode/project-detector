@@ -1,10 +1,10 @@
-use std::path::Path;
-use std::fs;
-use napi_derive::napi;
+use crate::module::Module;
 use napi::bindgen_prelude::Reference;
 use napi::Env;
+use napi_derive::napi;
+use std::fs;
+use std::path::Path;
 use url::Url;
-use crate::module::Module;
 
 /**
  * Single {@linkcode Module} contain multiple products.
@@ -55,7 +55,7 @@ impl Product {
   pub fn create(env: Env, module: Reference<Module>, directory_uri: String, target_name: String) -> Option<Product> {
     let parsed_directory_url = match Url::parse(&directory_uri) {
       Ok(url) => url,
-      Err(_) => return None
+      Err(_) => return None,
     };
     let fs_parsed_directory = match parsed_directory_url.to_file_path() {
       Ok(path) => path,
@@ -71,18 +71,16 @@ impl Product {
       Err(_) => return None,
     };
 
-    Some(
-      Product {
-        module: module.clone(env).unwrap(),
-        product_folder: match Url::from_directory_path(fs_parsed_directory) {
-          Ok(url) => url,
-          Err(_) => return None,
-        },
-        parsed_module_json5_content,
-        module_json5_content,
-        target_name,
-      }
-    )
+    Some(Product {
+      module: module.clone(env).unwrap(),
+      product_folder: match Url::from_directory_path(fs_parsed_directory) {
+        Ok(url) => url,
+        Err(_) => return None,
+      },
+      parsed_module_json5_content,
+      module_json5_content,
+      target_name,
+    })
   }
 
   pub fn get_product_url(&self) -> Url {
@@ -133,25 +131,14 @@ impl Product {
       Err(_) => return products,
     };
     let parsed_module_json5_content = module.get_parsed_build_profile_content();
-    let targets_directory_names: Vec<String> = match parsed_module_json5_content
-      .get("targets")
-      .and_then(|v| v.as_array())
-    {
-      Some(vec) => vec
-        .iter()
-        .filter_map(|item| {
-          item
-            .get("name")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string())
-        })
-        .collect(),
+    let targets_directory_names: Vec<String> = match parsed_module_json5_content.get("targets").and_then(|v| v.as_array()) {
+      Some(vec) => vec.iter().filter_map(|item| item.get("name").and_then(|v| v.as_str()).map(|s| s.to_string())).collect(),
       None => return products,
     };
 
     let src_directory_path = Path::join(&module_folder_path, "src");
     for target_directory_name in targets_directory_names {
-      let target_name = if target_directory_name == "default" { 
+      let target_name = if target_directory_name == "default" {
         "main".to_string()
       } else {
         target_directory_name.clone()
@@ -160,7 +147,7 @@ impl Product {
         Some(path) => path.to_string(),
         None => continue,
       };
-      
+
       let product_directory_path = match Url::from_directory_path(target_directory_path) {
         Ok(url) => url.to_string(),
         Err(_) => continue,
@@ -180,9 +167,9 @@ impl Product {
 
   /**
    * Get resource directories from model level `build-profile.json5` file.
-   * 
+   *
    * If the resource directories is not set will return the default resource directories like:
-   * 
+   *
    * - If the target is `default`, the result path is `src/main/resources`
    * - If the target is `foo`, the result path is `src/foo/resources`
    */
@@ -191,18 +178,15 @@ impl Product {
     let mut resource_directories = Vec::new();
     let target_name = self.get_target_name();
     let parsed_module_json5_content = self.get_module(env).get_parsed_build_profile_content();
-    let maybe_target = parsed_module_json5_content
-      .get("targets")
-      .and_then(|v| v.as_array())
-      .and_then(|vec| vec.iter().find(|item| {
-        match item.get("name") {
-          Some(value) => match value.as_str() {
-            Some(name) => name == target_name,
-            None => false,
-          },
+    let maybe_target = parsed_module_json5_content.get("targets").and_then(|v| v.as_array()).and_then(|vec| {
+      vec.iter().find(|item| match item.get("name") {
+        Some(value) => match value.as_str() {
+          Some(name) => name == target_name,
           None => false,
-        }
-      }));
+        },
+        None => false,
+      })
+    });
 
     let directories = maybe_target
       .and_then(|target| target.get("resource"))

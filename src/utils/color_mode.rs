@@ -6,19 +6,15 @@ pub enum ColorMode {
 impl ColorMode {
   pub fn is<T: Into<ColorModeInput>>(color_mode: T) -> bool {
     match color_mode.into() {
-      ColorModeInput::String(s) => {
-        match s.to_lowercase().as_str() {
-          "dark" => true,
-          "light" => true,
-          _ => false,
-        }
-      }
-      ColorModeInput::ColorMode(c) => {
-        match c {
-          ColorMode::Dark => true,
-          ColorMode::Light => true,
-        }
-      }
+      ColorModeInput::String(s) => match s.to_lowercase().as_str() {
+        "dark" => true,
+        "light" => true,
+        _ => false,
+      },
+      ColorModeInput::ColorMode(c) => match c {
+        ColorMode::Dark => true,
+        ColorMode::Light => true,
+      },
     }
   }
 }
@@ -39,4 +35,3 @@ impl From<ColorMode> for ColorModeInput {
     ColorModeInput::ColorMode(c)
   }
 }
-

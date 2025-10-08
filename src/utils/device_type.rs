@@ -26,8 +26,7 @@ impl DeviceType {
         // 如果传入的是 DeviceType 枚举，直接返回 true
         // 因为如果能够构造出 DeviceType，说明它是有效的
         match dt {
-          DeviceType::Phone | DeviceType::Tablet | DeviceType::Tv | 
-          DeviceType::Car | DeviceType::Wearable | DeviceType::TwoInOne => true,
+          DeviceType::Phone | DeviceType::Tablet | DeviceType::Tv | DeviceType::Car | DeviceType::Wearable | DeviceType::TwoInOne => true,
         }
       }
     }

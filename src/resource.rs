@@ -1,7 +1,10 @@
-use std::fs;
+use crate::{
+  product::Product,
+  utils::utils::{Qualifier, Utils},
+};
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
-use crate::{product::Product, utils::utils::{Qualifier, Utils}};
+use std::fs;
 use url::Url;
 
 #[napi]
@@ -40,12 +43,7 @@ impl Resource {
       Err(_) => return None,
     };
 
-    Some(
-      Resource {
-        uri,
-        product,
-      }
-    )
+    Some(Resource { uri, product })
   }
 
   #[napi]
@@ -109,24 +107,22 @@ impl Resource {
       if file_name_str != "base" && file_name_str != "rawfile" && file_name_str != "resfile" && qualifiers.len() == 0 {
         continue;
       }
-      
+
       let directory_uri = match Url::from_directory_path(entry.path().to_string_lossy().to_string()) {
         Ok(url) => url,
         Err(_) => continue,
       };
 
-      qualified_directories.push(
-        ResourceQualifiedDirectory {
-          uri: directory_uri.to_string(),
-          qualifiers,
-          directory_type: match file_name_str {
-            "base" => ResourceQualifiedDirectoryType::Base,
-            "rawfile" => ResourceQualifiedDirectoryType::RawFile,
-            "resfile" => ResourceQualifiedDirectoryType::ResFile,
-            _ => ResourceQualifiedDirectoryType::Qualified,
-          },
-        }
-      );
+      qualified_directories.push(ResourceQualifiedDirectory {
+        uri: directory_uri.to_string(),
+        qualifiers,
+        directory_type: match file_name_str {
+          "base" => ResourceQualifiedDirectoryType::Base,
+          "rawfile" => ResourceQualifiedDirectoryType::RawFile,
+          "resfile" => ResourceQualifiedDirectoryType::ResFile,
+          _ => ResourceQualifiedDirectoryType::Qualified,
+        },
+      });
     }
 
     qualified_directories

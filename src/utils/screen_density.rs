@@ -17,27 +17,23 @@ pub enum ScreenDensity {
 impl ScreenDensity {
   pub fn is<T: Into<ScreenDensityInput>>(screen_density: T) -> bool {
     match screen_density.into() {
-      ScreenDensityInput::String(s) => {
-        match s.to_lowercase().as_str() {
-          "sdpi" => true,
-          "mdpi" => true,
-          "ldpi" => true,
-          "xldpi" => true,
-          "xxldpi" => true,
-          "xxxldpi" => true,
-          _ => false,
-        }
-      }
-      ScreenDensityInput::ScreenDensity(sd) => {
-        match sd {
-          ScreenDensity::Sdpi => true,
-          ScreenDensity::Mdpi => true,
-          ScreenDensity::Ldpi => true,
-          ScreenDensity::Xldpi => true,
-          ScreenDensity::Xxldpi => true,
-          ScreenDensity::Xxxldpi => true,
-        }
-      }
+      ScreenDensityInput::String(s) => match s.to_lowercase().as_str() {
+        "sdpi" => true,
+        "mdpi" => true,
+        "ldpi" => true,
+        "xldpi" => true,
+        "xxldpi" => true,
+        "xxxldpi" => true,
+        _ => false,
+      },
+      ScreenDensityInput::ScreenDensity(sd) => match sd {
+        ScreenDensity::Sdpi => true,
+        ScreenDensity::Mdpi => true,
+        ScreenDensity::Ldpi => true,
+        ScreenDensity::Xldpi => true,
+        ScreenDensity::Xxldpi => true,
+        ScreenDensity::Xxxldpi => true,
+      },
     }
   }
 }

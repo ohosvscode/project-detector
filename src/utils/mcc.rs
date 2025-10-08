@@ -2,7 +2,7 @@
 //! - Consists of 3 digits.
 //! - Example: '460' (China)
 //! - For a detailed list, please refer to: https://www.mcc-mnc.com/
-//! 
+//!
 //! ---
 //!
 //! 移动国家码 (Mobile Country Code, MCC)
@@ -10,8 +10,8 @@
 //! - 例如: '460' (中国)
 //! - 详细列表请查阅: https://www.mcc-mnc.com/
 
-use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 #[allow(non_camel_case_types)]
 #[derive(EnumIter)]
@@ -1193,7 +1193,10 @@ pub enum MCC {
 
 impl MCC {
   /// Check if the mcc is a valid MCC code with value.
-  pub fn is<T>(mcc: T) -> bool where T: PartialEq<u32> + Copy {
+  pub fn is<T>(mcc: T) -> bool
+  where
+    T: PartialEq<u32> + Copy,
+  {
     MCC::iter().any(|variant| mcc == variant as u32)
   }
 

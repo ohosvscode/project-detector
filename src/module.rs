@@ -1,8 +1,8 @@
-use std::path::Path;
-use std::fs;
 use crate::project::Project;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
+use std::fs;
+use std::path::Path;
 use url::Url;
 
 /**
@@ -103,15 +103,13 @@ impl Module {
       None => return None,
     };
 
-    Some(
-      Module {
-        uri,
-        project: project.clone(env).unwrap(),
-        build_profile_content,
-        build_profile_parsed_content,
-        build_profile_path,
-      }
-    )
+    Some(Module {
+      uri,
+      project: project.clone(env).unwrap(),
+      build_profile_content,
+      build_profile_parsed_content,
+      build_profile_path,
+    })
   }
 
   /**
