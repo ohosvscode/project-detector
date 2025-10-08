@@ -4,14 +4,14 @@
   "cpu": [
     "x64"
   ],
+  "description": "",
+  "author": "Naily Zero <zero@naily.cc>",
+  "license": "MIT",
+  "keywords": [],
   "main": "project-detector.darwin-x64.node",
   "files": [
     "project-detector.darwin-x64.node"
   ],
-  "description": "",
-  "keywords": [],
-  "author": "Naily Zero <zero@naily.cc>",
-  "license": "MIT",
   "os": [
     "darwin"
   ]

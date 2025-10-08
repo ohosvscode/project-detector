@@ -4,14 +4,14 @@
   "cpu": [
     "arm64"
   ],
+  "description": "",
+  "author": "Naily Zero <zero@naily.cc>",
+  "license": "MIT",
+  "keywords": [],
   "main": "project-detector.win32-arm64-msvc.node",
   "files": [
     "project-detector.win32-arm64-msvc.node"
   ],
-  "description": "",
-  "keywords": [],
-  "author": "Naily Zero <zero@naily.cc>",
-  "license": "MIT",
   "os": [
     "win32"
   ]

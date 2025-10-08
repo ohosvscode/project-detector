@@ -4,14 +4,14 @@
   "cpu": [
     "arm"
   ],
+  "description": "",
+  "author": "Naily Zero <zero@naily.cc>",
+  "license": "MIT",
+  "keywords": [],
   "main": "project-detector.linux-arm-gnueabihf.node",
   "files": [
     "project-detector.linux-arm-gnueabihf.node"
   ],
-  "description": "",
-  "keywords": [],
-  "author": "Naily Zero <zero@naily.cc>",
-  "license": "MIT",
   "os": [
     "linux"
   ]
