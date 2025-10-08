@@ -46,6 +46,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.os }}
-          path: |
-            dist/index-${{ matrix.os }}.node
-            dist/index-${{ matrix.os }}.d.ts
+          path: dist

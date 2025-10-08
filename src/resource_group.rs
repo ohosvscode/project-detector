@@ -80,7 +80,7 @@ impl ResourceGroup {
         continue;
       }
 
-      let file_uri = match Url::from_directory_path(entry.path().to_string_lossy().to_string()) {
+      let file_uri = match Url::from_file_path(entry.path()) {
         Ok(url) => url,
         Err(_) => continue,
       };
