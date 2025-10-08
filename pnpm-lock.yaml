@@ -38,6 +38,57 @@ importers:
       vscode-uri:
         specifier: ^3.1.0
         version: 3.1.0
+    optionalDependencies:
+      '@arkts/project-detector-android-arm64':
+        specifier: workspace:*
+        version: link:npm/android-arm64
+      '@arkts/project-detector-darwin-arm64':
+        specifier: workspace:*
+        version: link:npm/darwin-arm64
+      '@arkts/project-detector-darwin-universal':
+        specifier: workspace:*
+        version: link:npm/darwin-universal
+      '@arkts/project-detector-darwin-x64':
+        specifier: workspace:*
+        version: link:npm/darwin-x64
+      '@arkts/project-detector-linux-arm-gnueabihf':
+        specifier: workspace:*
+        version: link:npm/linux-arm-gnueabihf
+      '@arkts/project-detector-linux-arm64-gnu':
+        specifier: workspace:*
+        version: link:npm/linux-arm64-gnu
+      '@arkts/project-detector-linux-x64-gnu':
+        specifier: workspace:*
+        version: link:npm/linux-x64-gnu
+      '@arkts/project-detector-win32-arm64-msvc':
+        specifier: workspace:*
+        version: link:npm/win32-arm64-msvc
+      '@arkts/project-detector-win32-ia32-msvc':
+        specifier: workspace:*
+        version: link:npm/win32-ia32-msvc
+      '@arkts/project-detector-win32-x64-msvc':
+        specifier: workspace:*
+        version: link:npm/win32-x64-msvc
+
+  npm/android-arm64: {}
+
+  npm/darwin-arm64: {}
+
+  npm/darwin-universal: {}
+
+  npm/darwin-x64: {}
+
+  npm/linux-arm-gnueabihf: {}
+
+  npm/linux-arm64-gnu: {}
+
+  npm/linux-x64-gnu: {}
+
+  npm/win32-arm64-msvc: {}
+
+  npm/win32-ia32-msvc: {}
+
+  npm/win32-x64-msvc: {}
 
 packages:
 
