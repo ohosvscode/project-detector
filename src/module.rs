@@ -53,6 +53,7 @@ impl Module {
    *
    * @returns The module uri.
    */
+  #[napi]
   pub fn get_uri(&self) -> String {
     path_clean::clean(&self.uri.to_string())
   }

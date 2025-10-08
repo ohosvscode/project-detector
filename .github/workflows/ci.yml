@@ -30,6 +30,17 @@ jobs:
       - name: Install rust dependencies
         run: cargo install cargo-udeps
 
+      - name: Debug - Check mock directory structure
+        run: |
+          echo "=== Checking harmony-project-1 structure ==="
+          ls -laR mock/harmony-project-1/entry/src/
+          echo ""
+          echo "=== Checking if directories exist ==="
+          [ -d "mock/harmony-project-1/entry/src/main" ] && echo "✓ main directory exists" || echo "✗ main directory missing"
+          [ -d "mock/harmony-project-1/entry/src/ohosTest" ] && echo "✓ ohosTest directory exists" || echo "✗ ohosTest directory missing"
+          [ -f "mock/harmony-project-1/entry/src/main/module.json5" ] && echo "✓ main/module.json5 exists" || echo "✗ main/module.json5 missing"
+          [ -f "mock/harmony-project-1/entry/src/ohosTest/module.json5" ] && echo "✓ ohosTest/module.json5 exists" || echo "✗ ohosTest/module.json5 missing"
+
       - name: Build
         run: pnpm build
 
