@@ -242,12 +242,11 @@ impl Utils {
     if part.contains('_') {
       // 语言相关 - 即使在 MCC_MNC 之后，也可以有语言部分
       // 只要还没到达 Orientation 之后的阶段
-      if *stage <= QualifierStage::Orientation {
-        if Self::parse_language_region(part, result) {
+      if *stage <= QualifierStage::Orientation
+        && Self::parse_language_region(part, result) {
           *stage = QualifierStage::Orientation;
           return Ok(());
         }
-      }
       return Err(()); // Orientation 之后的阶段不应该有下划线
     }
 
@@ -406,15 +405,8 @@ impl Utils {
     }
     // 3-4字母（可能是文字代码，如 Hant, Hans, Latn 等）-> 作为语言代码接受
     // 这是为了支持 ISO 15924 script codes
-    else if part.len() >= 3 && part.len() <= 4 && part.chars().all(|c| c.is_alphabetic()) {
-      result.push(Qualifier {
-        qualifier_type: QualifierType::LanguageCode,
-        qualifier_value: part.to_string(),
-      });
-      return true;
-    }
-    // 其他有效的语言代码
-    else if LanguageCode::is(part.to_string()) {
+    // 或其他有效的语言代码
+    else if (part.len() >= 3 && part.len() <= 4 && part.chars().all(|c| c.is_alphabetic())) || LanguageCode::is(part.to_string()) {
       result.push(Qualifier {
         qualifier_type: QualifierType::LanguageCode,
         qualifier_value: part.to_string(),

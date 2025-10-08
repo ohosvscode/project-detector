@@ -54,7 +54,7 @@ impl Project {
    */
   #[napi]
   pub fn get_uri(&self) -> String {
-    path_clean::clean(&self.uri.to_string())
+    path_clean::clean(self.uri.as_ref())
   }
 
   /**
@@ -107,7 +107,7 @@ impl Project {
     };
 
     // workspace build-profile.json5 file must have `app` field and `modules` field
-    if app_field_is_object != true || modules_field_is_array != true {
+    if !app_field_is_object || !modules_field_is_array {
       return None;
     }
 

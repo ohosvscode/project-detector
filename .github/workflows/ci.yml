@@ -27,6 +27,9 @@ jobs:
           profile: minimal
           components: rustfmt,clippy
 
+      - name: Lint
+        run: cargo clippy && pnpm eslint
+
       - name: Build
         run: pnpm build
 

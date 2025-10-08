@@ -4,13 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = [ "cdylib" ]
 
 [dependencies]
-napi = { version = "3.3.0", features = ["serde-json"] }
+napi = { version = "3.3.0", features = [ "serde-json" ] }
 napi-derive = "3.2.5"
 url = "2.5.7"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0", features = [ "derive" ] }
 serde_json5 = "0.2.1"
 serde_json = "1.0"
 walkdir = "2.4"
@@ -25,7 +25,7 @@ napi-build = "2.2.3"
 
 # 添加这些配置
 [package.metadata.docs.rs]
-features = ["doc"]
+features = [ "doc" ]
 
 # 可选：添加 clippy 进行代码检查
 [package.metadata.clippy]

@@ -55,7 +55,7 @@ impl Module {
    */
   #[napi]
   pub fn get_uri(&self) -> String {
-    path_clean::clean(&self.uri.to_string())
+    path_clean::clean(self.uri.as_ref())
   }
   /**
    * Create a new module.
@@ -95,7 +95,7 @@ impl Module {
       None => false,
     };
 
-    if app_field_is_object == true || modules_field_is_array == true {
+    if app_field_is_object || modules_field_is_array {
       return None;
     }
 
@@ -133,7 +133,7 @@ impl Module {
     let project_folder = project.get_project_folder_url();
 
     for module in parsed_modules {
-      if module.is_object() != true {
+      if !module.is_object() {
         continue;
       }
 

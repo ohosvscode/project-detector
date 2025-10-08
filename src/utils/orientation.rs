@@ -16,11 +16,7 @@ pub enum Orientation {
 impl Orientation {
   pub fn is<T: Into<OrientationInput>>(orientation: T) -> bool {
     match orientation.into() {
-      OrientationInput::String(s) => match s.to_lowercase().as_str() {
-        "vertical" => true,
-        "horizontal" => true,
-        _ => false,
-      },
+      OrientationInput::String(s) => matches!(s.to_lowercase().as_str(), "vertical" | "horizontal"),
       OrientationInput::Orientation(o) => match o {
         Orientation::Vertical => true,
         Orientation::Horizontal => true,

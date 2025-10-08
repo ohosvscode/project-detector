@@ -1,7 +1,7 @@
-import { describe, expect } from 'vitest'
 import { createRequire } from 'node:module'
+import { describe, expect } from 'vitest'
 
-describe.sequential('Utils', (it) => {
+describe.sequential('utils', (it) => {
   const require = createRequire(import.meta.url)
   const { Utils, QualifierType }: typeof import('../dist') = require('../dist')
 
@@ -13,19 +13,19 @@ describe.sequential('Utils', (it) => {
   it('should analyze mcc_mnc-language-region', () => {
     const result = Utils.analyzeQualifier('mcc460_mnc00-zh_Hant_CN')
     expect(result).toHaveLength(5)
-    
+
     expect(result[0].qualifierType).toBe(QualifierType.MCC)
     expect(result[0].qualifierValue).toBe('mcc460')
-    
+
     expect(result[1].qualifierType).toBe(QualifierType.MNC)
     expect(result[1].qualifierValue).toBe('mnc00')
-    
+
     expect(result[2].qualifierType).toBe(QualifierType.LanguageCode)
     expect(result[2].qualifierValue).toBe('zh')
-    
+
     expect(result[3].qualifierType).toBe(QualifierType.LanguageCode)
     expect(result[3].qualifierValue).toBe('Hant')
-    
+
     expect(result[4].qualifierType).toBe(QualifierType.RegionCode)
     expect(result[4].qualifierValue).toBe('CN')
   })
@@ -33,16 +33,16 @@ describe.sequential('Utils', (it) => {
   it('should analyze language-device-density', () => {
     const result = Utils.analyzeQualifier('zh_CN-car-ldpi')
     expect(result).toHaveLength(4)
-    
+
     expect(result[0].qualifierType).toBe(QualifierType.LanguageCode)
     expect(result[0].qualifierValue).toBe('zh')
-    
+
     expect(result[1].qualifierType).toBe(QualifierType.RegionCode)
     expect(result[1].qualifierValue).toBe('CN')
-    
+
     expect(result[2].qualifierType).toBe(QualifierType.DeviceType)
     expect(result[2].qualifierValue).toBe('car')
-    
+
     expect(result[3].qualifierType).toBe(QualifierType.ScreenDensity)
     expect(result[3].qualifierValue).toBe('ldpi')
   })
@@ -50,28 +50,28 @@ describe.sequential('Utils', (it) => {
   it('should analyze complex qualifier', () => {
     const result = Utils.analyzeQualifier('mcc460_mnc00-zh_CN-vertical-phone-light-xldpi')
     expect(result).toHaveLength(8)
-    
+
     expect(result[0].qualifierType).toBe(QualifierType.MCC)
     expect(result[0].qualifierValue).toBe('mcc460')
-    
+
     expect(result[1].qualifierType).toBe(QualifierType.MNC)
     expect(result[1].qualifierValue).toBe('mnc00')
-    
+
     expect(result[2].qualifierType).toBe(QualifierType.LanguageCode)
     expect(result[2].qualifierValue).toBe('zh')
-    
+
     expect(result[3].qualifierType).toBe(QualifierType.RegionCode)
     expect(result[3].qualifierValue).toBe('CN')
-    
+
     expect(result[4].qualifierType).toBe(QualifierType.Orientation)
     expect(result[4].qualifierValue).toBe('vertical')
-    
+
     expect(result[5].qualifierType).toBe(QualifierType.DeviceType)
     expect(result[5].qualifierValue).toBe('phone')
-    
+
     expect(result[6].qualifierType).toBe(QualifierType.ColorMode)
     expect(result[6].qualifierValue).toBe('light')
-    
+
     expect(result[7].qualifierType).toBe(QualifierType.ScreenDensity)
     expect(result[7].qualifierValue).toBe('xldpi')
   })
@@ -180,11 +180,11 @@ describe.sequential('Utils', (it) => {
     const resultUpper = Utils.analyzeQualifier('DARK')
     const resultLower = Utils.analyzeQualifier('dark')
     const resultMixed = Utils.analyzeQualifier('Dark')
-    
+
     expect(resultUpper).toHaveLength(1)
     expect(resultLower).toHaveLength(1)
     expect(resultMixed).toHaveLength(1)
-    
+
     expect(resultUpper[0].qualifierType).toBe(QualifierType.ColorMode)
     expect(resultLower[0].qualifierType).toBe(QualifierType.ColorMode)
     expect(resultMixed[0].qualifierType).toBe(QualifierType.ColorMode)
@@ -205,10 +205,10 @@ describe.sequential('Utils', (it) => {
     // 测试跳过某些阶段
     const result1 = Utils.analyzeQualifier('zh-dark')
     expect(result1).toHaveLength(2)
-    
+
     const result2 = Utils.analyzeQualifier('phone-mdpi')
     expect(result2).toHaveLength(2)
-    
+
     const result3 = Utils.analyzeQualifier('vertical-dark')
     expect(result3).toHaveLength(2)
   })

@@ -81,11 +81,11 @@ impl ElementJsonFileNameReference {
       // 检查是否是键值对节点
       if node.kind() == "pair" {
         // 获取 key 和 value 节点
-        if let Some(key_node) = node.child_by_field_name("key") {
-          if let Ok(key_text) = key_node.utf8_text(content.as_bytes()) {
+        if let Some(key_node) = node.child_by_field_name("key")
+          && let Ok(key_text) = key_node.utf8_text(content.as_bytes()) {
             // 检查键是否为 "name"
-            if key_text == "\"name\"" {
-              if let Some(value_node) = node.child_by_field_name("value") {
+            if key_text == "\"name\""
+              && let Some(value_node) = node.child_by_field_name("value") {
                 // 确保值是字符串类型
                 if value_node.kind() == "string" {
                   let text = &content[value_node.start_byte()..value_node.end_byte()];
@@ -103,9 +103,7 @@ impl ElementJsonFileNameReference {
                   ));
                 }
               }
-            }
           }
-        }
       }
 
       // 递归遍历子节点

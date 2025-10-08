@@ -48,7 +48,7 @@ impl Product {
    */
   #[napi]
   pub fn get_uri(&self) -> String {
-    path_clean::clean(&self.product_folder.to_string())
+    path_clean::clean(self.product_folder.as_ref())
   }
 
   #[napi(ts_return_type = "Product | undefined")]
@@ -218,15 +218,12 @@ impl Product {
           let resource_path = product_path.join(Path::new(dir));
           let joined_path = current_dir.join(&resource_path);
           let cleaned_path = path_clean::clean(&joined_path.to_string_lossy());
-          match Url::parse(&cleaned_path) {
-            Ok(url) => resource_directories.push(url.to_string()),
-            Err(_) => (),
-          }
+          if let Ok(url) = Url::parse(&cleaned_path) { resource_directories.push(url.to_string()) }
         }
       }
     }
 
-    if resource_directories.len() == 0 {
+    if resource_directories.is_empty() {
       let default_resource_directory = Path::new(&self.get_uri()).join("resources").to_str().unwrap().to_string();
       resource_directories.push(Url::parse(&default_resource_directory).unwrap().to_string());
     }

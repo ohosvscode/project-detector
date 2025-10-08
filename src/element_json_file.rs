@@ -33,6 +33,6 @@ impl ElementJsonFile {
 
   #[napi]
   pub fn get_uri(&self) -> String {
-    path_clean::clean(&self.uri.to_string())
+    path_clean::clean(self.uri.as_ref())
   }
 }

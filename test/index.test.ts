@@ -1,9 +1,9 @@
-import { describe, expect } from 'vitest'
-import { createRequire } from 'node:module'
-import { URI, Utils as UriUtils } from 'vscode-uri'
-import path from 'node:path'
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
+import path from 'node:path'
 import MagicString from 'magic-string'
+import { describe, expect } from 'vitest'
+import { URI, Utils as UriUtils } from 'vscode-uri'
 
 describe.sequential('sample', (it) => {
   const require = createRequire(import.meta.url)
@@ -23,7 +23,7 @@ describe.sequential('sample', (it) => {
   it.sequential('should find all projects', () => {
     const projects = Project.findAll(projectDetector)
     expect(projects.length).toBeGreaterThanOrEqual(2)
-    
+
     for (const project of projects) {
       const parsed = project.getParsedBuildProfileContent()
       const buildProfileContent = project.getBuildProfileContent()

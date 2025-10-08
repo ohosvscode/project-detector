@@ -1,7 +1,4 @@
-use crate::{
-  product::Product,
-  utils::utils::{Qualifier, Utils},
-};
+use crate::{product::Product, utils::utils_impl::{Qualifier, Utils}};
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 use std::fs;
@@ -33,7 +30,7 @@ pub struct ResourceQualifiedDirectory {
 impl Resource {
   #[napi]
   pub fn get_uri(&self) -> String {
-    path_clean::clean(&self.uri.to_string())
+    path_clean::clean(self.uri.as_ref())
   }
 
   #[napi]
@@ -104,7 +101,7 @@ impl Resource {
         None => continue,
       };
 
-      if file_name_str != "base" && file_name_str != "rawfile" && file_name_str != "resfile" && qualifiers.len() == 0 {
+      if file_name_str != "base" && file_name_str != "rawfile" && file_name_str != "resfile" && qualifiers.is_empty() {
         continue;
       }
 

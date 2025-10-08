@@ -1,0 +1,60 @@
+{
+  // This repo is using antfu's eslint config, so we need to disable prettier and let eslint handle the formatting
+  // Why?
+  // You can see antfu's blog:
+  // English: https://antfu.me/posts/why-not-prettier
+  // 中文: https://antfu.me/posts/why-not-prettier-zh
+  //
+  // Yes, I am the fan of antfu 😁
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "bun.test.enable": false,
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+
+  // Silent the stylistic rules in you IDE, but still auto fix them
+  "eslint.rules.customizations": [
+    { "rule": "style/*", "severity": "off" },
+    { "rule": "*-indent", "severity": "off" },
+    { "rule": "*-spacing", "severity": "off" },
+    { "rule": "*-spaces", "severity": "off" },
+    { "rule": "*-order", "severity": "off" },
+    { "rule": "*-dangle", "severity": "off" },
+    { "rule": "*-newline", "severity": "off" },
+    { "rule": "*quotes", "severity": "off" },
+    { "rule": "*semi", "severity": "off" }
+  ],
+
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "markdown",
+    "json",
+    "jsonc",
+    "yaml"
+  ],
+
+  // Exclude ohos-typescript from eslint.
+  "eslint.workingDirectories": [
+    {
+      "pattern": "."
+    }
+  ],
+  "editor.gotoLocation.alternativeDeclarationCommand": "editor.action.revealDefinition",
+  "editor.gotoLocation.alternativeDefinitionCommand": "editor.action.revealDefinition",
+  "editor.gotoLocation.alternativeTypeDefinitionCommand": "editor.action.revealDefinition",
+  "editor.selectionHighlight": false,
+  "files.autoSave": "onFocusChange",
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "off",
+    "strings": "on"
+  },
+  "oxc.enable": true
+}

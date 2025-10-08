@@ -1202,7 +1202,7 @@ impl MCC {
 
   /// Check if the mcc is a valid MCC code with string `mcc`.
   pub fn is_code(mcc: String) -> bool {
-    if mcc.starts_with("mcc") == false {
+    if !mcc.starts_with("mcc") {
       return false;
     }
     let mcc = mcc.replace("mcc", "");
