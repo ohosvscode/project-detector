@@ -173,7 +173,7 @@ jobs:
           path: artifacts
 
       - name: Create npm directories
-        run: napi create-npm-dirs
+        run: pnpm exec napi create-npm-dirs
 
       - name: Move artifacts
         run: pnpm artifacts
@@ -186,7 +186,7 @@ jobs:
         shell: bash
 
       - name: Prepare publish
-        run: napi pre-publish -t npm
+        run: pnpm exec napi pre-publish -t npm
 
       - name: Publish platform packages
         run: |
