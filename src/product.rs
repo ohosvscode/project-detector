@@ -136,14 +136,25 @@ impl Product {
       None => return products,
     };
 
-    let src_directory_path = Path::join(&module_folder_path, "src");
+    let src_directory_path = module_folder_path.join("src");
+    
+    // 检查 src 目录是否存在
+    if !src_directory_path.exists() || !src_directory_path.is_dir() {
+      return products;
+    }
+
     for target_directory_name in targets_directory_names {
       let target_name = if target_directory_name == "default" {
         "main".to_string()
       } else {
         target_directory_name.clone()
       };
-      let target_directory_pathbuf = Path::join(&src_directory_path, &target_name);
+      let target_directory_pathbuf = src_directory_path.join(&target_name);
+
+      // 检查目标目录是否存在
+      if !target_directory_pathbuf.exists() || !target_directory_pathbuf.is_dir() {
+        continue;
+      }
 
       let product_directory_path = match Url::from_directory_path(&target_directory_pathbuf) {
         Ok(url) => url.to_string(),
