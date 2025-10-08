@@ -182,6 +182,18 @@ jobs:
         with:
           path: artifacts
 
+      - name: Debug artifacts structure
+        run: |
+          echo "=== Artifacts directory structure ==="
+          ls -R artifacts/
+          echo ""
+          echo "=== Checking for dist directories ==="
+          find artifacts -name "dist" -type d
+          echo ""
+          echo "=== All .node files ==="
+          find artifacts -name "*.node"
+        shell: bash
+
       - name: Move artifacts
         run: pnpm artifacts
 
