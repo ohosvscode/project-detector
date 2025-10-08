@@ -116,22 +116,34 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-apple-darwin
-          path: artifacts
+          path: artifacts/x64
 
       - name: Download macOS arm64 artifact
         uses: actions/download-artifact@v4
         with:
           name: bindings-aarch64-apple-darwin
-          path: artifacts
+          path: artifacts/arm64
+
+      - name: Move binaries to root
+        run: |
+          cp artifacts/x64/index.node index.darwin-x64.node
+          cp artifacts/arm64/index.node index.darwin-arm64.node
+        shell: bash
 
       - name: Combine binaries
         run: pnpm universal
+
+      - name: Move universal binary to dist
+        run: |
+          mkdir -p dist
+          mv index.darwin-universal.node dist/
+        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: bindings-universal-apple-darwin
-          path: dist/*.node
+          path: dist/index.darwin-universal.node
           if-no-files-found: error
 
   publish:
