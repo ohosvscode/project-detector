@@ -58,25 +58,6 @@ describe.sequential('sample', (it) => {
 
   it.sequential('should find all products', () => {
     const project1Products = Product.findAll(project1Module1)
-    
-    // Debug: 输出找到的 products 信息
-    console.log(`\n=== Product Detection Debug ===`)
-    console.log(`Found ${project1Products.length} products`)
-    project1Products.forEach((p, i) => {
-      console.log(`  Product ${i}: directory=${p.getDirectoryName()}, target=${p.getTargetName()}`)
-      console.log(`             uri=${p.getUri()}`)
-    })
-    
-    // Debug: 输出 module 信息
-    if (typeof project1Module1.getUri === 'function') {
-      console.log(`Module URI: ${project1Module1.getUri()}`)
-    } else {
-      console.log(`Module build profile path: ${project1Module1.getBuildProfilePath()}`)
-    }
-    const buildProfile = project1Module1.getParsedBuildProfileContent()
-    console.log(`Targets in build profile:`, buildProfile.targets)
-    console.log(`=== End Debug ===\n`)
-    
     expect(project1Products.length).toBeGreaterThanOrEqual(2)
     project1Product1 = project1Products[0]
     project1Product2 = project1Products[1]
