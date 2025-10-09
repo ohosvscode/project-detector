@@ -1,4 +1,7 @@
-use crate::{product::Product, utils::utils_impl::{Qualifier, Utils}};
+use crate::{
+  product::Product,
+  utils::utils_impl::{Qualifier, Utils},
+};
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 use std::fs;

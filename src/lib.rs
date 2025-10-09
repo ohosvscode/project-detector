@@ -1,9 +1,9 @@
-pub mod project_detector;
-pub mod project;
-pub mod module;
-pub mod product;
-pub mod resource;
-pub mod resource_group;
 pub mod element_json_file;
 pub mod element_json_file_reference;
+pub mod module;
+pub mod product;
+pub mod project;
+pub mod project_detector;
+pub mod resource;
+pub mod resource_group;
 pub mod utils;

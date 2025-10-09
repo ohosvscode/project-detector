@@ -242,11 +242,10 @@ impl Utils {
     if part.contains('_') {
       // 语言相关 - 即使在 MCC_MNC 之后，也可以有语言部分
       // 只要还没到达 Orientation 之后的阶段
-      if *stage <= QualifierStage::Orientation
-        && Self::parse_language_region(part, result) {
-          *stage = QualifierStage::Orientation;
-          return Ok(());
-        }
+      if *stage <= QualifierStage::Orientation && Self::parse_language_region(part, result) {
+        *stage = QualifierStage::Orientation;
+        return Ok(());
+      }
       return Err(()); // Orientation 之后的阶段不应该有下划线
     }
 

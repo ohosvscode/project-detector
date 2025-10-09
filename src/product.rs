@@ -137,7 +137,7 @@ impl Product {
     };
 
     let src_directory_path = module_folder_path.join("src");
-    
+
     // 检查 src 目录是否存在
     if !src_directory_path.exists() || !src_directory_path.is_dir() {
       return products;
@@ -218,7 +218,9 @@ impl Product {
           let resource_path = product_path.join(Path::new(dir));
           let joined_path = current_dir.join(&resource_path);
           let cleaned_path = path_clean::clean(&joined_path.to_string_lossy());
-          if let Ok(url) = Url::parse(&cleaned_path) { resource_directories.push(url.to_string()) }
+          if let Ok(url) = Url::parse(&cleaned_path) {
+            resource_directories.push(url.to_string())
+          }
         }
       }
     }
