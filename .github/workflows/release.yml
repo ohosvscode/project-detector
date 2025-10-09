@@ -143,8 +143,8 @@ jobs:
 
       - name: Move binaries to root
         run: |
-          cp artifacts/x64/project-detector.x86_64-apple-darwin.node project-detector.darwin-x64.node
-          cp artifacts/arm64/project-detector.aarch64-apple-darwin.node project-detector.darwin-arm64.node
+          cp artifacts/x64/dist/project-detector.x86_64-apple-darwin.node project-detector.darwin-x64.node
+          cp artifacts/arm64/dist/project-detector.aarch64-apple-darwin.node project-detector.darwin-arm64.node
         shell: bash
 
       - name: Combine binaries
