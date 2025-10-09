@@ -1,1 +1,1 @@
-export * from '@napi-rs/package-template-pnpm-wasm32-wasi'
+export * from '@arkts/project-detector-wasm32-wasi'

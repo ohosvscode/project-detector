@@ -11,7 +11,7 @@ const __wasi = new __WASI({
   version: 'preview1',
 })
 
-const __wasmUrl = new URL('./package-template.wasm32-wasi.wasm', import.meta.url).href
+const __wasmUrl = new URL('./project-detector.wasm32-wasi.wasm', import.meta.url).href
 const __emnapiContext = __emnapiGetDefaultContext()
 
 
@@ -56,4 +56,14 @@ const {
   },
 })
 export default __napiModule.exports
-export const plus100 = __napiModule.exports.plus100
+export const ElementJsonFile = __napiModule.exports.ElementJsonFile
+export const ElementJsonFileNameReference = __napiModule.exports.ElementJsonFileNameReference
+export const Module = __napiModule.exports.Module
+export const Product = __napiModule.exports.Product
+export const Project = __napiModule.exports.Project
+export const ProjectDetector = __napiModule.exports.ProjectDetector
+export const Resource = __napiModule.exports.Resource
+export const ResourceGroup = __napiModule.exports.ResourceGroup
+export const Utils = __napiModule.exports.Utils
+export const QualifierType = __napiModule.exports.QualifierType
+export const ResourceQualifiedDirectoryType = __napiModule.exports.ResourceQualifiedDirectoryType

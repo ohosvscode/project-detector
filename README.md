@@ -1,20 +1,13 @@
-# `@napi-rs/package-template`
+# `@arkts/project-detector`
 
 ![https://github.com/napi-rs/package-template/actions](https://github.com/napi-rs/package-template/workflows/CI/badge.svg)
 
-> Template project for writing node packages with napi-rs.
+> Project Detector for detecting OpenHarmony/HarmonyOS projects.
 
-# Usage
-
-1. Click **Use this template**.
-2. **Clone** your project.
-3. Run `pnpm install` to install dependencies.
-4. Run `npx napi rename -n [name]` command under the project folder to rename your package.
-
-## Install this test package
+## Install this package
 
 ```
-pnpm add @napi-rs/package-template
+pnpm add @arkts/project-detector
 ```
 
 ## Usage
@@ -41,7 +34,7 @@ The other problem is how to deliver prebuild `binary` to users. Downloading it i
 
 In this package, we choose a better way to solve this problem. We release different `npm packages` for different platforms. And add it to `optionalDependencies` before releasing the `Major` package to npm.
 
-`NPM` will choose which native package should download from `registry` automatically. You can see [npm](./npm) dir for details. And you can also run `pnpm add @napi-rs/package-template` to see how it works.
+`NPM` will choose which native package should download from `registry` automatically. You can see [npm](./npm) dir for details. And you can also run `pnpm add @arkts/project-detector` to see how it works.
 
 ## Develop requirements
 

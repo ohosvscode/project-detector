@@ -32,16 +32,16 @@ const __sharedMemory = new WebAssembly.Memory({
   shared: true,
 })
 
-let __wasmFilePath = __nodePath.join(__dirname, 'package-template.wasm32-wasi.wasm')
-const __wasmDebugFilePath = __nodePath.join(__dirname, 'package-template.wasm32-wasi.debug.wasm')
+let __wasmFilePath = __nodePath.join(__dirname, 'project-detector.wasm32-wasi.wasm')
+const __wasmDebugFilePath = __nodePath.join(__dirname, 'project-detector.wasm32-wasi.debug.wasm')
 
 if (__nodeFs.existsSync(__wasmDebugFilePath)) {
   __wasmFilePath = __wasmDebugFilePath
 } else if (!__nodeFs.existsSync(__wasmFilePath)) {
   try {
-    __wasmFilePath = __nodePath.resolve('@napi-rs/package-template-pnpm-wasm32-wasi')
+    __wasmFilePath = __nodePath.resolve('@arkts/project-detector-wasm32-wasi')
   } catch {
-    throw new Error('Cannot find package-template.wasm32-wasi.wasm file, and @napi-rs/package-template-pnpm-wasm32-wasi package is not installed.')
+    throw new Error('Cannot find project-detector.wasm32-wasi.wasm file, and @arkts/project-detector-wasm32-wasi package is not installed.')
   }
 }
 
@@ -108,4 +108,14 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
   },
 })
 module.exports = __napiModule.exports
-module.exports.plus100 = __napiModule.exports.plus100
+module.exports.ElementJsonFile = __napiModule.exports.ElementJsonFile
+module.exports.ElementJsonFileNameReference = __napiModule.exports.ElementJsonFileNameReference
+module.exports.Module = __napiModule.exports.Module
+module.exports.Product = __napiModule.exports.Product
+module.exports.Project = __napiModule.exports.Project
+module.exports.ProjectDetector = __napiModule.exports.ProjectDetector
+module.exports.Resource = __napiModule.exports.Resource
+module.exports.ResourceGroup = __napiModule.exports.ResourceGroup
+module.exports.Utils = __napiModule.exports.Utils
+module.exports.QualifierType = __napiModule.exports.QualifierType
+module.exports.ResourceQualifiedDirectoryType = __napiModule.exports.ResourceQualifiedDirectoryType

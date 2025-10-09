@@ -1,17 +1,20 @@
 {
-  "name": "@napi-rs/package-template-pnpm",
+  "name": "@arkts/project-detector",
   "version": "1.1.1",
-  "description": "Template project for writing node package with napi-rs",
+  "description": "Project Detector for detecting OpenHarmony/HarmonyOS projects.",
   "main": "index.js",
   "types": "index.d.ts",
   "browser": "browser.js",
   "repository": {
-    "url": "git+ssh://git@github.com/napi-rs/package-template-pnpm.git",
+    "url": "git+ssh://git@github.com/ohosvscode/project-detector.git",
     "type": "git"
   },
   "license": "MIT",
   "keywords": [
-    "napi-rs",
+    "ohos",
+    "hvigor",
+    "ohosvscode",
+    "arkts",
     "NAPI",
     "N-API",
     "Rust",
@@ -24,7 +27,7 @@
     "browser.js"
   ],
   "napi": {
-    "binaryName": "package-template",
+    "binaryName": "project-detector",
     "targets": [
       "x86_64-apple-darwin",
       "aarch64-apple-darwin",
@@ -106,13 +109,6 @@
       "--import",
       "@oxc-node/core/register"
     ]
-  },
-  "prettier": {
-    "printWidth": 120,
-    "semi": false,
-    "trailingComma": "all",
-    "singleQuote": true,
-    "arrowParens": "always"
   },
   "packageManager": "pnpm@10.18.0"
 }
