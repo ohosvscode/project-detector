@@ -158,7 +158,8 @@ jobs:
           echo "CC_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/clang" >> $GITHUB_ENV
           echo "CXX_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/clang++" >> $GITHUB_ENV
           echo "AR_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/llvm-ar" >> $GITHUB_ENV
-          echo "CARGO_TARGET_WASM32_WASIP1_THREADS_LINKER=$PWD/wasi-sdk-21.0/bin/clang" >> $GITHUB_ENV
+          echo "CARGO_TARGET_WASM32_WASIP1_THREADS_LINKER=$PWD/wasi-sdk-21.0/bin/wasm-ld" >> $GITHUB_ENV
+          echo "CARGO_TARGET_WASM32_WASIP1_THREADS_RUSTFLAGS=-C link-arg=--sysroot=$PWD/wasi-sdk-21.0/share/wasi-sysroot" >> $GITHUB_ENV
         shell: bash
       - name: Build
         run: ${{ matrix.settings.build }}

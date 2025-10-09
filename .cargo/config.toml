@@ -8,5 +8,4 @@ rustflags = ["-C", "target-feature=+crt-static"]
 linker = "clang"
 rustflags = [
   "-C", "link-arg=--target=wasm32-wasip1-threads",
-  "-C", "link-arg=--sysroot=${WASI_SDK_PATH}/share/wasi-sysroot",
 ]
