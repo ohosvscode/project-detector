@@ -1,6 +1,6 @@
 # `@arkts/project-detector`
 
-![https://github.com/napi-rs/package-template/actions](https://github.com/napi-rs/package-template/workflows/CI/badge.svg)
+![https://github.com/napi-rs/project-detector/actions](https://github.com/napi-rs/project-detector/workflows/CI/badge.svg)
 
 > Project Detector for detecting OpenHarmony/HarmonyOS projects.
 
@@ -14,7 +14,7 @@ pnpm add @arkts/project-detector
 
 ### Build
 
-After `pnpm build` command, you can see `package-template.[darwin|win32|linux].node` file in project root. This is the native addon built from [lib.rs](./src/lib.rs).
+After `pnpm build` command, you can see `project-detector.[darwin|win32|linux].node` file in project root. This is the native addon built from [lib.rs](./src/lib.rs).
 
 ### Test
 

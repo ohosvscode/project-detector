@@ -1,7 +1,7 @@
 name: CI
 env:
   DEBUG: napi:*
-  APP_NAME: package-template
+  APP_NAME: project-detector
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
 permissions:
@@ -149,6 +149,17 @@ jobs:
           node-version: 22
           cache: pnpm
           architecture: x86
+      - name: Setup WASI SDK
+        if: matrix.settings.target == 'wasm32-wasip1-threads'
+        run: |
+          curl -L -o wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-21/wasi-sdk-21.0-linux.tar.gz
+          tar -xzf wasi-sdk.tar.gz
+          echo "WASI_SDK_PATH=$PWD/wasi-sdk-21.0" >> $GITHUB_ENV
+          echo "CC_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/clang" >> $GITHUB_ENV
+          echo "CXX_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/clang++" >> $GITHUB_ENV
+          echo "AR_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/llvm-ar" >> $GITHUB_ENV
+          echo "CARGO_TARGET_WASM32_WASIP1_THREADS_LINKER=$PWD/wasi-sdk-21.0/bin/clang" >> $GITHUB_ENV
+        shell: bash
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
