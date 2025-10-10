@@ -109,7 +109,17 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Install
+      - name: Install Rust (Windows)
+        if: ${{ contains(matrix.settings.host, 'windows') }}
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.settings.target }}
+          override: true
+          components: rustfmt, clippy
+      
+      - name: Install Rust (Non-Windows)
+        if: ${{ !contains(matrix.settings.host, 'windows') }}
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
