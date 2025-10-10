@@ -116,7 +116,6 @@ jobs:
           .\rustup-init.exe -y --default-toolchain stable --default-host ${{ matrix.settings.target }}
           $env:PATH += ";$env:USERPROFILE\.cargo\bin"
           & "$env:USERPROFILE\.cargo\bin\rustup.exe" component add rustfmt clippy
-        shell: pwsh
       
       - name: Install Rust (Non-Windows)
         if: ${{ !contains(matrix.settings.host, 'windows') }}
