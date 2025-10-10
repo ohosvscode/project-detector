@@ -109,11 +109,60 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Setup MSVC (Windows)
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Clear pnpm cache (if needed)
+        run: |
+          # Clear pnpm cache if it's corrupted or causing issues
+          pnpm store prune || true
+          pnpm config set store-dir ~/.pnpm-store
+        continue-on-error: true
+      - name: Setup MSVC Environment (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
-        uses: microsoft/setup-msbuild@v1.3
-        with:
-          vs-version: '[17.0,18.0)'
+        run: |
+          # Find and setup Visual Studio environment
+          echo "Looking for Visual Studio installation..."
+          
+          # Try different Visual Studio paths
+          VS_PATHS=(
+            "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"
+            "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"
+            "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
+            "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
+            "C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat"
+            "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvarsall.bat"
+          )
+          
+          VS_FOUND=false
+          for vs_path in "${VS_PATHS[@]}"; do
+            if [ -f "$vs_path" ]; then
+              echo "Found Visual Studio at: $vs_path"
+              echo "Setting up environment..."
+              # Call vcvarsall.bat and capture environment variables
+              cmd //c "\"$vs_path\" x64 && set" > vs_env.txt
+              # Extract important environment variables
+              grep -E "^(VCINSTALLDIR|VCToolsVersion|PATH|INCLUDE|LIB)=" vs_env.txt >> $env:GITHUB_ENV
+              VS_FOUND=true
+              break
+            fi
+          done
+          
+          if [ "$VS_FOUND" = false ]; then
+            echo "Visual Studio not found in standard locations"
+            echo "Trying to find vcvarsall.bat using where command..."
+            VS_PATH=$(where vcvarsall.bat 2>nul)
+            if [ -n "$VS_PATH" ]; then
+              echo "Found vcvarsall.bat at: $VS_PATH"
+              cmd //c "\"$VS_PATH\" x64 && set" > vs_env.txt
+              grep -E "^(VCINSTALLDIR|VCToolsVersion|PATH|INCLUDE|LIB)=" vs_env.txt >> $env:GITHUB_ENV
+            else
+              echo "Error: Visual Studio Build Tools not found"
+              echo "Please install Visual Studio Build Tools with C++ workload"
+              exit 1
+            fi
+          fi
+          
+          echo "Visual Studio environment setup completed"
+        shell: bash
       
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
