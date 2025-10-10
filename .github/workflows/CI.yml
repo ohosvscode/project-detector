@@ -152,9 +152,11 @@ jobs:
           if [[ "${{ matrix.settings.target }}" == "aarch64-linux-android" ]]; then
             echo "CC_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> $GITHUB_ENV
             echo "CXX_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" >> $GITHUB_ENV
+            echo "AR_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
           elif [[ "${{ matrix.settings.target }}" == "armv7-linux-androideabi" ]]; then
             echo "CC_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang" >> $GITHUB_ENV
             echo "CXX_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang++" >> $GITHUB_ENV
+            echo "AR_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
           fi
       
       - uses: mlugg/setup-zig@v2
@@ -181,7 +183,13 @@ jobs:
           node-version: 22
           cache: pnpm
           architecture: x86
-      - name: Build
+      - name: Build (Windows)
+        if: ${{ contains(matrix.settings.host, 'windows') }}
+        run: ${{ matrix.settings.build }}
+        shell: cmd
+      
+      - name: Build (Non-Windows)
+        if: ${{ !contains(matrix.settings.host, 'windows') }}
         run: ${{ matrix.settings.build }}
         shell: bash
       - name: Upload artifact
