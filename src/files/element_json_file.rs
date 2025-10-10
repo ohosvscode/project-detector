@@ -113,8 +113,9 @@ impl ElementJsonFile {
               }
             }
 
-            if let (Some(name_start), Some(name_end), Some(name_text), Some(value_start), Some(value_end), Some(value_text)) = 
-              (name_start, name_end, name_text, value_start, value_end, value_text) {
+            if let (Some(name_start), Some(name_end), Some(name_text), Some(value_start), Some(value_end), Some(value_text)) =
+              (name_start, name_end, name_text, value_start, value_end, value_text)
+            {
               reference.push(ElementJsonFileReference::new(
                 name_start as u32,
                 name_end as u32,

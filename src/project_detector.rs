@@ -1,7 +1,7 @@
+use crate::utils::uri::Uri;
 #[cfg(not(test))]
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
-use crate::utils::uri::Uri;
 
 #[napi]
 pub struct ProjectDetector {
