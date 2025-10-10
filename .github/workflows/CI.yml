@@ -195,7 +195,9 @@ jobs:
       
       - name: Build (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
-        run: ${{ matrix.settings.build }}
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+          ${{ matrix.settings.build }}
         shell: cmd
       
       - name: Build (Non-Windows)
@@ -224,7 +226,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build FreeBSD with Docker
         run: |
-          docker run --rm \
+          sudo docker run --rm \
             -v $PWD:/workspace \
             -w /workspace \
             --memory=2g \
