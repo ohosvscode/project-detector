@@ -141,6 +141,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libssl-dev pkg-config
       
+      - name: Install Android NDK
+        if: ${{ contains(matrix.settings.target, 'android') }}
+        run: |
+          wget https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
+          unzip android-ndk-r25c-linux.zip
+          echo "ANDROID_NDK_ROOT=$PWD/android-ndk-r25c" >> $GITHUB_ENV
+          echo "$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+          # Set up environment variables for Android targets
+          if [[ "${{ matrix.settings.target }}" == "aarch64-linux-android" ]]; then
+            echo "CC_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> $GITHUB_ENV
+            echo "CXX_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" >> $GITHUB_ENV
+          elif [[ "${{ matrix.settings.target }}" == "armv7-linux-androideabi" ]]; then
+            echo "CC_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang" >> $GITHUB_ENV
+            echo "CXX_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang++" >> $GITHUB_ENV
+          fi
+      
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
