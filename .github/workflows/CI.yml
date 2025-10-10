@@ -116,6 +116,7 @@ jobs:
           .\rustup-init.exe -y --default-toolchain stable --default-host ${{ matrix.settings.target }}
           echo "%USERPROFILE%\.cargo\bin" >> $env:GITHUB_PATH
           "%USERPROFILE%\.cargo\bin\rustup.exe" component add rustfmt clippy
+          echo "CARGO_PATH=%USERPROFILE%\.cargo\bin" >> $env:GITHUB_ENV
         shell: cmd
       
       - name: Install Rust (Non-Windows)
@@ -183,6 +184,15 @@ jobs:
           node-version: 22
           cache: pnpm
           architecture: x86
+      - name: Verify Rust Installation (Windows)
+        if: ${{ contains(matrix.settings.host, 'windows') }}
+        run: |
+          echo "PATH: %PATH%"
+          echo "CARGO_PATH: %CARGO_PATH%"
+          "%USERPROFILE%\.cargo\bin\cargo.exe" --version
+          "%USERPROFILE%\.cargo\bin\rustc.exe" --version
+        shell: cmd
+      
       - name: Build (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: ${{ matrix.settings.build }}
@@ -212,44 +222,35 @@ jobs:
     name: Build FreeBSD
     steps:
       - uses: actions/checkout@v5
-      - name: Build
-        id: build
-        uses: cross-platform-actions/action@v0.29.0
-        env:
-          DEBUG: napi:*
-          RUSTUP_IO_THREADS: 1
-        with:
-          operating_system: freebsd
-          version: '13.4'
-          memory: 2G
-          cpu_count: 1
-          environment_variables: 'DEBUG RUSTUP_IO_THREADS'
-          shell: bash
-          sync_files: false
-          shutdown_vm: true
-          run: |
-            sudo pkg install -y -f curl node libnghttp2 npm
-            sudo npm install -g corepack
-            curl https://sh.rustup.rs -sSf --output rustup.sh
-            sh rustup.sh -y --profile minimal --default-toolchain stable
-            corepack prepare
-            corepack enable
-            source "$HOME/.cargo/env"
-            echo "~~~~ rustc --version ~~~~"
-            rustc --version
-            echo "~~~~ node -v ~~~~"
-            node -v
-            echo "~~~~ pnpm --version ~~~~"
-            pnpm --version
-            pwd
-            ls -lah
-            whoami
-            env
-            freebsd-version
-            pnpm install
-            pnpm build
-            rm -rf node_modules
-            rm -rf target
+      - name: Build FreeBSD with Docker
+        run: |
+          docker run --rm \
+            -v $PWD:/workspace \
+            -w /workspace \
+            --memory=2g \
+            --cpus=1 \
+            freebsd:13.4 \
+            bash -c "
+              pkg install -y node npm curl
+              npm install -g pnpm
+              curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
+              source ~/.cargo/env
+              echo '~~~~ rustc --version ~~~~'
+              rustc --version
+              echo '~~~~ node -v ~~~~'
+              node -v
+              echo '~~~~ pnpm --version ~~~~'
+              pnpm --version
+              pwd
+              ls -lah
+              whoami
+              env
+              freebsd-version
+              pnpm install
+              pnpm build
+              rm -rf node_modules
+              rm -rf target
+            "
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
