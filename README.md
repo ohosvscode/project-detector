@@ -1,10 +1,17 @@
 # `@arkts/project-detector`
 
-![https://github.com/napi-rs/project-detector/actions](https://github.com/napi-rs/project-detector/workflows/CI/badge.svg)
+![https://github.com/ohosvscode/project-detector/actions](https://github.com/ohosvscode/project-detector/workflows/CI/badge.svg)
 
-> Project Detector for detecting OpenHarmony/HarmonyOS projects.
+> Project detector for OpenHarmony/HarmonyOS project, written in Rust.
 
-## Install this package
+# Usage
+
+1. Click **Use this template**.
+2. **Clone** your project.
+3. Run `pnpm install` to install dependencies.
+4. Run `npx napi rename -n [name]` command under the project folder to rename your package.
+
+## Install this test package
 
 ```
 pnpm add @arkts/project-detector

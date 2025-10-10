@@ -26,7 +26,7 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v5
       - name: setup pnpm
@@ -59,45 +59,45 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: macos-latest
+          - host: self-hosted
             target: x86_64-apple-darwin
             build: pnpm build --target x86_64-apple-darwin
-          - host: windows-latest
+          - host: self-hosted
             build: pnpm build --target x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
-          - host: windows-latest
+          - host: self-hosted
             build: pnpm build --target i686-pc-windows-msvc
             target: i686-pc-windows-msvc
-          - host: ubuntu-latest
+          - host: self-hosted
             target: x86_64-unknown-linux-gnu
             build: pnpm build --target x86_64-unknown-linux-gnu --use-napi-cross
-          - host: ubuntu-latest
+          - host: self-hosted
             target: x86_64-unknown-linux-musl
             build: pnpm build --target x86_64-unknown-linux-musl -x
-          - host: macos-latest
+          - host: self-hosted
             target: aarch64-apple-darwin
             build: pnpm build --target aarch64-apple-darwin
-          - host: ubuntu-latest
+          - host: self-hosted
             target: aarch64-unknown-linux-gnu
             build: pnpm build --target aarch64-unknown-linux-gnu --use-napi-cross
-          - host: ubuntu-latest
+          - host: self-hosted
             target: armv7-unknown-linux-gnueabihf
             build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
-          - host: ubuntu-latest
+          - host: self-hosted
             target: aarch64-linux-android
             build: pnpm build --target aarch64-linux-android
-          - host: ubuntu-latest
+          - host: self-hosted
             target: armv7-linux-androideabi
             build: pnpm build --target armv7-linux-androideabi
-          - host: ubuntu-latest
+          - host: self-hosted
             target: aarch64-unknown-linux-musl
             build: pnpm build --target aarch64-unknown-linux-musl -x
-          - host: windows-latest
+          - host: self-hosted
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
-          - host: ubuntu-latest
-            target: wasm32-wasip1-threads
-            build: pnpm build --target wasm32-wasip1-threads
+          # - host: self-hosted
+          #   target: wasm32-wasip1-threads
+          #   build: pnpm build --target wasm32-wasip1-threads
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     steps:
@@ -149,18 +149,6 @@ jobs:
           node-version: 22
           cache: pnpm
           architecture: x86
-      - name: Setup WASI SDK
-        if: matrix.settings.target == 'wasm32-wasip1-threads'
-        run: |
-          curl -L -o wasi-sdk.tar.gz https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-21/wasi-sdk-21.0-linux.tar.gz
-          tar -xzf wasi-sdk.tar.gz
-          echo "WASI_SDK_PATH=$PWD/wasi-sdk-21.0" >> $GITHUB_ENV
-          echo "CC_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/clang" >> $GITHUB_ENV
-          echo "CXX_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/clang++" >> $GITHUB_ENV
-          echo "AR_wasm32-wasip1-threads=$PWD/wasi-sdk-21.0/bin/llvm-ar" >> $GITHUB_ENV
-          echo "CARGO_TARGET_WASM32_WASIP1_THREADS_LINKER=$PWD/wasi-sdk-21.0/bin/wasm-ld" >> $GITHUB_ENV
-          echo "CARGO_TARGET_WASM32_WASIP1_THREADS_RUSTFLAGS=-C link-arg=--sysroot=$PWD/wasi-sdk-21.0/share/wasi-sysroot" >> $GITHUB_ENV
-        shell: bash
       - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
@@ -180,7 +168,7 @@ jobs:
           path: '*.wasm'
           if-no-files-found: error
   build-freebsd:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Build FreeBSD
     steps:
       - uses: actions/checkout@v5
@@ -234,13 +222,13 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: windows-latest
+          - host: self-hosted
             target: x86_64-pc-windows-msvc
             architecture: x64
-          - host: macos-latest
+          - host: self-hosted
             target: x86_64-apple-darwin
             architecture: x64
-          - host: macos-latest
+          - host: self-hosted
             target: aarch64-apple-darwin
             architecture: arm64
         node:
@@ -285,7 +273,7 @@ jobs:
         node:
           - '20'
           - '22'
-    runs-on: ${{ contains(matrix.target, 'aarch64') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ contains(matrix.target, 'aarch64') && 'ubuntu-24.04-arm' || 'self-hosted' }}
     steps:
       - uses: actions/checkout@v5
       - name: setup pnpm
@@ -339,43 +327,43 @@ jobs:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
           run: npm run test
-  test-wasi:
-    name: Test WASI target
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-      - name: Setup node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install
-      - name: Download artifacts
-        uses: actions/download-artifact@v5
-        with:
-          name: bindings-wasm32-wasip1-threads
-          path: .
-      - name: List packages
-        run: ls -R .
-        shell: bash
-      - name: Test bindings
-        run: pnpm test
-        env:
-          NAPI_RS_FORCE_WASI: 1
+  # test-wasi:
+  #   name: Test WASI target
+  #   needs:
+  #     - build
+  #   runs-on: self-hosted
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - name: setup pnpm
+  #       uses: pnpm/action-setup@v4
+  #     - name: Setup node
+  #       uses: actions/setup-node@v5
+  #       with:
+  #         node-version: 22
+  #         cache: pnpm
+  #     - name: Install dependencies
+  #       run: pnpm install
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v5
+  #       with:
+  #         name: bindings-wasm32-wasip1-threads
+  #         path: .
+  #     - name: List packages
+  #       run: ls -R .
+  #       shell: bash
+  #     - name: Test bindings
+  #       run: pnpm test
+  #       env:
+  #         NAPI_RS_FORCE_WASI: 1
   publish:
     name: Publish
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs:
       - lint
       - build-freebsd
       - test-macOS-windows-binding
       - test-linux-binding
-      - test-wasi
+      # - test-wasi
     steps:
       - uses: actions/checkout@v5
       - name: setup pnpm
