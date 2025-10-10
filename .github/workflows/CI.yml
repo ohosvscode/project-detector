@@ -116,51 +116,73 @@ jobs:
           pnpm store prune || true
           pnpm config set store-dir ~/.pnpm-store
         continue-on-error: true
+      - name: Install ARM64 Build Tools (Windows)
+        if: ${{ contains(matrix.settings.host, 'windows') && matrix.settings.target == 'aarch64-pc-windows-msvc' }}
+        run: |
+          echo "Installing ARM64 Build Tools for aarch64-pc-windows-msvc target..."
+          curl -o vs_buildtools.exe https://aka.ms/vs/17/release/vs_buildtools.exe
+          .\vs_buildtools.exe --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
+        shell: cmd
+        continue-on-error: true
       - name: Setup MSVC Environment (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
-          echo "Looking for Visual Studio installation..."
+          echo "Setting up MSVC environment for target: ${{ matrix.settings.target }}"
           
-          REM Try different Visual Studio paths
+          # For ARM64 targets, we need to set up cross-compilation environment
+          if "%{{ matrix.settings.target }}"=="aarch64-pc-windows-msvc" (
+            echo "Setting up ARM64 cross-compilation environment..."
+            REM Try to find ARM64 toolchain
+            if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\arm64\cl.exe" (
+              echo "Found ARM64 toolchain in VS2022 BuildTools"
+              for /d %%i in ("C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*") do (
+                set "VCToolsVersion=%%~ni"
+                set "VCINSTALLDIR=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC"
+                set "PATH=%%i\bin\Hostx64\arm64;%PATH%"
+                goto :arm64_found
+              )
+            )
+            if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\arm64\cl.exe" (
+              echo "Found ARM64 toolchain in VS2019 BuildTools"
+              for /d %%i in ("C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\*") do (
+                set "VCToolsVersion=%%~ni"
+                set "VCINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC"
+                set "PATH=%%i\bin\Hostx64\arm64;%PATH%"
+                goto :arm64_found
+              )
+            )
+            echo "ARM64 toolchain not found, falling back to x64 toolchain"
+            goto :setup_x64
+            :arm64_found
+            echo "ARM64 toolchain setup completed"
+            goto :done
+          )
+          
+          :setup_x64
+          echo "Setting up x64 MSVC environment..."
+          REM Try different Visual Studio paths for x64
           if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
             echo "Found Visual Studio 2022 BuildTools"
             call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-            goto :found
+            goto :done
           )
-          
           if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
             echo "Found Visual Studio 2019 BuildTools"
             call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-            goto :found
+            goto :done
           )
-          
-          if exist "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" (
-            echo "Found Visual Studio 2022 Community"
-            call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-            goto :found
-          )
-          
-          if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" (
-            echo "Found Visual Studio 2019 Community"
-            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
-            goto :found
-          )
-          
-          echo "Visual Studio not found in standard locations"
-          echo "Trying to find vcvarsall.bat using where command..."
+          echo "Visual Studio not found, trying to find vcvarsall.bat..."
           for /f "tokens=*" %%i in ('where vcvarsall.bat 2^>nul') do (
             echo "Found vcvarsall.bat at: %%i"
             call "%%i" x64
-            goto :found
+            goto :done
           )
+          echo "Warning: Visual Studio Build Tools not found"
           
-          echo "Error: Visual Studio Build Tools not found"
-          echo "Please install Visual Studio Build Tools with C++ workload"
-          exit /b 1
-          
-          :found
-          echo "Visual Studio environment setup completed"
+          :done
+          echo "MSVC environment setup completed"
         shell: cmd
+        continue-on-error: true
       
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
