@@ -112,14 +112,13 @@ jobs:
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
-          # Detect Windows architecture
-          if "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
-            curl -o rustup-init.exe https://win.rustup.rs/x86_64
-          ) else (
-            curl -o rustup-init.exe https://win.rustup.rs/i686
-          )
-          .\rustup-init.exe -y --default-toolchain stable --default-host ${{ matrix.settings.target }}
+          echo "PROCESSOR_ARCHITECTURE: %PROCESSOR_ARCHITECTURE%"
+          echo "PROCESSOR_ARCHITEW6432: %PROCESSOR_ARCHITEW6432%"
+          # Always use x86_64 version for Windows runners
+          curl -o rustup-init.exe https://win.rustup.rs/x86_64
+          .\rustup-init.exe -y --default-toolchain stable --default-host x86_64-pc-windows-msvc
           echo "%USERPROFILE%\.cargo\bin" >> $env:GITHUB_PATH
+          "%USERPROFILE%\.cargo\bin\rustup.exe" target add ${{ matrix.settings.target }}
           "%USERPROFILE%\.cargo\bin\rustup.exe" component add rustfmt clippy
           echo "CARGO_PATH=%USERPROFILE%\.cargo\bin" >> $env:GITHUB_ENV
         shell: cmd
@@ -159,10 +158,14 @@ jobs:
             echo "CC_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> $GITHUB_ENV
             echo "CXX_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang++" >> $GITHUB_ENV
             echo "AR_aarch64_linux_android=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
+            echo "TARGET_CC=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang" >> $GITHUB_ENV
+            echo "TARGET_AR=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
           elif [[ "${{ matrix.settings.target }}" == "armv7-linux-androideabi" ]]; then
             echo "CC_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang" >> $GITHUB_ENV
             echo "CXX_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang++" >> $GITHUB_ENV
             echo "AR_armv7_linux_androideabi=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
+            echo "TARGET_CC=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang" >> $GITHUB_ENV
+            echo "TARGET_AR=$PWD/android-ndk-r25c/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
           fi
       
       - uses: mlugg/setup-zig@v2
