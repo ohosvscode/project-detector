@@ -112,10 +112,10 @@ jobs:
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
-          Invoke-WebRequest -Uri "https://win.rustup.rs/x86_64" -OutFile "rustup-init.exe"
+          curl -o rustup-init.exe https://win.rustup.rs/x86_64
           .\rustup-init.exe -y --default-toolchain stable --default-host ${{ matrix.settings.target }}
-          $env:PATH += ";$env:USERPROFILE\.cargo\bin"
-          & "$env:USERPROFILE\.cargo\bin\rustup.exe" component add rustfmt clippy
+          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+          "%USERPROFILE%\.cargo\bin\rustup.exe" component add rustfmt clippy
       
       - name: Install Rust (Non-Windows)
         if: ${{ !contains(matrix.settings.host, 'windows') }}
@@ -134,6 +134,12 @@ jobs:
             .cargo-cache
             target/
           key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
+      - name: Install build tools (Linux)
+        if: ${{ contains(matrix.settings.host, 'linux') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev pkg-config
+      
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
