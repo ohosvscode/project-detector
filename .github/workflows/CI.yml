@@ -111,12 +111,12 @@ jobs:
           cache: pnpm
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.settings.target }}
-          override: true
-          components: rustfmt, clippy
+        run: |
+          Invoke-WebRequest -Uri "https://win.rustup.rs/x86_64" -OutFile "rustup-init.exe"
+          .\rustup-init.exe -y --default-toolchain stable --default-host ${{ matrix.settings.target }}
+          $env:PATH += ";$env:USERPROFILE\.cargo\bin"
+          & "$env:USERPROFILE\.cargo\bin\rustup.exe" component add rustfmt clippy
+        shell: pwsh
       
       - name: Install Rust (Non-Windows)
         if: ${{ !contains(matrix.settings.host, 'windows') }}
