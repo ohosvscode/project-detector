@@ -219,46 +219,46 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: '*.wasm'
           if-no-files-found: error
-  build-freebsd:
-    runs-on: [self-hosted, linux]
-    name: Build FreeBSD
-    steps:
-      - uses: actions/checkout@v5
-      - name: Build FreeBSD with Docker
-        run: |
-          sudo docker run --rm \
-            -v $PWD:/workspace \
-            -w /workspace \
-            --memory=2g \
-            --cpus=1 \
-            freebsd:13.4 \
-            bash -c "
-              pkg install -y node npm curl
-              npm install -g pnpm
-              curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
-              source ~/.cargo/env
-              echo '~~~~ rustc --version ~~~~'
-              rustc --version
-              echo '~~~~ node -v ~~~~'
-              node -v
-              echo '~~~~ pnpm --version ~~~~'
-              pnpm --version
-              pwd
-              ls -lah
-              whoami
-              env
-              freebsd-version
-              pnpm install
-              pnpm build
-              rm -rf node_modules
-              rm -rf target
-            "
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bindings-freebsd
-          path: ${{ env.APP_NAME }}.*.node
-          if-no-files-found: error
+  # build-freebsd:
+  #   runs-on: [self-hosted, linux]
+  #   name: Build FreeBSD
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #     - name: Build FreeBSD with Docker
+  #       run: |
+  #         sudo docker run --rm \
+  #           -v $PWD:/workspace \
+  #           -w /workspace \
+  #           --memory=2g \
+  #           --cpus=1 \
+  #           freebsd/freebsd:13.4 \
+  #           bash -c "
+  #             pkg install -y node npm curl
+  #             npm install -g pnpm
+  #             curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain stable
+  #             source ~/.cargo/env
+  #             echo '~~~~ rustc --version ~~~~'
+  #             rustc --version
+  #             echo '~~~~ node -v ~~~~'
+  #             node -v
+  #             echo '~~~~ pnpm --version ~~~~'
+  #             pnpm --version
+  #             pwd
+  #             ls -lah
+  #             whoami
+  #             env
+  #             freebsd-version
+  #             pnpm install
+  #             pnpm build
+  #             rm -rf node_modules
+  #             rm -rf target
+  #           "
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: bindings-freebsd
+  #         path: ${{ env.APP_NAME }}.*.node
+  #         if-no-files-found: error
   test-macOS-windows-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs:
@@ -405,7 +405,7 @@ jobs:
     runs-on: self-hosted
     needs:
       - lint
-      - build-freebsd
+      # - build-freebsd
       - test-macOS-windows-binding
       - test-linux-binding
       # - test-wasi
