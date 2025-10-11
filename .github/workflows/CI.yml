@@ -56,10 +56,10 @@ jobs:
           - host: [self-hosted, macos]
             target: x86_64-apple-darwin
             build: pnpm build --target x86_64-apple-darwin
-          - host: [self-hosted, windows, X64]
+          - host: [self-hosted, windows, x64]
             build: pnpm build --target x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
-          - host: [self-hosted, windows, X64]
+          - host: [self-hosted, windows, x64]
             build: pnpm build --target i686-pc-windows-msvc
             target: i686-pc-windows-msvc
           - host: [self-hosted, linux]
@@ -80,7 +80,7 @@ jobs:
           - host: [self-hosted, linux]
             target: aarch64-unknown-linux-musl
             build: pnpm build --target aarch64-unknown-linux-musl -x
-          - host: [self-hosted, windows, ARM64]
+          - host: [self-hosted, windows, ARM]
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@20
