@@ -109,7 +109,7 @@ jobs:
           node-version: 22
       
       - name: Verify ARM64 Environment (Windows ARM64)
-        if: ${{ contains(matrix.settings.host, 'windows-arm64') }}
+        if: ${{ contains(matrix.settings.host, 'ARM') }}
         run: |
           echo "Verifying ARM64 native environment..."
           echo "Architecture: %PROCESSOR_ARCHITECTURE%"
@@ -147,30 +147,34 @@ jobs:
         continue-on-error: true
       
       - name: Setup MSVC Environment (Windows ARM64)
-        if: ${{ contains(matrix.settings.host, 'windows-arm64') }}
+        if: ${{ contains(matrix.settings.host, 'ARM') }}
         run: |
           echo "Setting up MSVC environment for ARM64 Windows..."
           REM Try different Visual Studio paths for ARM64
           if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
             echo "Found Visual Studio 2022 BuildTools"
-            call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
+            call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
             goto :done
           )
           if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
             echo "Found Visual Studio 2019 BuildTools"
-            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
+            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
             goto :done
           )
           echo "Visual Studio not found, trying to find vcvarsall.bat..."
           for /f "tokens=*" %%i in ('where vcvarsall.bat 2^>nul') do (
             echo "Found vcvarsall.bat at: %%i"
-            call "%%i" arm64
+            call "%%i" amd64_arm64
             goto :done
           )
           echo "Warning: Visual Studio Build Tools not found"
           
           :done
           echo "MSVC environment setup completed"
+          echo "VCINSTALLDIR: %VCINSTALLDIR%"
+          echo "INCLUDE: %INCLUDE%"
+          echo "LIB: %LIB%"
+          echo "PATH: %PATH%"
         shell: cmd
         continue-on-error: true
       
@@ -189,7 +193,7 @@ jobs:
         shell: cmd
       
       - name: Install Rust (Windows ARM64)
-        if: ${{ contains(matrix.settings.host, 'windows-arm64') }}
+        if: ${{ contains(matrix.settings.host, 'ARM') }}
         run: |
           echo "PROCESSOR_ARCHITECTURE: %PROCESSOR_ARCHITECTURE%"
           echo "PROCESSOR_ARCHITEW6432: %PROCESSOR_ARCHITEW6432%"
@@ -197,8 +201,37 @@ jobs:
           curl -o rustup-init.exe https://win.rustup.rs/aarch64
           .\rustup-init.exe -y --default-toolchain stable --default-host aarch64-pc-windows-msvc
           echo "%USERPROFILE%\.cargo\bin" >> $env:GITHUB_PATH
+          "%USERPROFILE%\.cargo\bin\rustup.exe" target add aarch64-pc-windows-msvc
           "%USERPROFILE%\.cargo\bin\rustup.exe" component add rustfmt clippy
           echo "CARGO_PATH=%USERPROFILE%\.cargo\bin" >> $env:GITHUB_ENV
+        shell: cmd
+      
+      - name: Setup C Compiler Environment (Windows ARM64)
+        if: ${{ contains(matrix.settings.host, 'ARM') }}
+        run: |
+          echo "Setting up C compiler environment for Windows ARM64..."
+          REM Set up environment variables for C compilation
+          set "CC_aarch64_pc_windows_msvc=cl.exe"
+          set "CXX_aarch64_pc_windows_msvc=cl.exe"
+          set "AR_aarch64_pc_windows_msvc=lib.exe"
+          set "TARGET_CC=cl.exe"
+          set "TARGET_AR=lib.exe"
+          
+          REM Set up include paths for C standard library
+          set "INCLUDE=%VCINSTALLDIR%Include;%VCINSTALLDIR%Include\ucrt;%VCINSTALLDIR%Include\shared;%VCINSTALLDIR%Include\um;%VCINSTALLDIR%Include\winrt"
+          set "LIB=%VCINSTALLDIR%Lib\ARM64;%VCINSTALLDIR%Lib\ARM64\ucrt;%VCINSTALLDIR%Lib\ARM64\um"
+          
+          echo "CC_aarch64_pc_windows_msvc=%CC_aarch64_pc_windows_msvc%" >> $env:GITHUB_ENV
+          echo "CXX_aarch64_pc_windows_msvc=%CXX_aarch64_pc_windows_msvc%" >> $env:GITHUB_ENV
+          echo "AR_aarch64_pc_windows_msvc=%AR_aarch64_pc_windows_msvc%" >> $env:GITHUB_ENV
+          echo "TARGET_CC=%TARGET_CC%" >> $env:GITHUB_ENV
+          echo "TARGET_AR=%TARGET_AR%" >> $env:GITHUB_ENV
+          echo "INCLUDE=%INCLUDE%" >> $env:GITHUB_ENV
+          echo "LIB=%LIB%" >> $env:GITHUB_ENV
+          
+          echo "C compiler environment setup completed"
+          echo "INCLUDE: %INCLUDE%"
+          echo "LIB: %LIB%"
         shell: cmd
       
       - name: Install Rust (Non-Windows)
@@ -219,16 +252,26 @@ jobs:
       #       target/
       #     key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
       
-      - name: Install Android NDK
+      - name: Setup Android NDK Environment
         if: ${{ contains(matrix.settings.target, 'android') }}
         run: |
-          echo "Installing Android NDK..."
-          # Download and install Android NDK
-          wget https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
-          unzip android-ndk-r25c-linux.zip
-          NDK_ROOT="$PWD/android-ndk-r25c"
-          echo "ANDROID_NDK_ROOT=$NDK_ROOT" >> $GITHUB_ENV
-          echo "$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+          echo "Setting up Android NDK environment using local installation..."
+          
+          # Check if NDK_ROOT is set
+          if [ -z "$NDK_ROOT" ]; then
+            echo "❌ NDK_ROOT environment variable is not set"
+            echo "Please set NDK_ROOT in your .bashrc or runner environment"
+            exit 1
+          fi
+          
+          # Check if NDK directory exists
+          if [ ! -d "$NDK_ROOT" ]; then
+            echo "❌ NDK directory not found: $NDK_ROOT"
+            echo "Please check your NDK installation path"
+            exit 1
+          fi
+          
+          echo "✅ Using local NDK: $NDK_ROOT"
           
           # Set up environment variables for Android targets
           if [[ "${{ matrix.settings.target }}" == "aarch64-linux-android" ]]; then
@@ -252,6 +295,7 @@ jobs:
           # Debug: Print environment variables
           echo "=== Environment Variables Debug ==="
           echo "Target: ${{ matrix.settings.target }}"
+          echo "NDK_ROOT: $NDK_ROOT"
           echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
           echo "TARGET_CC: $TARGET_CC"
           echo "TARGET_AR: $TARGET_AR"
@@ -295,6 +339,30 @@ jobs:
           echo "CARGO_PATH: %CARGO_PATH%"
           "%USERPROFILE%\.cargo\bin\cargo.exe" --version
           "%USERPROFILE%\.cargo\bin\rustc.exe" --version
+        shell: cmd
+      
+      - name: Verify Windows ARM64 Environment
+        if: ${{ contains(matrix.settings.host, 'ARM') }}
+        run: |
+          echo "=== Windows ARM64 Environment Verification ==="
+          echo "Target: ${{ matrix.settings.target }}"
+          echo "CC_aarch64_pc_windows_msvc: %CC_aarch64_pc_windows_msvc%"
+          echo "CXX_aarch64_pc_windows_msvc: %CXX_aarch64_pc_windows_msvc%"
+          echo "AR_aarch64_pc_windows_msvc: %AR_aarch64_pc_windows_msvc%"
+          echo "TARGET_CC: %TARGET_CC%"
+          echo "TARGET_AR: %TARGET_AR%"
+          echo "INCLUDE: %INCLUDE%"
+          echo "LIB: %LIB%"
+          echo "VCINSTALLDIR: %VCINSTALLDIR%"
+          echo "=== Checking stdbool.h ==="
+          if exist "%VCINSTALLDIR%Include\stdbool.h" (
+            echo "stdbool.h found at: %VCINSTALLDIR%Include\stdbool.h"
+          ) else (
+            echo "stdbool.h NOT FOUND in %VCINSTALLDIR%Include\"
+            echo "Searching for stdbool.h..."
+            dir /s /b "%VCINSTALLDIR%" | findstr /i stdbool.h
+          )
+          echo "=== End Verification ==="
         shell: cmd
       
       - name: Verify Android Environment (Android targets)
@@ -343,10 +411,75 @@ jobs:
           CC_aarch64_linux_android: ${{ env.CC_aarch64_linux_android }}
           CXX_aarch64_linux_android: ${{ env.CXX_aarch64_linux_android }}
           AR_aarch64_linux_android: ${{ env.AR_aarch64_linux_android }}
+          CC_aarch64_pc_windows_msvc: ${{ env.CC_aarch64_pc_windows_msvc }}
+          CXX_aarch64_pc_windows_msvc: ${{ env.CXX_aarch64_pc_windows_msvc }}
+          AR_aarch64_pc_windows_msvc: ${{ env.AR_aarch64_pc_windows_msvc }}
+          INCLUDE: ${{ env.INCLUDE }}
+          LIB: ${{ env.LIB }}
       
-      - name: Build (Non-Windows)
-        if: ${{ !contains(matrix.settings.host, 'windows') }}
-        run: ${{ matrix.settings.build }}
+      - name: Build (Windows ARM64)
+        if: ${{ contains(matrix.settings.host, 'ARM') }}
+        run: |
+          echo "Setting up MSVC environment and building for Windows ARM64..."
+          REM Set up MSVC environment for ARM64
+          if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
+            echo "Found Visual Studio 2022 BuildTools"
+            call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
+          ) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
+            echo "Found Visual Studio 2019 BuildTools"
+            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
+          ) else (
+            echo "Visual Studio not found, trying to find vcvarsall.bat..."
+            for /f "tokens=*" %%i in ('where vcvarsall.bat 2^>nul') do (
+              echo "Found vcvarsall.bat at: %%i"
+              call "%%i" amd64_arm64
+              goto :build
+            )
+            echo "Warning: Visual Studio Build Tools not found"
+          )
+          
+          :build
+          echo "Environment after vcvarsall:"
+          echo "VCINSTALLDIR: %VCINSTALLDIR%"
+          echo "INCLUDE: %INCLUDE%"
+          echo "LIB: %LIB%"
+          echo "PATH: %PATH%"
+          
+          REM Set up Rust environment
+          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+          
+          REM Build the project
+          ${{ matrix.settings.build }}
+        shell: cmd
+      
+      - name: Build (Android)
+        if: ${{ contains(matrix.settings.target, 'android') }}
+        run: |
+          echo "=== Building for Android target: ${{ matrix.settings.target }} ==="
+          echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
+          echo "TARGET_CC: $TARGET_CC"
+          echo "TARGET_AR: $TARGET_AR"
+          echo "CC_armv7_linux_androideabi: $CC_armv7_linux_androideabi"
+          echo "CC_aarch64_linux_android: $CC_aarch64_linux_android"
+          echo "PATH: $PATH"
+          
+          # Verify NDK tools exist
+          if [[ "${{ matrix.settings.target }}" == "armv7-linux-androideabi" ]]; then
+            if [ -f "$CC_armv7_linux_androideabi" ]; then
+              echo "✓ CC_armv7_linux_androideabi found: $CC_armv7_linux_androideabi"
+            else
+              echo "✗ CC_armv7_linux_androideabi NOT FOUND: $CC_armv7_linux_androideabi"
+            fi
+          elif [[ "${{ matrix.settings.target }}" == "aarch64-linux-android" ]]; then
+            if [ -f "$CC_aarch64_linux_android" ]; then
+              echo "✓ CC_aarch64_linux_android found: $CC_aarch64_linux_android"
+            else
+              echo "✗ CC_aarch64_linux_android NOT FOUND: $CC_aarch64_linux_android"
+            fi
+          fi
+          
+          # Build the project
+          ${{ matrix.settings.build }}
         shell: bash
         env:
           ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_ROOT }}
@@ -358,6 +491,11 @@ jobs:
           CC_aarch64_linux_android: ${{ env.CC_aarch64_linux_android }}
           CXX_aarch64_linux_android: ${{ env.CXX_aarch64_linux_android }}
           AR_aarch64_linux_android: ${{ env.AR_aarch64_linux_android }}
+      
+      - name: Build (Non-Windows)
+        if: ${{ !contains(matrix.settings.host, 'windows') && !contains(matrix.settings.target, 'android') }}
+        run: ${{ matrix.settings.build }}
+        shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: matrix.settings.target != 'wasm32-wasip1-threads'
