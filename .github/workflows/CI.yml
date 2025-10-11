@@ -92,7 +92,7 @@ jobs:
           - host: [self-hosted, linux]
             target: aarch64-unknown-linux-musl
             build: pnpm build --target aarch64-unknown-linux-musl -x
-          - host: [self-hosted, windows]
+          - host: [self-hosted, windows-arm64]
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
           # - host: [self-hosted, linux]
@@ -116,50 +116,29 @@ jobs:
           pnpm store prune || true
           pnpm config set store-dir ~/.pnpm-store
         continue-on-error: true
-      - name: Install ARM64 Build Tools (Windows)
+      - name: Install ARM64 Build Tools (Windows x64)
         if: ${{ contains(matrix.settings.host, 'windows') && matrix.settings.target == 'aarch64-pc-windows-msvc' }}
         run: |
-          echo "Installing ARM64 Build Tools for aarch64-pc-windows-msvc target..."
+          echo "Installing ARM64 Build Tools for cross-compilation on x64 Windows..."
           curl -o vs_buildtools.exe https://aka.ms/vs/17/release/vs_buildtools.exe
           .\vs_buildtools.exe --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
         shell: cmd
         continue-on-error: true
-      - name: Setup MSVC Environment (Windows)
+      
+      - name: Verify ARM64 Environment (Windows ARM64)
+        if: ${{ contains(matrix.settings.host, 'windows-arm64') }}
+        run: |
+          echo "Verifying ARM64 native environment..."
+          echo "Architecture: %PROCESSOR_ARCHITECTURE%"
+          where cl.exe
+          where link.exe
+          echo "ARM64 native environment verified"
+        shell: cmd
+        continue-on-error: true
+      - name: Setup MSVC Environment (Windows x64)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
-          echo "Setting up MSVC environment for target: ${{ matrix.settings.target }}"
-          
-          # For ARM64 targets, we need to set up cross-compilation environment
-          if "%{{ matrix.settings.target }}"=="aarch64-pc-windows-msvc" (
-            echo "Setting up ARM64 cross-compilation environment..."
-            REM Try to find ARM64 toolchain
-            if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\arm64\cl.exe" (
-              echo "Found ARM64 toolchain in VS2022 BuildTools"
-              for /d %%i in ("C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*") do (
-                set "VCToolsVersion=%%~ni"
-                set "VCINSTALLDIR=C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC"
-                set "PATH=%%i\bin\Hostx64\arm64;%PATH%"
-                goto :arm64_found
-              )
-            )
-            if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\arm64\cl.exe" (
-              echo "Found ARM64 toolchain in VS2019 BuildTools"
-              for /d %%i in ("C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\*") do (
-                set "VCToolsVersion=%%~ni"
-                set "VCINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC"
-                set "PATH=%%i\bin\Hostx64\arm64;%PATH%"
-                goto :arm64_found
-              )
-            )
-            echo "ARM64 toolchain not found, falling back to x64 toolchain"
-            goto :setup_x64
-            :arm64_found
-            echo "ARM64 toolchain setup completed"
-            goto :done
-          )
-          
-          :setup_x64
-          echo "Setting up x64 MSVC environment..."
+          echo "Setting up MSVC environment for x64 Windows..."
           REM Try different Visual Studio paths for x64
           if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
             echo "Found Visual Studio 2022 BuildTools"
@@ -184,16 +163,57 @@ jobs:
         shell: cmd
         continue-on-error: true
       
-      - name: Install Rust (Windows)
+      - name: Setup MSVC Environment (Windows ARM64)
+        if: ${{ contains(matrix.settings.host, 'windows-arm64') }}
+        run: |
+          echo "Setting up MSVC environment for ARM64 Windows..."
+          REM Try different Visual Studio paths for ARM64
+          if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
+            echo "Found Visual Studio 2022 BuildTools"
+            call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
+            goto :done
+          )
+          if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
+            echo "Found Visual Studio 2019 BuildTools"
+            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
+            goto :done
+          )
+          echo "Visual Studio not found, trying to find vcvarsall.bat..."
+          for /f "tokens=*" %%i in ('where vcvarsall.bat 2^>nul') do (
+            echo "Found vcvarsall.bat at: %%i"
+            call "%%i" arm64
+            goto :done
+          )
+          echo "Warning: Visual Studio Build Tools not found"
+          
+          :done
+          echo "MSVC environment setup completed"
+        shell: cmd
+        continue-on-error: true
+      
+      - name: Install Rust (Windows x64)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
           echo "PROCESSOR_ARCHITECTURE: %PROCESSOR_ARCHITECTURE%"
           echo "PROCESSOR_ARCHITEW6432: %PROCESSOR_ARCHITEW6432%"
-          # Always use x86_64 version for Windows runners
+          # Use x86_64 version for x64 Windows runners
           curl -o rustup-init.exe https://win.rustup.rs/x86_64
           .\rustup-init.exe -y --default-toolchain stable --default-host x86_64-pc-windows-msvc
           echo "%USERPROFILE%\.cargo\bin" >> $env:GITHUB_PATH
           "%USERPROFILE%\.cargo\bin\rustup.exe" target add ${{ matrix.settings.target }}
+          "%USERPROFILE%\.cargo\bin\rustup.exe" component add rustfmt clippy
+          echo "CARGO_PATH=%USERPROFILE%\.cargo\bin" >> $env:GITHUB_ENV
+        shell: cmd
+      
+      - name: Install Rust (Windows ARM64)
+        if: ${{ contains(matrix.settings.host, 'windows-arm64') }}
+        run: |
+          echo "PROCESSOR_ARCHITECTURE: %PROCESSOR_ARCHITECTURE%"
+          echo "PROCESSOR_ARCHITEW6432: %PROCESSOR_ARCHITEW6432%"
+          # Use ARM64 version for ARM64 Windows runners
+          curl -o rustup-init.exe https://win.rustup.rs/aarch64
+          .\rustup-init.exe -y --default-toolchain stable --default-host aarch64-pc-windows-msvc
+          echo "%USERPROFILE%\.cargo\bin" >> $env:GITHUB_PATH
           "%USERPROFILE%\.cargo\bin\rustup.exe" component add rustfmt clippy
           echo "CARGO_PATH=%USERPROFILE%\.cargo\bin" >> $env:GITHUB_ENV
         shell: cmd
