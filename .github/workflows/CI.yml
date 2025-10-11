@@ -148,7 +148,14 @@ jobs:
           architecture: x86
       - name: Build (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'ARM') }}
-        run: ${{ matrix.settings.build }}
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+          echo PATH=%PATH%
+          echo INCLUDE=%INCLUDE%
+          echo LIB=%LIB%
+          where cl.exe
+          where link.exe
+          ${{ matrix.settings.build }}
         shell: cmd
       - name: Build (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') && !contains(matrix.settings.host, 'ARM') }}
