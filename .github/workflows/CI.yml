@@ -74,10 +74,10 @@ jobs:
           - host: [self-hosted, linux, x64]
             target: aarch64-unknown-linux-gnu
             build: pnpm build --target aarch64-unknown-linux-gnu --use-napi-cross
-          - host: [self-hosted, linux, x64]
+          - host: [self-hosted, linux, ARM]
             target: armv7-unknown-linux-gnueabihf
             build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
-          - host: [self-hosted, linux, x64]
+          - host: [self-hosted, linux, ARM]
             target: aarch64-unknown-linux-musl
             build: pnpm build --target aarch64-unknown-linux-musl -x
           - host: [self-hosted, windows, ARM]
