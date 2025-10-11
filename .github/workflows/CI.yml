@@ -149,12 +149,9 @@ jobs:
       - name: Build (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'ARM') }}
         run: |
-          if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
-            call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
-          ) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
-            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
-          )
           set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+          set "HOST_LIB=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
+          set "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS=-L native=%HOST_LIB%"
           ${{ matrix.settings.build }}
         shell: cmd
       - name: Build (Windows)
