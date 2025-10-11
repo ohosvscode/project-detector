@@ -57,7 +57,7 @@
     "format:rs": "cargo fmt",
     "lint": "oxlint",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "ava",
+    "test": "vitest",
     "version": "napi version"
   },
   "devDependencies": {
@@ -68,7 +68,6 @@
     "@oxc-node/core": "^0.0.32",
     "@taplo/cli": "^0.7.0",
     "@tybys/wasm-util": "^0.10.0",
-    "ava": "^6.4.1",
     "chalk": "^5.6.2",
     "emnapi": "^1.5.0",
     "husky": "^9.1.7",
