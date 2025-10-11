@@ -5,10 +5,4 @@ rustflags = ["-C", "target-feature=+crt-static"]
 rustflags = ["-C", "target-feature=+crt-static"]
 
 [target.aarch64-pc-windows-msvc]
-linker = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/bin/Hostarm64/arm64/link.exe"
-rustflags = [
-    "-C", "target-feature=+crt-static",
-    "-L", "native=C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Tools/MSVC/14.44.35207/lib/arm64",
-    "-L", "native=C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/ucrt/arm64",
-    "-L", "native=C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/arm64"
-]
+rustflags = ["-C", "target-feature=+crt-static"]

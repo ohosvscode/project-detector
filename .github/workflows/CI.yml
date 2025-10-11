@@ -149,7 +149,8 @@ jobs:
       - name: Build (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'ARM') }}
         run: |
-          set "PATH=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostarm64\arm64;%PATH%;%USERPROFILE%\.cargo\bin"
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
+          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
           ${{ matrix.settings.build }}
         shell: cmd
       - name: Build (Windows)
