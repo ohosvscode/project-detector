@@ -148,10 +148,7 @@ jobs:
           architecture: x86
       - name: Build (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'ARM') }}
-        run: |
-          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-          set "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS=-L native=\"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\" -L native=\"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64\" -L native=\"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\""
-          ${{ matrix.settings.build }}
+        run: ${{ matrix.settings.build }}
         shell: cmd
       - name: Build (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') && !contains(matrix.settings.host, 'ARM') }}
