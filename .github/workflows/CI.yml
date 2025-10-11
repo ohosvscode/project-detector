@@ -79,7 +79,7 @@ jobs:
             build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
           - host: [self-hosted, linux, ARM]
             target: aarch64-unknown-linux-musl
-            build: pnpm build --target aarch64-unknown-linux-musl -x
+            build: pnpm build --target aarch64-unknown-linux-musl --use-napi-cross -x
           - host: [self-hosted, windows, ARM]
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
@@ -104,7 +104,7 @@ jobs:
         shell: cmd
         continue-on-error: true
       - name: Setup MSVC Environment (Windows ARM64)
-        if: ${{ contains(matrix.settings.host, 'ARM') }}
+        if: ${{ contains(matrix.settings.host, 'ARM') && contains(matrix.settings.host, 'windows') }}
         run: |
           if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
             call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
@@ -147,7 +147,7 @@ jobs:
           node-version: 22
           architecture: x86
       - name: Build (Windows ARM64)
-        if: ${{ contains(matrix.settings.host, 'ARM') }}
+        if: ${{ contains(matrix.settings.host, 'ARM') && contains(matrix.settings.host, 'windows') }}
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
           set PATH=%PATH%;%USERPROFILE%\.cargo\bin
