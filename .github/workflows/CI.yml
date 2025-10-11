@@ -221,47 +221,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential libssl-dev pkg-config
       
-      - name: Setup Android NDK Environment
+      - name: Install Android NDK
         if: ${{ contains(matrix.settings.target, 'android') }}
         run: |
-          # Find Android SDK installation
-          ANDROID_SDK=""
-          if [ -d "/usr/lib/android-sdk" ]; then
-            ANDROID_SDK="/usr/lib/android-sdk"
-          elif [ -d "/opt/android-sdk" ]; then
-            ANDROID_SDK="/opt/android-sdk"
-          elif [ -d "$HOME/android-sdk" ]; then
-            ANDROID_SDK="$HOME/android-sdk"
-          elif [ -d "/usr/local/android-sdk" ]; then
-            ANDROID_SDK="/usr/local/android-sdk"
-          else
-            echo "Android SDK not found, trying to find NDK directly..."
-            # Try to find NDK directly
-            NDK_PATH=$(find /usr /opt /home -name "ndk*" -type d 2>/dev/null | head -1)
-            if [ -n "$NDK_PATH" ]; then
-              ANDROID_SDK=$(dirname "$NDK_PATH")
-            fi
-          fi
-          
-          if [ -z "$ANDROID_SDK" ]; then
-            echo "Error: Android SDK not found. Please install android-sdk package."
-            exit 1
-          fi
-          
-          echo "Found Android SDK at: $ANDROID_SDK"
-          # Find NDK in the SDK
-          NDK_ROOT=$(find "$ANDROID_SDK" -name "ndk*" -type d | head -1)
-          if [ -z "$NDK_ROOT" ]; then
-            echo "NDK not found in SDK, trying alternative locations..."
-            NDK_ROOT=$(find /usr /opt -name "ndk*" -type d 2>/dev/null | head -1)
-          fi
-          
-          if [ -z "$NDK_ROOT" ] || [ ! -d "$NDK_ROOT" ]; then
-            echo "Error: NDK not found. Please ensure NDK is installed with the SDK."
-            exit 1
-          fi
-          
-          echo "Using NDK at: $NDK_ROOT"
+          echo "Installing Android NDK..."
+          # Download and install Android NDK
+          wget https://dl.google.com/android/repository/android-ndk-r25c-linux.zip
+          unzip android-ndk-r25c-linux.zip
+          NDK_ROOT="$PWD/android-ndk-r25c"
           echo "ANDROID_NDK_ROOT=$NDK_ROOT" >> $GITHUB_ENV
           echo "$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
           
