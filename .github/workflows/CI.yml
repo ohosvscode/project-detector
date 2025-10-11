@@ -83,10 +83,10 @@ jobs:
           - host: [self-hosted, linux]
             target: armv7-unknown-linux-gnueabihf
             build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
-          - host: [self-hosted, linux]
+          - host: [self-hosted, linux, x86]
             target: aarch64-linux-android
             build: pnpm build --target aarch64-linux-android
-          - host: [self-hosted, linux]
+          - host: [self-hosted, linux, x86]
             target: armv7-linux-androideabi
             build: pnpm build --target armv7-linux-androideabi
           - host: [self-hosted, linux]
