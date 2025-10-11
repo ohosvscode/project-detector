@@ -34,7 +34,10 @@ jobs:
           sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
           sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
           sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          # 动态获取当前用户组名称
+          CURRENT_USER=$(whoami)
+          CURRENT_GROUP=$(id -gn)
+          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
           sudo chmod -R 755 ${{ github.workspace }}
       - name: Clean workspace (Windows)
         if: runner.os == 'Windows'
@@ -106,7 +109,10 @@ jobs:
           sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
           sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
           sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          # 动态获取当前用户组名称
+          CURRENT_USER=$(whoami)
+          CURRENT_GROUP=$(id -gn)
+          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
           sudo chmod -R 755 ${{ github.workspace }}
       - name: Clean workspace (Windows)
         if: runner.os == 'Windows'
@@ -226,7 +232,10 @@ jobs:
           sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
           sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
           sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          # 动态获取当前用户组名称
+          CURRENT_USER=$(whoami)
+          CURRENT_GROUP=$(id -gn)
+          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
           sudo chmod -R 755 ${{ github.workspace }}
       - name: Clean workspace (Windows)
         if: runner.os == 'Windows'
@@ -281,7 +290,10 @@ jobs:
           sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
           sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
           sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          # 动态获取当前用户组名称
+          CURRENT_USER=$(whoami)
+          CURRENT_GROUP=$(id -gn)
+          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
           sudo chmod -R 755 ${{ github.workspace }}
       - name: Clean workspace (Windows)
         if: runner.os == 'Windows'
@@ -353,7 +365,10 @@ jobs:
           sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
           sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
           sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          # 动态获取当前用户组名称
+          CURRENT_USER=$(whoami)
+          CURRENT_GROUP=$(id -gn)
+          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
           sudo chmod -R 755 ${{ github.workspace }}
       - name: Clean workspace (Windows)
         if: runner.os == 'Windows'
