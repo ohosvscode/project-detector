@@ -333,11 +333,31 @@ jobs:
           set PATH=%PATH%;%USERPROFILE%\.cargo\bin
           ${{ matrix.settings.build }}
         shell: cmd
+        env:
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_ROOT }}
+          TARGET_CC: ${{ env.TARGET_CC }}
+          TARGET_AR: ${{ env.TARGET_AR }}
+          CC_armv7_linux_androideabi: ${{ env.CC_armv7_linux_androideabi }}
+          CXX_armv7_linux_androideabi: ${{ env.CXX_armv7_linux_androideabi }}
+          AR_armv7_linux_androideabi: ${{ env.AR_armv7_linux_androideabi }}
+          CC_aarch64_linux_android: ${{ env.CC_aarch64_linux_android }}
+          CXX_aarch64_linux_android: ${{ env.CXX_aarch64_linux_android }}
+          AR_aarch64_linux_android: ${{ env.AR_aarch64_linux_android }}
       
       - name: Build (Non-Windows)
         if: ${{ !contains(matrix.settings.host, 'windows') }}
         run: ${{ matrix.settings.build }}
         shell: bash
+        env:
+          ANDROID_NDK_ROOT: ${{ env.ANDROID_NDK_ROOT }}
+          TARGET_CC: ${{ env.TARGET_CC }}
+          TARGET_AR: ${{ env.TARGET_AR }}
+          CC_armv7_linux_androideabi: ${{ env.CC_armv7_linux_androideabi }}
+          CXX_armv7_linux_androideabi: ${{ env.CXX_armv7_linux_androideabi }}
+          AR_armv7_linux_androideabi: ${{ env.AR_armv7_linux_androideabi }}
+          CC_aarch64_linux_android: ${{ env.CC_aarch64_linux_android }}
+          CXX_aarch64_linux_android: ${{ env.CXX_aarch64_linux_android }}
+          AR_aarch64_linux_android: ${{ env.AR_aarch64_linux_android }}
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         if: matrix.settings.target != 'wasm32-wasip1-threads'
