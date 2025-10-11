@@ -92,7 +92,7 @@ jobs:
           - host: [self-hosted, linux]
             target: aarch64-unknown-linux-musl
             build: pnpm build --target aarch64-unknown-linux-musl -x
-          - host: [self-hosted, windows-arm64]
+          - host: [self-hosted, windows, arm64, ARM]
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
           # - host: [self-hosted, linux]
@@ -270,6 +270,16 @@ jobs:
             echo "CC_armv7_pc_windows_msvc=$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang" >> $GITHUB_ENV
             echo "AR_armv7_pc_windows_msvc=$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar" >> $GITHUB_ENV
           fi
+          
+          # Debug: Print environment variables
+          echo "=== Environment Variables Debug ==="
+          echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
+          echo "TARGET_CC: $TARGET_CC"
+          echo "TARGET_AR: $TARGET_AR"
+          echo "CC_aarch64_linux_android: $CC_aarch64_linux_android"
+          echo "AR_aarch64_linux_android: $AR_aarch64_linux_android"
+          echo "PATH: $PATH"
+          echo "=== End Debug ==="
       
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
@@ -303,6 +313,32 @@ jobs:
           "%USERPROFILE%\.cargo\bin\cargo.exe" --version
           "%USERPROFILE%\.cargo\bin\rustc.exe" --version
         shell: cmd
+      
+      - name: Verify Android Environment (Android targets)
+        if: ${{ contains(matrix.settings.target, 'android') }}
+        run: |
+          echo "=== Android Environment Verification ==="
+          echo "ANDROID_NDK_ROOT: $ANDROID_NDK_ROOT"
+          echo "TARGET_CC: $TARGET_CC"
+          echo "TARGET_AR: $TARGET_AR"
+          echo "CC_aarch64_linux_android: $CC_aarch64_linux_android"
+          echo "AR_aarch64_linux_android: $AR_aarch64_linux_android"
+          echo "PATH: $PATH"
+          echo "=== Checking NDK tools ==="
+          ls -la "$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin/" | head -10
+          echo "=== Checking specific tools ==="
+          if [ -f "$TARGET_CC" ]; then
+            echo "TARGET_CC exists: $TARGET_CC"
+          else
+            echo "TARGET_CC NOT FOUND: $TARGET_CC"
+          fi
+          if [ -f "$TARGET_AR" ]; then
+            echo "TARGET_AR exists: $TARGET_AR"
+          else
+            echo "TARGET_AR NOT FOUND: $TARGET_AR"
+          fi
+          echo "=== End Verification ==="
+        shell: bash
       
       - name: Build (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
