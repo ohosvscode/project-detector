@@ -56,10 +56,10 @@ jobs:
           - host: [self-hosted, macos]
             target: x86_64-apple-darwin
             build: pnpm build --target x86_64-apple-darwin
-          - host: [self-hosted, windows]
+          - host: [self-hosted, windows, X64]
             build: pnpm build --target x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
-          - host: [self-hosted, windows]
+          - host: [self-hosted, windows, X64]
             build: pnpm build --target i686-pc-windows-msvc
             target: i686-pc-windows-msvc
           - host: [self-hosted, linux]
@@ -80,7 +80,7 @@ jobs:
           - host: [self-hosted, linux]
             target: aarch64-unknown-linux-musl
             build: pnpm build --target aarch64-unknown-linux-musl -x
-          - host: [self-hosted, windows, ARM]
+          - host: [self-hosted, windows, ARM64]
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@20
@@ -150,8 +150,7 @@ jobs:
         if: ${{ contains(matrix.settings.host, 'ARM') }}
         run: |
           set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-          set "HOST_LIB=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64"
-          set "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS=-L native=%HOST_LIB%"
+          set "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS=-L native=\"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\" -L native=\"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\ucrt\x64\" -L native=\"C:\Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\""
           ${{ matrix.settings.build }}
         shell: cmd
       - name: Build (Windows)
