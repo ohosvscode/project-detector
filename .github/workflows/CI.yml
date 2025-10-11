@@ -116,14 +116,6 @@ jobs:
           pnpm store prune || true
           pnpm config set store-dir ~/.pnpm-store
         continue-on-error: true
-      - name: Install ARM64 Build Tools (Windows x64)
-        if: ${{ contains(matrix.settings.host, 'windows') && matrix.settings.target == 'aarch64-pc-windows-msvc' }}
-        run: |
-          echo "Installing ARM64 Build Tools for cross-compilation on x64 Windows..."
-          curl -o vs_buildtools.exe https://aka.ms/vs/17/release/vs_buildtools.exe
-          .\vs_buildtools.exe --quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64
-        shell: cmd
-        continue-on-error: true
       
       - name: Verify ARM64 Environment (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'windows-arm64') }}
