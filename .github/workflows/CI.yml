@@ -24,35 +24,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  cleanup:
-    name: Cleanup workspace
-    runs-on: [self-hosted, linux]
-    if: always()
-    steps:
-      - name: Force clean all workspaces
-        run: |
-          # 清理所有可能的工作目录
-          sudo find /home/parallels/actions-runner/_work -name "project-detector" -type d -exec rm -rf {} + 2>/dev/null || true
-          # 确保工作目录权限正确
-          sudo chown -R parallels:parallels /home/parallels/actions-runner/_work/ 2>/dev/null || true
-          sudo chmod -R 755 /home/parallels/actions-runner/_work/ 2>/dev/null || true
-        shell: bash
-
   lint:
     name: Lint
     runs-on: [self-hosted, macos]
     steps:
-      - name: Force clean workspace
-        run: |
-          # 强制删除所有文件和目录，包括隐藏文件
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          # 如果find失败，使用rm -rf作为备选
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          # 确保工作目录存在且权限正确
-          sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
-          sudo chmod -R 755 ${{ github.workspace }}
-        shell: bash
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -111,17 +86,6 @@ jobs:
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - name: Force clean workspace
-        run: |
-          # 强制删除所有文件和目录，包括隐藏文件
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          # 如果find失败，使用rm -rf作为备选
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          # 确保工作目录存在且权限正确
-          sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
-          sudo chmod -R 755 ${{ github.workspace }}
-        shell: bash
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -228,17 +192,6 @@ jobs:
           - '22'
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - name: Force clean workspace
-        run: |
-          # 强制删除所有文件和目录，包括隐藏文件
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          # 如果find失败，使用rm -rf作为备选
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          # 确保工作目录存在且权限正确
-          sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
-          sudo chmod -R 755 ${{ github.workspace }}
-        shell: bash
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -280,17 +233,6 @@ jobs:
       - linux
       - ${{ contains(matrix.target, 'x86_64') && 'x64' || 'arm64' }}
     steps:
-      - name: Force clean workspace
-        run: |
-          # 强制删除所有文件和目录，包括隐藏文件
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          # 如果find失败，使用rm -rf作为备选
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          # 确保工作目录存在且权限正确
-          sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
-          sudo chmod -R 755 ${{ github.workspace }}
-        shell: bash
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -339,12 +281,7 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          run: |
-            # 在Docker容器内清理可能的权限问题
-            npm run test
-            # 测试完成后清理可能产生权限问题的文件
-            find . -name ".vite" -type d -exec chmod -R 755 {} \; 2>/dev/null || true
-            find . -name "node_modules" -type d -exec chmod -R 755 {} \; 2>/dev/null || true
+          run: npm run test
 
   publish:
     name: Publish
@@ -354,17 +291,6 @@ jobs:
       - test-macOS-windows-binding
       - test-linux-binding
     steps:
-      - name: Force clean workspace
-        run: |
-          # 强制删除所有文件和目录，包括隐藏文件
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          # 如果find失败，使用rm -rf作为备选
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          # 确保工作目录存在且权限正确
-          sudo mkdir -p ${{ github.workspace }}
-          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
-          sudo chmod -R 755 ${{ github.workspace }}
-        shell: bash
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
