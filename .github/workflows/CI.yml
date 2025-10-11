@@ -235,9 +235,6 @@ jobs:
       #       .cargo-cache
       #       target/
       #     key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
-      - name: Install build tools (Linux)
-        if: ${{ contains(matrix.settings.host, 'linux') }}
-        run: sudo apt-get install -y build-essential libssl-dev pkg-config
       
       - name: Install Android NDK
         if: ${{ contains(matrix.settings.target, 'android') }}
