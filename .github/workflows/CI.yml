@@ -192,6 +192,20 @@ jobs:
           - '22'
     runs-on: ${{ matrix.settings.host }}
     steps:
+      - name: Clean workspace (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
+          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
+          sudo mkdir -p ${{ github.workspace }}
+          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          sudo chmod -R 755 ${{ github.workspace }}
+      - name: Clean workspace (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -233,6 +247,20 @@ jobs:
       - linux
       - ${{ contains(matrix.target, 'x86_64') && 'x64' || 'arm64' }}
     steps:
+      - name: Clean workspace (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
+          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
+          sudo mkdir -p ${{ github.workspace }}
+          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          sudo chmod -R 755 ${{ github.workspace }}
+      - name: Clean workspace (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
@@ -291,6 +319,20 @@ jobs:
       - test-macOS-windows-binding
       - test-linux-binding
     steps:
+      - name: Clean workspace (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
+          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
+          sudo mkdir -p ${{ github.workspace }}
+          sudo chown -R $(whoami):$(whoami) ${{ github.workspace }}
+          sudo chmod -R 755 ${{ github.workspace }}
+      - name: Clean workspace (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
