@@ -4,6 +4,7 @@ env:
   APP_NAME: project-detector
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
+  MSVC_ARM64_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
 permissions:
   contents: write
   id-token: write
@@ -163,6 +164,7 @@ jobs:
       - name: Build (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'ARM') && contains(matrix.settings.host, 'windows') }}
         run: |
+          call "%MSVC_ARM64_PATH%" arm64
           set PATH=%PATH%;%USERPROFILE%\.cargo\bin
           ${{ matrix.settings.build }}
         shell: cmd
