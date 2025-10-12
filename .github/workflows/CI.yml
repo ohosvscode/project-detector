@@ -383,7 +383,8 @@ jobs:
         run: ls -R ./npm
       - name: Publish
         run: |
-          npm config set provenance true
+          # 自托管运行器不支持provenance，禁用此功能
+          npm config set provenance false
           if git log -1 --pretty=%B | grep "^v\?[0-9]\+\.[0-9]\+\.[0-9]\+$";
           then
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
