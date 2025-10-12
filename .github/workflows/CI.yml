@@ -328,6 +328,7 @@ jobs:
         if: ${{ contains(matrix.target, 'armv7') }}
         with:
           platforms: all
+          cache-image: false
       - name: Test bindings
         uses: addnab/docker-run-action@v3
         with:
