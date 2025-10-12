@@ -1,9 +1,9 @@
-use napi_derive::napi;
-use std::path::Path;
-use crate::utils::uri::Uri;
 use crate::resource_directory::ResourceDirectory;
+use crate::utils::uri::Uri;
 use napi::bindgen_prelude::Reference;
 use napi::Env;
+use napi_derive::napi;
+use std::path::Path;
 
 #[napi]
 pub struct ElementDirectory {
@@ -15,7 +15,10 @@ pub struct ElementDirectory {
 impl ElementDirectory {
   #[napi]
   pub fn from(resource_directory: Reference<ResourceDirectory>) -> Self {
-    Self { uri: Uri::file(Path::new(&resource_directory.get_uri().fs_path()).join("element").to_string_lossy().to_string()), resource_directory }
+    Self {
+      uri: Uri::file(Path::new(&resource_directory.get_uri().fs_path()).join("element").to_string_lossy().to_string()),
+      resource_directory,
+    }
   }
 
   #[napi]

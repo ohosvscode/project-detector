@@ -1,5 +1,5 @@
-pub mod files;
 pub mod element_directory;
+pub mod files;
 pub mod module;
 pub mod product;
 pub mod project;

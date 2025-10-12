@@ -1,13 +1,13 @@
-use crate::{references::element_json_file_reference::ElementJsonFileReference, utils::uri::Uri};
 #[cfg(not(test))]
 use crate::element_directory::ElementDirectory;
+use crate::{references::element_json_file_reference::ElementJsonFileReference, utils::uri::Uri};
 #[cfg(not(test))]
 use napi::bindgen_prelude::Reference;
 #[cfg(not(test))]
 use napi::Env;
+use napi_derive::napi;
 #[cfg(not(test))]
 use std::fs;
-use napi_derive::napi;
 use tree_sitter::Parser;
 
 #[napi]
@@ -26,7 +26,11 @@ impl ElementJsonFile {
     let mut parser = Parser::new();
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
-    Self { parser, source_code, uri: uri.clone() }
+    Self {
+      parser,
+      source_code,
+      uri: uri.clone(),
+    }
   }
 
   #[cfg(not(test))]
@@ -34,31 +38,30 @@ impl ElementJsonFile {
     let mut parser = Parser::new();
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
-    Self { parser, source_code, uri: uri.clone(), resource_directory }
+    Self {
+      parser,
+      source_code,
+      uri: uri.clone(),
+      resource_directory,
+    }
   }
 
   #[napi]
   #[cfg(not(test))]
   pub fn find_all(element_directory: Reference<ElementDirectory>, env: Env) -> Vec<ElementJsonFile> {
     let mut element_json_files = Vec::new();
-    let resource_files = match fs::read_dir(&element_directory.get_uri().fs_path()) {
+    let resource_files = match fs::read_dir(element_directory.get_uri().fs_path()) {
       Ok(resource_directories) => resource_directories
         .flatten()
         .filter(|entry| entry.metadata().map(|m| m.is_file()).unwrap_or(false))
         .filter(|entry| entry.path().extension().map(|extension| extension == "json").unwrap_or(false)),
       Err(_) => return element_json_files,
     };
-    
+
     for file_entry in resource_files {
       let file_path = file_entry.path().to_string_lossy().to_string();
       let file_content = fs::read_to_string(file_path.clone()).unwrap_or_default();
-      element_json_files.push(
-        Self::new(
-          element_directory.clone(env).unwrap(),
-          &Uri::file(file_path),
-          file_content,
-        )
-      );
+      element_json_files.push(Self::new(element_directory.clone(env).unwrap(), &Uri::file(file_path), file_content));
     }
 
     element_json_files
@@ -84,7 +87,6 @@ impl ElementJsonFile {
   pub fn parse(&mut self) -> serde_json::Value {
     serde_json5::from_str(&self.source_code).unwrap()
   }
-
 
   #[napi]
   pub fn get_reference(&mut self) -> Vec<ElementJsonFileReference> {
