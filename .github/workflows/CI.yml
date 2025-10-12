@@ -311,7 +311,7 @@ jobs:
             if ('${{ matrix.target }}'.endsWith('-musl')) {
               console.log('IMAGE=node:${{ matrix.node }}-alpine')
             } else {
-              console.log('IMAGE=node:${{ matrix.node }}-slim')
+              console.log('IMAGE=node:${{ matrix.node }}-bullseye')
             }
           " >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
@@ -335,7 +335,11 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          run: npm run test
+          run: |
+            if ! echo "${{ steps.docker.outputs.IMAGE }}" | grep -q alpine; then
+              apt-get update && apt-get install -y libc6-dev
+            fi
+            npm run test
 
   publish:
     name: Publish
