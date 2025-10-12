@@ -53,6 +53,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Install
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -128,6 +129,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
@@ -161,6 +163,7 @@ jobs:
         with:
           node-version: 22
           architecture: x86
+          package-manager-cache: false
       - name: Build (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'ARM') && contains(matrix.settings.host, 'windows') }}
         run: |
@@ -232,6 +235,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           architecture: ${{ matrix.settings.architecture }}
+          package-manager-cache: false
       - name: Install dependencies
         run: pnpm install
       - name: Download artifacts
@@ -289,6 +293,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
+          package-manager-cache: false
       - name: Output docker params
         id: docker
         run: |
@@ -362,6 +367,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
+          package-manager-cache: false
       - name: Install dependencies
         run: pnpm install
       - name: Download all artifacts
