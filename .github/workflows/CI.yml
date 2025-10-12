@@ -127,26 +127,6 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: Setup MSVC Environment (Windows x64)
-        if: ${{ contains(matrix.settings.host, 'windows') && !contains(matrix.settings.host, 'ARM') }}
-        run: |
-          if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
-            call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-          ) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
-            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-          )
-        shell: cmd
-        continue-on-error: true
-      - name: Setup MSVC Environment (Windows ARM64)
-        if: ${{ contains(matrix.settings.host, 'ARM') && contains(matrix.settings.host, 'windows') }}
-        run: |
-          if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
-            call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
-          ) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" (
-            call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" amd64_arm64
-          )
-        shell: cmd
-        continue-on-error: true
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
@@ -183,7 +163,6 @@ jobs:
       - name: Build (Windows ARM64)
         if: ${{ contains(matrix.settings.host, 'ARM') && contains(matrix.settings.host, 'windows') }}
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
           set PATH=%PATH%;%USERPROFILE%\.cargo\bin
           ${{ matrix.settings.build }}
         shell: cmd
