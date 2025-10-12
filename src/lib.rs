@@ -1,4 +1,10 @@
 pub mod files;
+pub mod element_directory;
+pub mod module;
+pub mod product;
+pub mod project;
 pub mod project_detector;
 pub mod references;
+pub mod resource;
+pub mod resource_directory;
 pub mod utils;

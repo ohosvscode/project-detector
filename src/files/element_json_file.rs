@@ -1,6 +1,12 @@
 use crate::{references::element_json_file_reference::ElementJsonFileReference, utils::uri::Uri};
 #[cfg(not(test))]
-use napi::{bindgen_prelude::Reference, Env};
+use crate::element_directory::ElementDirectory;
+#[cfg(not(test))]
+use napi::bindgen_prelude::Reference;
+#[cfg(not(test))]
+use napi::Env;
+#[cfg(not(test))]
+use std::fs;
 use napi_derive::napi;
 use tree_sitter::Parser;
 
@@ -8,40 +14,77 @@ use tree_sitter::Parser;
 pub struct ElementJsonFile {
   parser: Parser,
   source_code: String,
-  #[cfg(not(test))]
-  uri: Reference<Uri>,
-  #[cfg(test)]
   uri: Uri,
+  #[cfg(not(test))]
+  resource_directory: Reference<ElementDirectory>,
 }
 
 #[napi]
 impl ElementJsonFile {
-  #[cfg(not(test))]
-  pub fn new(uri: Reference<Uri>, source_code: String) -> Self {
+  #[cfg(test)]
+  pub fn new(uri: &Uri, source_code: String) -> Self {
     let mut parser = Parser::new();
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
-    Self { parser, source_code, uri }
+    Self { parser, source_code, uri: uri.clone() }
   }
 
-  #[cfg(test)]
-  pub fn new(uri: Uri, source_code: String) -> Self {
+  #[cfg(not(test))]
+  pub fn new(resource_directory: Reference<ElementDirectory>, uri: &Uri, source_code: String) -> Self {
     let mut parser = Parser::new();
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
-    Self { parser, source_code, uri }
+    Self { parser, source_code, uri: uri.clone(), resource_directory }
   }
 
   #[napi]
   #[cfg(not(test))]
-  pub fn get_uri(&self, env: Env) -> Reference<Uri> {
-    self.uri.clone(env).unwrap()
+  pub fn find_all(element_directory: Reference<ElementDirectory>, env: Env) -> Vec<ElementJsonFile> {
+    let mut element_json_files = Vec::new();
+    let resource_files = match fs::read_dir(&element_directory.get_uri().fs_path()) {
+      Ok(resource_directories) => resource_directories
+        .flatten()
+        .filter(|entry| entry.metadata().map(|m| m.is_file()).unwrap_or(false))
+        .filter(|entry| entry.path().extension().map(|extension| extension == "json").unwrap_or(false)),
+      Err(_) => return element_json_files,
+    };
+    
+    for file_entry in resource_files {
+      let file_path = file_entry.path().to_string_lossy().to_string();
+      let file_content = fs::read_to_string(file_path.clone()).unwrap_or_default();
+      element_json_files.push(
+        Self::new(
+          element_directory.clone(env).unwrap(),
+          &Uri::file(file_path),
+          file_content,
+        )
+      );
+    }
+
+    element_json_files
   }
 
-  #[cfg(test)]
+  #[napi]
   pub fn get_uri(&self) -> Uri {
     self.uri.clone()
   }
+
+  #[napi]
+  #[cfg(not(test))]
+  pub fn get_resource_directory(&self, env: Env) -> Reference<ElementDirectory> {
+    self.resource_directory.clone(env).unwrap()
+  }
+
+  #[napi]
+  pub fn get_content(&self) -> String {
+    self.source_code.clone()
+  }
+
+  #[napi]
+  pub fn parse(&mut self) -> serde_json::Value {
+    serde_json5::from_str(&self.source_code).unwrap()
+  }
+
 
   #[napi]
   pub fn get_reference(&mut self) -> Vec<ElementJsonFileReference> {
@@ -141,7 +184,7 @@ mod tests {
   #[test]
   fn test_get_reference() {
     let mock_str = String::from("{ \"string\": [{ \"name\": \"test1\", \"value\": \"test1-value\" }] }");
-    let mut element_json_file = ElementJsonFile::new(Uri::file("test.json".to_string()), mock_str.clone());
+    let mut element_json_file = ElementJsonFile::new(&Uri::file("test.json".to_string()), mock_str.clone());
     let references = element_json_file.get_reference();
     assert_eq!(references.len(), 1);
     assert_eq!(references[0].get_name_text(), "\"test1\"");

@@ -1,21 +1,13 @@
+/* eslint-disable no-console */
 import { Bench } from 'tinybench'
-
-import { plus100 } from '../index.js'
-
-function add(a: number) {
-  return a + 100
-}
+import { ProjectDetector } from '../index.js'
 
 const bench = new Bench()
 
-bench.add('Native a + 100', () => {
-  plus100(10)
+bench.add('Native ProjectDetector.create', () => {
+  ProjectDetector.create('')
 })
 
-bench.add('JavaScript a + 100', () => {
-  add(10)
-})
-
-await bench.run()
-
-console.table(bench.table())
+bench.run()
+  .then(() => console.table(bench.table()))
+  .catch(console.error)
