@@ -313,7 +313,7 @@ jobs:
             if ('${{ matrix.target }}'.endsWith('-musl')) {
               console.log('IMAGE=node:${{ matrix.node }}-alpine')
             } else {
-              console.log('IMAGE=node:${{ matrix.node }}-bullseye')
+              console.log('IMAGE=node:${{ matrix.node }}-slim')
             }
           " >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
@@ -330,6 +330,8 @@ jobs:
         with:
           platforms: all
           cache-image: false
+      - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        if: ${{ contains(matrix.target, 'armv7') }}
       - name: Test bindings
         uses: addnab/docker-run-action@v3
         with:
@@ -342,7 +344,7 @@ jobs:
             # 安装 pnpm 并清理重新安装依赖项以确保正确的架构模块
             npm install -g pnpm
             rm -rf node_modules
-            pnpm install
+            pnpm install --force
             pnpm test
 
   publish:
