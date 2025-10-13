@@ -9,7 +9,7 @@ export declare class ElementDirectory {
 export declare class ElementJsonFile {
   static findAll(elementDirectory: ElementDirectory): Array<ElementJsonFile>
   getUri(): Uri
-  getResourceDirectory(): ElementDirectory
+  getElementDirectory(): ElementDirectory
   getContent(): string
   parse(): any
   getReference(): Array<ElementJsonFileReference>
@@ -21,7 +21,9 @@ export declare class ElementJsonFileReference {
   getValueStart(): number
   getValueEnd(): number
   getNameText(): string
+  getNameFullText(): string
   getValueText(): string
+  getValueFullText(): string
 }
 
 export declare class Module {
@@ -130,6 +132,7 @@ export declare class Resource {
 export declare class ResourceDirectory {
   static findAll(resource: Resource): Array<ResourceDirectory>
   getUri(): Uri
+  getResource(): Resource
   getQualifiers(): Array<Qualifier> | 'base' | 'rawfile' | 'resfile'
 }
 

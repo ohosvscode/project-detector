@@ -45,11 +45,27 @@ impl ElementJsonFileReference {
 
   #[napi]
   pub fn get_name_text(&self) -> String {
+    let s = self.name_text.as_str();
+    let s = if s.starts_with('"') { &s[1..] } else { s };
+    let s = if s.ends_with('"') { &s[..s.len() - 1] } else { s };
+    s.to_string()
+  }
+
+  #[napi]
+  pub fn get_name_full_text(&self) -> String {
     self.name_text.clone()
   }
 
   #[napi]
   pub fn get_value_text(&self) -> String {
+    let s = self.value_text.as_str();
+    let s = if s.starts_with('"') { &s[1..] } else { s };
+    let s = if s.ends_with('"') { &s[..s.len() - 1] } else { s };
+    s.to_string()
+  }
+
+  #[napi]
+  pub fn get_value_full_text(&self) -> String {
     self.value_text.clone()
   }
 }

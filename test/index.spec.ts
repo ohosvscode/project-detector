@@ -1,4 +1,5 @@
 import path from 'node:path'
+import MagicString from 'magic-string'
 import { describe, expect } from 'vitest'
 import { ElementDirectory, ElementJsonFile, Module, Product, Project, ProjectDetector, Resource, ResourceDirectory, Uri } from '../index.js'
 
@@ -74,11 +75,25 @@ describe.sequential('projectDetector', (it) => {
     expect(harmonyProject1MainBaseResource).toBeDefined()
   })
 
+  let stringJsonFile: ElementJsonFile
+
   it.sequential('elementDirectory & elementJsonFile.findAll', () => {
     const elementDirectory = ElementDirectory.from(harmonyProject1MainBaseResource)
     const elementJsonFiles = ElementJsonFile.findAll(elementDirectory)
     expect(elementJsonFiles.length).toBeGreaterThanOrEqual(1)
-    const stringJsonFile = elementJsonFiles.find(elementJsonFile => elementJsonFile.getUri().toString().includes('string.json'))!
+    stringJsonFile = elementJsonFiles.find(elementJsonFile => elementJsonFile.getUri().toString().includes('string.json'))!
     expect(stringJsonFile).toBeDefined()
+  })
+
+  it.sequential('elementJsonFile.getReference', () => {
+    const references = stringJsonFile.getReference()
+    expect(references.length).toBeGreaterThanOrEqual(1)
+    const ms = new MagicString(stringJsonFile.getContent())
+    for (const reference of references) {
+      expect(ms.slice(reference.getNameStart(), reference.getNameEnd())).toBe(reference.getNameFullText())
+      expect(ms.slice(reference.getValueStart(), reference.getValueEnd())).toBe(reference.getValueFullText())
+      expect(reference.getNameFullText()).toBe(`"${reference.getNameText()}"`)
+      expect(reference.getValueFullText()).toBe(`"${reference.getValueText()}"`)
+    }
   })
 })

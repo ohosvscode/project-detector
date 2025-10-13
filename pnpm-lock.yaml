@@ -50,6 +50,9 @@ importers:
       lint-staged:
         specifier: ^16.1.6
         version: 16.1.6
+      magic-string:
+        specifier: ^0.30.19
+        version: 0.30.19
       npm-run-all2:
         specifier: ^8.0.4
         version: 8.0.4

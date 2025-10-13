@@ -76,6 +76,7 @@
     "eslint": "^9.37.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",
+    "magic-string": "^0.30.19",
     "npm-run-all2": "^8.0.4",
     "tinybench": "^5.0.1",
     "typescript": "^5.9.2",

@@ -16,7 +16,7 @@ pub struct ElementJsonFile {
   source_code: String,
   uri: Uri,
   #[cfg(not(test))]
-  resource_directory: Reference<ElementDirectory>,
+  element_directory: Reference<ElementDirectory>,
 }
 
 #[napi]
@@ -34,7 +34,7 @@ impl ElementJsonFile {
   }
 
   #[cfg(not(test))]
-  pub fn new(resource_directory: Reference<ElementDirectory>, uri: &Uri, source_code: String) -> Self {
+  pub fn new(element_directory: Reference<ElementDirectory>, uri: &Uri, source_code: String) -> Self {
     let mut parser = Parser::new();
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
@@ -42,7 +42,7 @@ impl ElementJsonFile {
       parser,
       source_code,
       uri: uri.clone(),
-      resource_directory,
+      element_directory,
     }
   }
 
@@ -74,13 +74,17 @@ impl ElementJsonFile {
 
   #[napi]
   #[cfg(not(test))]
-  pub fn get_resource_directory(&self, env: Env) -> Reference<ElementDirectory> {
-    self.resource_directory.clone(env).unwrap()
+  pub fn get_element_directory(&self, env: Env) -> Reference<ElementDirectory> {
+    self.element_directory.clone(env).unwrap()
   }
 
   #[napi]
   pub fn get_content(&self) -> String {
     self.source_code.clone()
+  }
+
+  fn byte_to_char_index(&self, byte_offset: usize) -> usize {
+    self.source_code[..byte_offset].chars().count()
   }
 
   #[napi]
@@ -139,16 +143,16 @@ impl ElementJsonFile {
                 Ok(text) => text,
                 Err(_) => continue,
               };
-              if key_text.contains("\"name\"") {
-                name_start = Some(filtered_nodes[1].start_byte());
-                name_end = Some(filtered_nodes[1].end_byte());
+              if key_text =="\"name\"" {
+                name_start = Some(self.byte_to_char_index(filtered_nodes[1].start_byte()));
+                name_end = Some(self.byte_to_char_index(filtered_nodes[1].end_byte()));
                 name_text = Some(match filtered_nodes[1].utf8_text(self.source_code.as_bytes()) {
                   Ok(text) => text.to_string(),
                   Err(_) => continue,
                 });
-              } else if key_text.contains("\"value\"") {
-                value_start = Some(filtered_nodes[1].start_byte());
-                value_end = Some(filtered_nodes[1].end_byte());
+              } else if key_text == "\"value\"" {
+                value_start = Some(self.byte_to_char_index(filtered_nodes[1].start_byte()));
+                value_end = Some(self.byte_to_char_index(filtered_nodes[1].end_byte()));
                 value_text = Some(match filtered_nodes[1].utf8_text(self.source_code.as_bytes()) {
                   Ok(text) => text.to_string(),
                   Err(_) => continue,
@@ -161,14 +165,16 @@ impl ElementJsonFile {
             if let (Some(name_start), Some(name_end), Some(name_text), Some(value_start), Some(value_end), Some(value_text)) =
               (name_start, name_end, name_text, value_start, value_end, value_text)
             {
-              reference.push(ElementJsonFileReference::new(
-                name_start as u32,
-                name_end as u32,
-                name_text,
-                value_start as u32,
-                value_end as u32,
-                value_text,
-              ))
+              reference.push(
+                ElementJsonFileReference::new(
+                  name_start as u32,
+                  name_end as u32,
+                  name_text,
+                  value_start as u32,
+                  value_end as u32,
+                  value_text,
+                )
+              )
             }
           }
         }
@@ -183,17 +189,39 @@ impl ElementJsonFile {
 mod tests {
   use super::*;
 
+  fn slice(s: &str, start: usize, end_exclusive: usize) -> String {
+    let mut byte_start = 0usize;
+    let mut byte_end = s.len();
+    for (i, (bpos, _)) in s.char_indices().enumerate() {
+      if i == start { byte_start = bpos; }
+      if i == end_exclusive { byte_end = bpos; break; }
+    }
+    s[byte_start..byte_end].to_string()
+  }
+
   #[test]
   fn test_get_reference() {
     let mock_str = String::from("{ \"string\": [{ \"name\": \"test1\", \"value\": \"test1-value\" }] }");
     let mut element_json_file = ElementJsonFile::new(&Uri::file("test.json".to_string()), mock_str.clone());
     let references = element_json_file.get_reference();
     assert_eq!(references.len(), 1);
-    assert_eq!(references[0].get_name_text(), "\"test1\"");
-    assert_eq!(references[0].get_value_text(), "\"test1-value\"");
-    assert_eq!(references[0].get_name_start(), 23);
-    assert_eq!(references[0].get_name_end(), 30);
-    assert_eq!(references[0].get_value_start(), 41);
-    assert_eq!(references[0].get_value_end(), 54);
+    assert_eq!(references[0].get_name_full_text(), "\"test1\"");
+    assert_eq!(references[0].get_value_full_text(), "\"test1-value\"");
+    assert_eq!(
+      slice(
+        &mock_str,
+        references[0].get_name_start() as usize,
+        references[0].get_name_end() as usize
+      ),
+      references[0].get_name_full_text()
+    );
+    assert_eq!(
+      slice(
+        &mock_str,
+        references[0].get_value_start() as usize,
+        references[0].get_value_end() as usize
+      ),
+      references[0].get_value_full_text()
+    );
   }
 }
