@@ -57,7 +57,7 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           run_install: true
-      - name: Install
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
@@ -82,19 +82,19 @@ jobs:
           - host: [self-hosted, windows, x64]
             build: pnpm build --target i686-pc-windows-msvc
             target: i686-pc-windows-msvc
-          - host: [self-hosted, linux, ARM]
+          - host: [self-hosted, linux, x64]
             target: x86_64-unknown-linux-gnu
             build: pnpm build --target x86_64-unknown-linux-gnu --use-napi-cross
-          - host: [self-hosted, linux, ARM]
+          - host: [self-hosted, linux, x64]
             target: x86_64-unknown-linux-musl
             build: pnpm build --target x86_64-unknown-linux-musl -x
           - host: [self-hosted, macos]
             target: aarch64-apple-darwin
             build: pnpm build --target aarch64-apple-darwin
-          - host: [self-hosted, linux, ARM]
+          - host: [self-hosted, linux, x64]
             target: aarch64-unknown-linux-gnu
             build: pnpm build --target aarch64-unknown-linux-gnu --use-napi-cross
-          - host: [self-hosted, linux, ARM]
+          - host: [self-hosted, linux, x64]
             target: armv7-unknown-linux-gnueabihf
             build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
           - host: [self-hosted, linux, ARM]
@@ -268,7 +268,7 @@ jobs:
     runs-on:
       - self-hosted
       - linux
-      - ARM
+      - ${{ contains(matrix.target, 'armv7') && 'x64' || (contains(matrix.target, 'x86_64') && 'x64' || 'arm64') }}
     steps:
       - name: Clean workspace (Linux/macOS)
         if: runner.os != 'Windows'
@@ -312,10 +312,8 @@ jobs:
           node -e "
             if ('${{ matrix.target }}'.endsWith('-musl')) {
               console.log('IMAGE=node:${{ matrix.node }}-alpine')
-            } else if ('${{ matrix.target }}' === 'x86_64-unknown-linux-gnu') {
-              console.log('IMAGE=node:${{ matrix.node }}-bookworm')
             } else {
-              console.log('IMAGE=node:${{ matrix.node }}-slim')
+              console.log('IMAGE=node:${{ matrix.node }}-bullseye')
             }
           " >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
@@ -337,7 +335,11 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          run: npm run test
+          run: |
+            if ! echo "${{ steps.docker.outputs.IMAGE }}" | grep -q alpine; then
+              apt-get update && apt-get install -y libc6-dev
+            fi
+            npm run test
 
   publish:
     name: Publish
