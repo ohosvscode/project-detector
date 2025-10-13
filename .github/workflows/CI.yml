@@ -337,8 +337,15 @@ jobs:
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
           run: |
             if ! echo "${{ steps.docker.outputs.IMAGE }}" | grep -q alpine; then
-              apt-get update && apt-get install -y libc6-dev
+              apt-get update && apt-get install -y libc6-dev build-essential
             fi
+            # 检查 le16toh 符号是否可用
+            echo "Checking for le16toh symbol..."
+            nm -D /lib/x86_64-linux-gnu/libc.so.6 | grep le16toh || echo "le16toh not found in libc"
+            # 设置环境变量确保正确的链接
+            export RUSTFLAGS="-C link-arg=-Wl,--allow-multiple-definition"
+            # 尝试重新构建原生模块
+            npm rebuild
             npm run test
 
   publish:
