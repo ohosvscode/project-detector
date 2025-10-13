@@ -342,18 +342,21 @@ jobs:
           run: |
             if ! echo "${{ steps.docker.outputs.IMAGE }}" | grep -q alpine; then
               apt-get update && apt-get install -y libc6-dev
-              # 仅 armv7 安装 libbsd，提供 le16toh 等符号
-              if [ "${{ matrix.target }}" = "armv7-unknown-linux-gnueabihf" ]; then
+              # 为需要 libbsd 的架构安装 libbsd0，提供 le16toh 等符号
+              if [ "${{ matrix.target }}" = "armv7-unknown-linux-gnueabihf" ] || [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
                 apt-get install -y libbsd0
               fi
             fi
             # 安装 pnpm 并清理重新安装依赖项以确保正确的架构模块
             npm install -g pnpm
             rm -rf node_modules
-            # 仅 armv7 设置库路径与预加载
+            # 为需要 libbsd 的架构设置库路径与预加载
             if [ "${{ matrix.target }}" = "armv7-unknown-linux-gnueabihf" ]; then
               export LD_LIBRARY_PATH=/lib/arm-linux-gnueabihf:${LD_LIBRARY_PATH}
               export LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libbsd.so.0
+            elif [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
+              export LD_LIBRARY_PATH=/lib/aarch64-linux-gnu:${LD_LIBRARY_PATH}
+              export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libbsd.so.0
             fi
             pnpm install --force
             pnpm test
