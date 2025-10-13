@@ -339,7 +339,11 @@ jobs:
             if ! echo "${{ steps.docker.outputs.IMAGE }}" | grep -q alpine; then
               apt-get update && apt-get install -y libc6-dev
             fi
-            npm run test
+            # 安装 pnpm 并清理重新安装依赖项以确保正确的架构模块
+            npm install -g pnpm
+            rm -rf node_modules
+            pnpm install
+            pnpm test
 
   publish:
     name: Publish
