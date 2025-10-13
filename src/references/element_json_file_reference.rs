@@ -21,6 +21,7 @@ pub struct ElementJsonFileReference {
 #[napi]
 impl ElementJsonFileReference {
   #[cfg(not(test))]
+  #[allow(clippy::too_many_arguments)]
   pub fn new(
     name_start: u32,
     name_end: u32,
@@ -44,6 +45,7 @@ impl ElementJsonFileReference {
   }
 
   #[cfg(test)]
+  #[allow(clippy::too_many_arguments)]
   pub fn new(name_start: u32, name_end: u32, name_text: String, value_start: u32, value_end: u32, value_text: String, element_type: String) -> Self {
     Self {
       name_start,
@@ -56,7 +58,7 @@ impl ElementJsonFileReference {
     }
   }
 
-  fn byte_to_char_index(source_code: &String, byte_offset: usize) -> usize {
+  fn byte_to_char_index(source_code: &str, byte_offset: usize) -> usize {
     source_code[..byte_offset].chars().count()
   }
 
@@ -293,8 +295,8 @@ impl ElementJsonFileReference {
   #[napi]
   pub fn get_name_text(&self) -> String {
     let s = self.name_text.as_str();
-    let s = if s.starts_with('"') { &s[1..] } else { s };
-    let s = if s.ends_with('"') { &s[..s.len() - 1] } else { s };
+    let s = if let Some(stripped) = s.strip_prefix('"') { stripped } else { s };
+    let s = if let Some(stripped) = s.strip_suffix('"') { stripped } else { s };
     s.to_string()
   }
 
@@ -306,8 +308,8 @@ impl ElementJsonFileReference {
   #[napi]
   pub fn get_value_text(&self) -> String {
     let s = self.value_text.as_str();
-    let s = if s.starts_with('"') { &s[1..] } else { s };
-    let s = if s.ends_with('"') { &s[..s.len() - 1] } else { s };
+    let s = if let Some(stripped) = s.strip_prefix('"') { stripped } else { s };
+    let s = if let Some(stripped) = s.strip_suffix('"') { stripped } else { s };
     s.to_string()
   }
 
@@ -319,8 +321,8 @@ impl ElementJsonFileReference {
   #[napi]
   pub fn get_element_type(&self) -> String {
     let s = self.element_type.as_str();
-    let s = if s.starts_with('"') { &s[1..] } else { s };
-    let s = if s.ends_with('"') { &s[..s.len() - 1] } else { s };
+    let s = if let Some(stripped) = s.strip_prefix('"') { stripped } else { s };
+    let s = if let Some(stripped) = s.strip_suffix('"') { stripped } else { s };
     s.to_string()
   }
 
