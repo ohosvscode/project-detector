@@ -121,6 +121,28 @@ pub fn htobe64(val: u64) -> u64 {
   }
 }
 
+// 为避免在部分 Linux 发行版/架构上缺失 libbsd 导致的运行期符号解析失败，
+// 这里显式导出与 libbsd 同名的 C 符号，以便动态链接器可在本模块内解析。
+// 这些实现仅依赖于主机端大小端判断和字节交换，与上方纯 Rust 版本一致。
+
+#[export_name = "le16toh"]
+pub extern "C" fn c_le16toh(x: u16) -> u16 { le16toh(x) }
+
+#[export_name = "be16toh"]
+pub extern "C" fn c_be16toh(x: u16) -> u16 { be16toh(x) }
+
+#[export_name = "le32toh"]
+pub extern "C" fn c_le32toh(x: u32) -> u32 { le32toh(x) }
+
+#[export_name = "be32toh"]
+pub extern "C" fn c_be32toh(x: u32) -> u32 { be32toh(x) }
+
+#[export_name = "le64toh"]
+pub extern "C" fn c_le64toh(x: u64) -> u64 { le64toh(x) }
+
+#[export_name = "be64toh"]
+pub extern "C" fn c_be64toh(x: u64) -> u64 { be64toh(x) }
+
 #[cfg(test)]
 mod tests {
   use super::*;
