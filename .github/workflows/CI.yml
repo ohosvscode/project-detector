@@ -48,15 +48,15 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: 22
           package-manager-cache: false
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Install
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -124,15 +124,15 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: 22
           package-manager-cache: false
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
@@ -229,16 +229,16 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           architecture: ${{ matrix.settings.architecture }}
           package-manager-cache: false
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -288,15 +288,15 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           package-manager-cache: false
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Output docker params
         id: docker
         run: |
@@ -380,15 +380,15 @@ jobs:
           Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: 22
           package-manager-cache: false
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
