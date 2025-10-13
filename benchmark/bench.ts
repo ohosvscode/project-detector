@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { Bench } from 'tinybench'
-import { ProjectDetector } from '../index.js'
+import { ProjectDetector } from '../index'
 
 const bench = new Bench()
 
