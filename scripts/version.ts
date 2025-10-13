@@ -1,8 +1,7 @@
-import { execSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
-import { NapiCli } from '@napi-rs/cli'
+import process from 'node:process'
 
-new NapiCli().version({}).then(() => {
-  const version = JSON.parse(fs.readFileSync('package.json', 'utf-8')).version
-  execSync(`pnpm build && git add --all && git commit -m "${version}"`)
-}).catch(console.error)
+spawnSync('napi version', process.argv.slice(2), { stdio: 'inherit' })
+const version = JSON.parse(fs.readFileSync('package.json', 'utf-8')).version
+spawnSync(`pnpm build && git add --all && git commit -m "${version}"`, { stdio: 'inherit' })
