@@ -315,7 +315,7 @@ jobs:
             } else if ('${{ matrix.target }}' === 'x86_64-unknown-linux-gnu') {
               console.log('IMAGE=node:${{ matrix.node }}-bookworm')
             } else {
-              console.log('IMAGE=node:${{ matrix.node }}-bullseye')
+              console.log('IMAGE=node:${{ matrix.node }}-slim')
             }
           " >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
@@ -337,40 +337,7 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          run: |
-            if echo "${{ steps.docker.outputs.IMAGE }}" | grep -q alpine; then
-              # Alpine Linux
-              apk update && apk add --no-cache musl-dev build-base binutils
-              echo "Checking for le16toh symbol in Alpine..."
-              if command -v nm >/dev/null 2>&1; then
-                nm -D /lib/libc.musl-x86_64.so.1 | grep le16toh || echo "le16toh not found in musl libc"
-                echo "Checking for alternative byte order functions..."
-                nm -D /lib/libc.musl-x86_64.so.1 | grep -E "(htole16|htons|ntohs)" || echo "No alternative functions found"
-              else
-                echo "nm command not available, skipping symbol check"
-              fi
-            else
-              # Debian/Ubuntu
-              apt-get update && apt-get install -y libc6-dev build-essential binutils curl
-              echo "Checking for le16toh symbol..."
-              if command -v nm >/dev/null 2>&1; then
-                nm -D /lib/x86_64-linux-gnu/libc.so.6 | grep le16toh || echo "le16toh not found in libc"
-                echo "Checking for alternative byte order functions..."
-                nm -D /lib/x86_64-linux-gnu/libc.so.6 | grep -E "(htole16|htons|ntohs)" || echo "No alternative functions found"
-              else
-                echo "nm command not available, skipping symbol check"
-              fi
-            fi
-            # 设置环境变量确保正确的链接
-            export RUSTFLAGS="-C link-arg=-Wl,--allow-multiple-definition"
-            # 确保 pnpm 可用
-            if ! command -v pnpm >/dev/null 2>&1; then
-              echo "Installing pnpm..."
-              npm install -g pnpm
-            fi
-            # 安装依赖
-            pnpm install --force
-            npm run test
+          run: npm run test
 
   publish:
     name: Publish
