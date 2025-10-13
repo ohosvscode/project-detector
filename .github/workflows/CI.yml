@@ -50,6 +50,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
@@ -59,8 +61,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
-      - name: Install dependencies
-        run: pnpm install
       - name: ESLint
         run: pnpm lint
       - name: Cargo fmt
@@ -126,6 +126,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
@@ -156,8 +158,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           tool: cargo-zigbuild
-      - name: Install dependencies
-        run: pnpm install
       - name: Setup node x86
         uses: actions/setup-node@v5
         if: matrix.settings.target == 'i686-pc-windows-msvc'
@@ -231,14 +231,14 @@ jobs:
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           architecture: ${{ matrix.settings.architecture }}
           package-manager-cache: false
-      - name: Install dependencies
-        run: pnpm install
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -290,6 +290,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
@@ -317,8 +319,6 @@ jobs:
             }
           " >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-      - name: Install dependencies
-        run: pnpm install --force
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -382,13 +382,13 @@ jobs:
       - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          run_install: true
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: 22
           package-manager-cache: false
-      - name: Install dependencies
-        run: pnpm install
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
