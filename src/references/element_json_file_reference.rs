@@ -1,9 +1,9 @@
+use crate::files::element_json_file::ElementJsonFile;
 #[cfg(not(test))]
 use napi::bindgen_prelude::Reference;
 #[cfg(not(test))]
 use napi::Env;
 use napi_derive::napi;
-use crate::files::element_json_file::ElementJsonFile;
 
 #[napi]
 pub struct ElementJsonFileReference {
@@ -44,15 +44,7 @@ impl ElementJsonFileReference {
   }
 
   #[cfg(test)]
-  pub fn new(
-    name_start: u32,
-    name_end: u32,
-    name_text: String,
-    value_start: u32,
-    value_end: u32,
-    value_text: String,
-    element_type: String,
-  ) -> Self {
+  pub fn new(name_start: u32, name_end: u32, name_text: String, value_start: u32, value_end: u32, value_text: String, element_type: String) -> Self {
     Self {
       name_start,
       name_end,
@@ -130,7 +122,7 @@ impl ElementJsonFileReference {
                 Ok(text) => text,
                 Err(_) => continue,
               };
-              if key_text =="\"name\"" {
+              if key_text == "\"name\"" {
                 name_start = Some(Self::byte_to_char_index(&source_code, filtered_nodes[1].start_byte()));
                 name_end = Some(Self::byte_to_char_index(&source_code, filtered_nodes[1].end_byte()));
                 name_text = Some(match filtered_nodes[1].utf8_text(source_code.as_bytes()) {
@@ -152,18 +144,16 @@ impl ElementJsonFileReference {
             if let (Some(name_start), Some(name_end), Some(name_text), Some(value_start), Some(value_end), Some(value_text)) =
               (name_start, name_end, name_text, value_start, value_end, value_text)
             {
-              reference.push(
-                ElementJsonFileReference::new(
-                  name_start as u32,
-                  name_end as u32,
-                  name_text,
-                  value_start as u32,
-                  value_end as u32,
-                  value_text,
-                  element_json_file.clone(env).unwrap(),
-                  current_element_type.clone(),
-                )
-              )
+              reference.push(ElementJsonFileReference::new(
+                name_start as u32,
+                name_end as u32,
+                name_text,
+                value_start as u32,
+                value_end as u32,
+                value_text,
+                element_json_file.clone(env).unwrap(),
+                current_element_type.clone(),
+              ))
             }
           }
         }
@@ -234,7 +224,7 @@ impl ElementJsonFileReference {
                 Ok(text) => text,
                 Err(_) => continue,
               };
-              if key_text =="\"name\"" {
+              if key_text == "\"name\"" {
                 name_start = Some(Self::byte_to_char_index(&source_code, filtered_nodes[1].start_byte()));
                 name_end = Some(Self::byte_to_char_index(&source_code, filtered_nodes[1].end_byte()));
                 name_text = Some(match filtered_nodes[1].utf8_text(source_code.as_bytes()) {
@@ -256,17 +246,15 @@ impl ElementJsonFileReference {
             if let (Some(name_start), Some(name_end), Some(name_text), Some(value_start), Some(value_end), Some(value_text)) =
               (name_start, name_end, name_text, value_start, value_end, value_text)
             {
-              reference.push(
-                ElementJsonFileReference::new(
-                  name_start as u32,
-                  name_end as u32,
-                  name_text,
-                  value_start as u32,
-                  value_end as u32,
-                  value_text,
-                  current_element_type.clone(),
-                )
-              )
+              reference.push(ElementJsonFileReference::new(
+                name_start as u32,
+                name_end as u32,
+                name_text,
+                value_start as u32,
+                value_end as u32,
+                value_text,
+                current_element_type.clone(),
+              ))
             }
           }
         }
@@ -344,12 +332,12 @@ impl ElementJsonFileReference {
   #[napi]
   pub fn to_ets_format(&self) -> String {
     let text = self.get_name_text();
-    return format!("app.{}.{}", self.get_element_type(), text);
+    format!("app.{}.{}", self.get_element_type(), text)
   }
 
   #[napi]
   pub fn to_json_format(&self) -> String {
     let text = self.get_name_text();
-    return format!("${}:{}", self.get_element_type(), text);
+    format!("${}:{}", self.get_element_type(), text)
   }
 }

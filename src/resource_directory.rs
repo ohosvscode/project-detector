@@ -22,12 +22,10 @@ impl ResourceDirectory {
     let qualified_directories = resource.get_qualified_directories();
 
     for qualified_directory in qualified_directories {
-      resource_directories.push(
-        ResourceDirectory { 
-          uri: qualified_directory,
-          resource: resource.clone(env).unwrap()
-        }
-      )
+      resource_directories.push(ResourceDirectory {
+        uri: qualified_directory,
+        resource: resource.clone(env).unwrap(),
+      })
     }
 
     resource_directories

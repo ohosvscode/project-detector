@@ -98,14 +98,19 @@ impl ElementJsonFile {
 mod tests {
   use crate::references::element_json_file_reference::ElementJsonFileReference;
 
-use super::*;
+  use super::*;
 
   fn slice(s: &str, start: usize, end_exclusive: usize) -> String {
     let mut byte_start = 0usize;
     let mut byte_end = s.len();
     for (i, (bpos, _)) in s.char_indices().enumerate() {
-      if i == start { byte_start = bpos; }
-      if i == end_exclusive { byte_end = bpos; break; }
+      if i == start {
+        byte_start = bpos;
+      }
+      if i == end_exclusive {
+        byte_end = bpos;
+        break;
+      }
     }
     s[byte_start..byte_end].to_string()
   }
@@ -119,19 +124,11 @@ use super::*;
     assert_eq!(references[0].get_name_full_text(), "\"test1\"");
     assert_eq!(references[0].get_value_full_text(), "\"test1-value\"");
     assert_eq!(
-      slice(
-        &mock_str,
-        references[0].get_name_start() as usize,
-        references[0].get_name_end() as usize
-      ),
+      slice(&mock_str, references[0].get_name_start() as usize, references[0].get_name_end() as usize),
       references[0].get_name_full_text()
     );
     assert_eq!(
-      slice(
-        &mock_str,
-        references[0].get_value_start() as usize,
-        references[0].get_value_end() as usize
-      ),
+      slice(&mock_str, references[0].get_value_start() as usize, references[0].get_value_end() as usize),
       references[0].get_value_full_text()
     );
   }

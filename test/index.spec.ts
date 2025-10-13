@@ -85,7 +85,7 @@ describe.sequential('projectDetector', (it) => {
     expect(stringJsonFile).toBeDefined()
   })
 
-  it.sequential('elementJsonFile.getReference', () => {
+  it.sequential('ElementJsonFileReference.findAll', () => {
     const references = ElementJsonFileReference.findAll(stringJsonFile)
     expect(references.length).toBeGreaterThanOrEqual(1)
     const ms = new MagicString(stringJsonFile.getContent())
