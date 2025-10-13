@@ -12,10 +12,11 @@ export declare class ElementJsonFile {
   getElementDirectory(): ElementDirectory
   getContent(): string
   parse(): any
-  getReference(): Array<ElementJsonFileReference>
 }
 
 export declare class ElementJsonFileReference {
+  static findAll(elementJsonFile: ElementJsonFile): Array<ElementJsonFileReference>
+  getElementJsonFile(): ElementJsonFile
   getNameStart(): number
   getNameEnd(): number
   getValueStart(): number
@@ -24,6 +25,10 @@ export declare class ElementJsonFileReference {
   getNameFullText(): string
   getValueText(): string
   getValueFullText(): string
+  getElementType(): string
+  getFullElementType(): string
+  toEtsFormat(): string
+  toJsonFormat(): string
 }
 
 export declare class Module {

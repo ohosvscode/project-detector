@@ -1,6 +1,6 @@
 #[cfg(not(test))]
 use crate::element_directory::ElementDirectory;
-use crate::{references::element_json_file_reference::ElementJsonFileReference, utils::uri::Uri};
+use crate::utils::uri::Uri;
 #[cfg(not(test))]
 use napi::bindgen_prelude::Reference;
 #[cfg(not(test))]
@@ -8,11 +8,12 @@ use napi::Env;
 use napi_derive::napi;
 #[cfg(not(test))]
 use std::fs;
+use std::sync::{Arc, Mutex};
 use tree_sitter::Parser;
 
 #[napi]
 pub struct ElementJsonFile {
-  parser: Parser,
+  parser: Arc<Mutex<Parser>>,
   source_code: String,
   uri: Uri,
   #[cfg(not(test))]
@@ -27,7 +28,7 @@ impl ElementJsonFile {
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
     Self {
-      parser,
+      parser: Arc::new(Mutex::new(parser)),
       source_code,
       uri: uri.clone(),
     }
@@ -39,7 +40,7 @@ impl ElementJsonFile {
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
     Self {
-      parser,
+      parser: Arc::new(Mutex::new(parser)),
       source_code,
       uri: uri.clone(),
       element_directory,
@@ -83,111 +84,21 @@ impl ElementJsonFile {
     self.source_code.clone()
   }
 
-  fn byte_to_char_index(&self, byte_offset: usize) -> usize {
-    self.source_code[..byte_offset].chars().count()
-  }
-
   #[napi]
   pub fn parse(&mut self) -> serde_json::Value {
     serde_json5::from_str(&self.source_code).unwrap()
   }
 
-  #[napi]
-  pub fn get_reference(&mut self) -> Vec<ElementJsonFileReference> {
-    let mut reference = Vec::new();
-    let tree = self.parser.parse(self.source_code.clone(), None).unwrap();
-
-    for child in tree.root_node().children(&mut tree.root_node().walk()) {
-      if child.kind() != "object" {
-        continue;
-      }
-
-      for element_type_key in child.children(&mut child.walk()) {
-        if element_type_key.kind() != "pair" {
-          continue;
-        }
-
-        for element_type_value in element_type_key.children(&mut element_type_key.walk()) {
-          if element_type_value.kind() != "array" {
-            continue;
-          }
-
-          for element_name in element_type_value.children(&mut element_type_value.walk()) {
-            if element_name.kind() != "object" {
-              continue;
-            }
-
-            let mut name_start: Option<usize> = None;
-            let mut name_end: Option<usize> = None;
-            let mut name_text: Option<String> = None;
-            let mut value_start: Option<usize> = None;
-            let mut value_end: Option<usize> = None;
-            let mut value_text: Option<String> = None;
-
-            for element_name_key in element_name.children(&mut element_name.walk()) {
-              if element_name_key.kind() != "pair" {
-                continue;
-              }
-
-              let mut filtered_nodes = Vec::new();
-              for element_name_key_item in element_name_key.children(&mut element_name_key.walk()) {
-                if element_name_key_item.kind() != "string" {
-                  continue;
-                }
-                filtered_nodes.push(element_name_key_item);
-              }
-              if filtered_nodes.len() != 2 {
-                continue;
-              }
-              let key_text = match filtered_nodes[0].utf8_text(self.source_code.as_bytes()) {
-                Ok(text) => text,
-                Err(_) => continue,
-              };
-              if key_text =="\"name\"" {
-                name_start = Some(self.byte_to_char_index(filtered_nodes[1].start_byte()));
-                name_end = Some(self.byte_to_char_index(filtered_nodes[1].end_byte()));
-                name_text = Some(match filtered_nodes[1].utf8_text(self.source_code.as_bytes()) {
-                  Ok(text) => text.to_string(),
-                  Err(_) => continue,
-                });
-              } else if key_text == "\"value\"" {
-                value_start = Some(self.byte_to_char_index(filtered_nodes[1].start_byte()));
-                value_end = Some(self.byte_to_char_index(filtered_nodes[1].end_byte()));
-                value_text = Some(match filtered_nodes[1].utf8_text(self.source_code.as_bytes()) {
-                  Ok(text) => text.to_string(),
-                  Err(_) => continue,
-                });
-              } else {
-                continue;
-              }
-            }
-
-            if let (Some(name_start), Some(name_end), Some(name_text), Some(value_start), Some(value_end), Some(value_text)) =
-              (name_start, name_end, name_text, value_start, value_end, value_text)
-            {
-              reference.push(
-                ElementJsonFileReference::new(
-                  name_start as u32,
-                  name_end as u32,
-                  name_text,
-                  value_start as u32,
-                  value_end as u32,
-                  value_text,
-                )
-              )
-            }
-          }
-        }
-      }
-    }
-
-    reference
+  pub fn get_parser(&self) -> Arc<Mutex<Parser>> {
+    Arc::clone(&self.parser)
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use crate::references::element_json_file_reference::ElementJsonFileReference;
+
+use super::*;
 
   fn slice(s: &str, start: usize, end_exclusive: usize) -> String {
     let mut byte_start = 0usize;
@@ -202,8 +113,8 @@ mod tests {
   #[test]
   fn test_get_reference() {
     let mock_str = String::from("{ \"string\": [{ \"name\": \"test1\", \"value\": \"test1-value\" }] }");
-    let mut element_json_file = ElementJsonFile::new(&Uri::file("test.json".to_string()), mock_str.clone());
-    let references = element_json_file.get_reference();
+    let element_json_file = ElementJsonFile::new(&Uri::file("test.json".to_string()), mock_str.clone());
+    let references = ElementJsonFileReference::find_all(element_json_file);
     assert_eq!(references.len(), 1);
     assert_eq!(references[0].get_name_full_text(), "\"test1\"");
     assert_eq!(references[0].get_value_full_text(), "\"test1-value\"");

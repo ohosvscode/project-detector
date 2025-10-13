@@ -1,7 +1,7 @@
 import path from 'node:path'
 import MagicString from 'magic-string'
 import { describe, expect } from 'vitest'
-import { ElementDirectory, ElementJsonFile, Module, Product, Project, ProjectDetector, Resource, ResourceDirectory, Uri } from '../index.js'
+import { ElementDirectory, ElementJsonFile, ElementJsonFileReference, Module, Product, Project, ProjectDetector, Resource, ResourceDirectory, Uri } from '../index.js'
 
 describe.sequential('projectDetector', (it) => {
   const mockPath = path.resolve(__dirname, '..', 'mock')
@@ -86,7 +86,7 @@ describe.sequential('projectDetector', (it) => {
   })
 
   it.sequential('elementJsonFile.getReference', () => {
-    const references = stringJsonFile.getReference()
+    const references = ElementJsonFileReference.findAll(stringJsonFile)
     expect(references.length).toBeGreaterThanOrEqual(1)
     const ms = new MagicString(stringJsonFile.getContent())
     for (const reference of references) {
@@ -94,6 +94,8 @@ describe.sequential('projectDetector', (it) => {
       expect(ms.slice(reference.getValueStart(), reference.getValueEnd())).toBe(reference.getValueFullText())
       expect(reference.getNameFullText()).toBe(`"${reference.getNameText()}"`)
       expect(reference.getValueFullText()).toBe(`"${reference.getValueText()}"`)
+      expect(reference.toEtsFormat()).toBe(`app.${reference.getElementType()}.${reference.getNameText()}`)
+      expect(reference.toJsonFormat()).toBe(`$${reference.getElementType()}:${reference.getNameText()}`)
     }
   })
 })
