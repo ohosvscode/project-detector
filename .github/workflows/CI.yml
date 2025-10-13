@@ -312,6 +312,8 @@ jobs:
           node -e "
             if ('${{ matrix.target }}'.endsWith('-musl')) {
               console.log('IMAGE=node:${{ matrix.node }}-alpine')
+            } else if ('${{ matrix.target }}' === 'armv7-unknown-linux-gnueabihf') {
+              console.log('IMAGE=node:${{ matrix.node }}-bullseye')
             } else {
               console.log('IMAGE=node:${{ matrix.node }}-slim')
             }
@@ -344,6 +346,10 @@ jobs:
             # 安装 pnpm 并清理重新安装依赖项以确保正确的架构模块
             npm install -g pnpm
             rm -rf node_modules
+            # 为 ARM 架构设置环境变量
+            if [[ "${{ matrix.target }}" == "armv7-unknown-linux-gnueabihf" ]]; then
+              export LD_LIBRARY_PATH=/lib/arm-linux-gnueabihf:$LD_LIBRARY_PATH
+            fi
             pnpm install --force
             pnpm test
 
