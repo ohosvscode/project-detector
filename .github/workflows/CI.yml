@@ -310,6 +310,8 @@ jobs:
           node -e "
             if ('${{ matrix.target }}'.endsWith('-musl')) {
               console.log('IMAGE=node:${{ matrix.node }}-alpine')
+            } else if ('${{ matrix.target }}' === 'x86_64-unknown-linux-gnu') {
+              console.log('IMAGE=node:${{ matrix.node }}-bookworm')
             } else {
               console.log('IMAGE=node:${{ matrix.node }}-bullseye')
             }
@@ -342,10 +344,14 @@ jobs:
             # 检查 le16toh 符号是否可用
             echo "Checking for le16toh symbol..."
             nm -D /lib/x86_64-linux-gnu/libc.so.6 | grep le16toh || echo "le16toh not found in libc"
+            # 检查是否有 le16toh 的替代函数
+            echo "Checking for alternative byte order functions..."
+            nm -D /lib/x86_64-linux-gnu/libc.so.6 | grep -E "(htole16|htons|ntohs)" || echo "No alternative functions found"
             # 设置环境变量确保正确的链接
             export RUSTFLAGS="-C link-arg=-Wl,--allow-multiple-definition"
-            # 尝试重新构建原生模块
-            npm rebuild
+            # 清理并重新安装依赖
+            rm -rf node_modules package-lock.json pnpm-lock.yaml
+            pnpm install --force
             npm run test
 
   publish:
