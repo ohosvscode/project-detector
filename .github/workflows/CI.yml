@@ -152,6 +152,8 @@ jobs:
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
+          use-cache: false
+          use-tool-cache: false
           version: 0.15.1
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
