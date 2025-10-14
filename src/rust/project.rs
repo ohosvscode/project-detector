@@ -81,16 +81,18 @@ impl Project {
     let build_profile_content = fs::read_to_string(build_profile_uri.fs_path()).unwrap_or_default();
     let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
 
-    if parsed_build_profile.is_object() && parsed_build_profile.get("app").is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").is_some_and(|modules| modules.is_array())) {
-      Some(
-        Project {
-          project_detector: project_detector.clone(env).unwrap(),
-          uri,
-          parsed_build_profile,
-          build_profile_uri,
-          build_profile_content,
-        }
-      )
+    if parsed_build_profile.is_object()
+      && parsed_build_profile
+        .get("app")
+        .is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").is_some_and(|modules| modules.is_array()))
+    {
+      Some(Project {
+        project_detector: project_detector.clone(env).unwrap(),
+        uri,
+        parsed_build_profile,
+        build_profile_uri,
+        build_profile_content,
+      })
     } else {
       None
     }
