@@ -3,7 +3,7 @@ use std::{fmt, path};
 use url::Url;
 
 #[napi]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Uri {
   fs_path: path::PathBuf,
   url: Url,
@@ -29,6 +29,11 @@ impl Uri {
       fs_path: url.to_file_path().unwrap_or_default(),
       url,
     }
+  }
+
+  #[napi]
+  pub fn is_equal(&self, other: &Uri) -> bool {
+    self.fs_path == other.fs_path || self.to_string() == other.to_string()
   }
 
   #[napi(getter)]

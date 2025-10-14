@@ -8,6 +8,7 @@ version = "0.1.0"
 
 [lib]
 crate-type = [ "cdylib" ]
+path = "src/rust/lib.rs"
 
 [dependencies]
 napi = { version = "3.0.0", features = [ "serde-json" ] }

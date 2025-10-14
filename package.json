@@ -62,6 +62,11 @@
     "test": "vitest",
     "version": "node --import @oxc-node/core/register scripts/version.ts"
   },
+  "dependencies": {
+    "alien-signals": "^3.0.0",
+    "chokidar": "^4.0.3",
+    "mitt": "^3.0.1"
+  },
   "devDependencies": {
     "@antfu/eslint-config": "^5.4.1",
     "@emnapi/core": "^1.5.0",
@@ -72,6 +77,8 @@
     "@taplo/cli": "^0.7.0",
     "@tybys/wasm-util": "^0.10.0",
     "@types/node": "^24.7.2",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
     "chalk": "^5.6.2",
     "emnapi": "^1.5.0",
     "eslint": "^9.37.0",

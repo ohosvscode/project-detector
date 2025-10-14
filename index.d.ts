@@ -53,6 +53,7 @@ export declare class Product {
 export declare class Project {
   getProjectDetector(): ProjectDetector
   static findAll(projectDetector: ProjectDetector): Array<Project>
+  static create(projectDetector: ProjectDetector, uri: string): Project | null
   getUri(): Uri
   getParsedBuildProfile(): any
   getBuildProfileUri(): Uri
@@ -144,6 +145,7 @@ export declare class ResourceDirectory {
 export declare class Uri {
   static file(path: string): Uri
   static parse(url: string): Uri
+  isEqual(other: Uri): boolean
   get fsPath(): string
   get path(): string
   get scheme(): string

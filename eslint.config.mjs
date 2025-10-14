@@ -6,4 +6,9 @@ export default antfu({
     'index.d.ts',
     '*.js',
   ],
+
+  rules: {
+    'ts/no-namespace': 'off',
+    'ts/method-signature-style': ['error', 'method'],
+  },
 })
