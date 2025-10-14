@@ -53,7 +53,7 @@ export declare class Product {
 export declare class Project {
   getProjectDetector(): ProjectDetector
   static findAll(projectDetector: ProjectDetector): Array<Project>
-  static create(projectDetector: ProjectDetector, uri: string): Project | null
+  static create(projectDetector: ProjectDetector, projectUri: string): Project | null
   getUri(): Uri
   getParsedBuildProfile(): any
   getBuildProfileUri(): Uri

@@ -1,21 +1,35 @@
+import type { Uri } from '../../index'
 import type { ProjectDetector } from './project-detector'
-import type { Signal } from './types'
 import { signal } from 'alien-signals'
 import { Project as RustProject } from '../../index'
+import { DisposableSignal } from './types'
 
 export interface Project extends RustProject {
+  getUnderlyingProject(): RustProject
 }
 
 export namespace Project {
-  export function findAll(projectDetector: ProjectDetector): Signal<Project[]> {
-    const projects: Signal<Project[]> = signal(RustProject.findAll(projectDetector.getProjectDetector()))
+  function boundRustProject(project: RustProject): Project {
+    return {
+      getBuildProfileContent: () => project.getBuildProfileContent(),
+      getBuildProfileUri: () => project.getBuildProfileUri(),
+      getParsedBuildProfile: () => project.getParsedBuildProfile(),
+      getUri: () => project.getUri(),
+      getUnderlyingProject: () => project,
+      getProjectDetector: () => project.getProjectDetector(),
+    }
+  }
 
-    projectDetector.on('*', (event, uri) => {
+  export function findAll(projectDetector: ProjectDetector): DisposableSignal<Project[]> {
+    const underlyingProjectDetector = projectDetector.getUnderlyingProjectDetector()
+    const projects = signal<Project[]>(RustProject.findAll(underlyingProjectDetector).map(boundRustProject))
+
+    const handle = (event: keyof ProjectDetector.EventMap, uri: Uri) => {
       if (event === 'file-created' && uri.fsPath.endsWith('build-profile.json5')) {
-        projects(RustProject.findAll(projectDetector.getProjectDetector()))
-        const newProject = RustProject.create(projectDetector.getProjectDetector(), uri.fsPath)
+        projects(RustProject.findAll(underlyingProjectDetector).map(boundRustProject))
+        const newProject = RustProject.create(underlyingProjectDetector, uri.fsPath)
         if (newProject) {
-          projects([...projects(), newProject])
+          projects([...projects(), boundRustProject(newProject)])
         }
       }
       else if (event === 'file-deleted' && uri.fsPath.endsWith('build-profile.json5')) {
@@ -28,12 +42,13 @@ export namespace Project {
         const existingProjectIndex = projects().findIndex(project => project.getUri().isEqual(uri) || project.getBuildProfileUri().isEqual(uri))
         if (existingProjectIndex !== -1) {
           const currentProjects = projects()
-          currentProjects[existingProjectIndex] = RustProject.create(projectDetector.getProjectDetector(), uri.fsPath)!
+          currentProjects[existingProjectIndex] = boundRustProject(RustProject.create(underlyingProjectDetector, uri.fsPath)!)
           projects(currentProjects)
         }
       }
-    })
+    }
 
-    return projects
+    projectDetector.on('*', handle)
+    return DisposableSignal.create(projects, () => projectDetector.off('*', handle)) as DisposableSignal<Project[]>
   }
 }

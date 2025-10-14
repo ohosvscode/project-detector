@@ -5,7 +5,7 @@ import { ProjectDetector as RustProjectDetector } from '../../index'
 
 export interface ProjectDetector extends Emitter<ProjectDetector.EventMap> {
   getWorkspaceFolder(): Uri
-  getProjectDetector(): RustProjectDetector
+  getUnderlyingProjectDetector(): RustProjectDetector
 }
 
 export namespace ProjectDetector {
@@ -27,7 +27,7 @@ export namespace ProjectDetector {
       off: emitter.off,
       emit: emitter.emit,
       getWorkspaceFolder: () => projectDetector.getWorkspaceFolder(),
-      getProjectDetector: () => projectDetector,
+      getUnderlyingProjectDetector: () => projectDetector,
     }
   }
 }

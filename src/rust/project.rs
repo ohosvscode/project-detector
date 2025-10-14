@@ -50,24 +50,19 @@ impl Project {
   pub fn find_all(project_detector: Reference<ProjectDetector>, env: Env) -> Vec<Project> {
     let mut projects = Vec::new();
     let workspace_folder = project_detector.get_workspace_folder().fs_path();
-    let dir_entries = WalkDir::new(workspace_folder).into_iter().filter_map(|entry| match entry {
-      Ok(entry) => {
-        if Self::is_in_exclude_dirs(&entry) {
-          None
-        } else {
-          Some(entry)
-        }
-      }
-      Err(_) => None,
-    });
+    let entries: Vec<_> = WalkDir::new(workspace_folder)
+      .into_iter()
+      .filter_entry(|entry| !Self::is_in_exclude_dirs(entry))
+      .filter_map(|res| res.ok())
+      .collect();
 
-    for entry in dir_entries {
-      if let Some(project) = Self::create(
-        project_detector.clone(env).unwrap(),
-        env,
-        entry.path().parent().unwrap_or(Path::new("")).to_string_lossy().to_string(),
-      ) {
-        projects.push(project);
+    for entry in entries {
+      let path = entry.path();
+      if path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name == "build-profile.json5") && entry.file_type().is_file() {
+        let project_dir = path.parent().unwrap_or(Path::new("")).to_string_lossy().to_string();
+        if let Some(project) = Self::create(project_detector.clone(env).unwrap(), env, project_dir) {
+          projects.push(project);
+        }
       }
     }
 
@@ -76,26 +71,26 @@ impl Project {
 
   #[napi]
   #[cfg(not(test))]
-  pub fn create(project_detector: Reference<ProjectDetector>, env: Env, uri: String) -> Option<Project> {
-    let uri = Uri::file(uri);
-    let file_path = uri.fs_path();
-    let build_profile_path = Path::new(&file_path).join("build-profile.json5");
+  pub fn create(project_detector: Reference<ProjectDetector>, env: Env, project_uri: String) -> Option<Project> {
+    let uri = Uri::file(project_uri);
+    if !fs::metadata(uri.fs_path()).map(|m| m.is_dir()).unwrap_or(false) {
+      return None;
+    }
+    let build_profile_path = Path::new(&uri.fs_path()).join("build-profile.json5");
     let build_profile_uri = Uri::file(build_profile_path.to_string_lossy().to_string());
-    let file_content = fs::read_to_string(build_profile_uri.fs_path()).unwrap_or_default();
-    let build_profile: serde_json::Value = serde_json5::from_str(&file_content).unwrap_or_default();
+    let build_profile_content = fs::read_to_string(build_profile_uri.fs_path()).unwrap_or_default();
+    let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
 
-    if build_profile.is_object()
-      && build_profile
-        .get("app")
-        .is_some_and(|app| app.is_object() && build_profile.get("modules").is_some_and(|modules| modules.is_array()))
-    {
-      Some(Project {
-        project_detector: project_detector.clone(env).unwrap(),
-        uri,
-        parsed_build_profile: build_profile,
-        build_profile_uri,
-        build_profile_content: file_content,
-      })
+    if parsed_build_profile.is_object() && parsed_build_profile.get("app").is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").is_some_and(|modules| modules.is_array())) {
+      Some(
+        Project {
+          project_detector: project_detector.clone(env).unwrap(),
+          uri,
+          parsed_build_profile,
+          build_profile_uri,
+          build_profile_content,
+        }
+      )
     } else {
       None
     }

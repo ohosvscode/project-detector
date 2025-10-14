@@ -8,7 +8,7 @@ export namespace Chokidar {
     watcher.on('change', path => projectDetector.emit('file-changed', Uri.file(path)))
     watcher.on('unlink', path => projectDetector.emit('file-deleted', Uri.file(path)))
     watcher.on('add', path => projectDetector.emit('file-created', Uri.file(path)))
-    await new Promise(resolve => watcher.on('ready', () => resolve(void 0)))
+    await new Promise<void>(resolve => watcher.on('ready', resolve))
     return watcher
   }
 }

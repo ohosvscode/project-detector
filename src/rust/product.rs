@@ -1,9 +1,8 @@
-use std::path::Path;
-
 use crate::module::Module;
 use crate::utils::uri::Uri;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
+use std::path::Path;
 
 #[napi]
 pub struct Product {
