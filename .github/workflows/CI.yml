@@ -56,7 +56,8 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          run_install: true
+          run_install: |
+            - args: [--force]
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -132,7 +133,8 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          run_install: true
+          run_install: |
+            - args: [--force]
       - name: Install Rust (Windows)
         if: ${{ contains(matrix.settings.host, 'windows') }}
         run: |
@@ -238,7 +240,8 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          run_install: true
+          run_install: |
+            - args: [--force]
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -296,7 +299,8 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          run_install: true
+          run_install: |
+            - args: [--force]
       - name: Output docker params
         id: docker
         run: |
@@ -395,7 +399,8 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          run_install: true
+          run_install: |
+            - args: [--force]
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
