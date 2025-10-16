@@ -369,7 +369,7 @@ jobs:
 
   publish:
     name: Publish
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, macOS, ARM]
     needs:
       - lint
       - test-macOS-windows-binding
