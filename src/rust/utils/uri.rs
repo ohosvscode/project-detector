@@ -13,7 +13,7 @@ pub struct Uri {
 impl Uri {
   #[napi]
   pub fn file(path: String) -> Self {
-    let url = Url::from_file_path(path).unwrap_or(Url::parse("file://").unwrap());
+    let url = Url::from_file_path(&path).unwrap_or(Url::parse(&path).unwrap_or(Url::parse("file://").unwrap()));
 
     Self {
       fs_path: url.to_file_path().unwrap_or_default(),
@@ -29,6 +29,24 @@ impl Uri {
       fs_path: url.to_file_path().unwrap_or_default(),
       url,
     }
+  }
+
+  #[napi(js_name = "basename")]
+  pub fn base_name(uri: &Uri) -> String {
+    uri.url.path_segments()
+      .and_then(|segments| segments.last())
+      .unwrap_or_default()
+      .to_string()
+  }
+
+  #[napi(js_name = "dirname")]
+  pub fn dir_name(uri: &Uri) -> Uri {
+    let path = path::Path::new(&uri.fs_path);
+    Uri::file(
+      path.parent()
+      .map(|p| p.to_string_lossy().to_string())
+      .unwrap_or_else(|| ".".to_string())
+    )
   }
 
   #[napi]

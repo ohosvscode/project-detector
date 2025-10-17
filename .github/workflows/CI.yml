@@ -364,7 +364,7 @@ jobs:
               export LD_LIBRARY_PATH=/lib/aarch64-linux-gnu:${LD_LIBRARY_PATH}
               export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libbsd.so.0
             fi
-            pnpm install --force
+            pnpm install --force --registry=https://registry.npmmirror.com
             pnpm test
 
   publish:

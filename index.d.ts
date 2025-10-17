@@ -32,6 +32,7 @@ export declare class ElementJsonFileReference {
 }
 
 export declare class Module {
+  static create(project: Project, moduleUri: string): Module | null
   static findAll(project: Project): Array<Module>
   getUri(): Uri
   getModuleName(): string
@@ -145,6 +146,8 @@ export declare class ResourceDirectory {
 export declare class Uri {
   static file(path: string): Uri
   static parse(url: string): Uri
+  static basename(uri: Uri): string
+  static dirname(uri: Uri): Uri
   isEqual(other: Uri): boolean
   get fsPath(): string
   get path(): string

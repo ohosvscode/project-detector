@@ -18,6 +18,29 @@ pub struct Module {
 #[napi]
 impl Module {
   #[napi]
+  pub fn create(project: Reference<Project>, module_uri: String, env: Env) -> Option<Module> {
+    let uri = Uri::file(module_uri);
+    let build_profile_path = Path::new(&uri.fs_path()).join("build-profile.json5");
+    let build_profile_uri = Uri::file(build_profile_path.to_string_lossy().to_string());
+    let build_profile_content = fs::read_to_string(build_profile_path).unwrap_or_default();
+    let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
+    if !parsed_build_profile.is_object() || !parsed_build_profile.get("targets").is_some_and(|targets| targets.is_array()) {
+      return None;
+    }
+
+    Some(
+      Module {
+        module_name: Self::extract_module_name(&parsed_build_profile),
+        uri,
+        project: project.clone(env).unwrap(),
+        parsed_build_profile,
+        build_profile_uri,
+        build_profile_content,
+      }
+    )
+  }
+
+  #[napi]
   pub fn find_all(project: Reference<Project>, env: Env) -> Vec<Module> {
     let parsed_build_profile = project.get_parsed_build_profile();
     let mut modules = Vec::new();
@@ -28,23 +51,11 @@ impl Module {
     };
 
     for module_config in modules_array {
-      let uri = Self::build_module_uri(&project, module_config);
-      let build_profile_path = Path::new(&uri.fs_path()).join("build-profile.json5");
-      let build_profile_uri = Uri::file(build_profile_path.to_string_lossy().to_string());
-      let build_profile_content = fs::read_to_string(build_profile_path).unwrap_or_default();
-      let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
-      if !parsed_build_profile.is_object() || !parsed_build_profile.get("targets").is_some_and(|targets| targets.is_array()) {
-        continue;
+      let project_ref = project.clone(env).unwrap();
+      let uri = Self::build_module_uri(project_ref, module_config);
+      if let Some(module) = Self::create(project.clone(env).unwrap(), uri.to_string(), env) {
+        modules.push(module);
       }
-
-      modules.push(Module {
-        module_name: Self::extract_module_name(module_config),
-        uri,
-        project: project.clone(env).unwrap(),
-        parsed_build_profile,
-        build_profile_uri,
-        build_profile_content,
-      });
     }
 
     modules
@@ -86,7 +97,7 @@ impl Module {
     module_config.get("name").and_then(|name| name.as_str()).unwrap_or("").to_string()
   }
 
-  fn build_module_uri(project: &Reference<Project>, module_config: &serde_json::Value) -> Uri {
+  fn build_module_uri(project: Reference<Project>, module_config: &serde_json::Value) -> Uri {
     let project_path = project.get_uri().fs_path();
     let src_path = module_config.get("srcPath").and_then(|path| path.as_str()).unwrap_or("");
     let full_path = path_clean::clean(Path::new(&project_path).join(src_path).to_string_lossy().to_string());

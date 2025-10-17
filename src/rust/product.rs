@@ -24,10 +24,12 @@ impl Product {
     for target_config in targets_array {
       let target_name = target_config.get("name").and_then(|name| name.as_str()).unwrap_or_default();
 
-      products.push(Product {
-        module: module.clone(env).unwrap(),
-        name: target_name.to_string(),
-      })
+      products.push(
+        Product {
+          module: module.clone(env).unwrap(),
+          name: target_name.to_string(),
+        }
+      )
     }
 
     products

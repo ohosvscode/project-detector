@@ -84,15 +84,17 @@ impl Project {
     if parsed_build_profile.is_object()
       && parsed_build_profile
         .get("app")
-        .is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").is_some_and(|modules| modules.is_array()))
+        .is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").and_then(|modules| modules.as_array()).is_some())
     {
-      Some(Project {
-        project_detector: project_detector.clone(env).unwrap(),
-        uri,
-        parsed_build_profile,
-        build_profile_uri,
-        build_profile_content,
-      })
+      Some(
+        Project {
+          project_detector: project_detector.clone(env).unwrap(),
+          uri,
+          parsed_build_profile,
+          build_profile_uri,
+          build_profile_content,
+        }
+      )
     } else {
       None
     }
