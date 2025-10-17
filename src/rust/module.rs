@@ -28,16 +28,14 @@ impl Module {
       return None;
     }
 
-    Some(
-      Module {
-        module_name: Self::extract_module_name(&parsed_build_profile),
-        uri,
-        project: project.clone(env).unwrap(),
-        parsed_build_profile,
-        build_profile_uri,
-        build_profile_content,
-      }
-    )
+    Some(Module {
+      module_name: Self::extract_module_name(&parsed_build_profile),
+      uri,
+      project: project.clone(env).unwrap(),
+      parsed_build_profile,
+      build_profile_uri,
+      build_profile_content,
+    })
   }
 
   #[napi]
