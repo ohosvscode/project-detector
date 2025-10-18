@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { afterAll, describe, expect } from 'vitest'
 import { Uri } from '../index'
-import { Chokidar, Module, Project, ProjectDetector } from '../src/node'
+import { Module, Product, Project, ProjectDetector, Watcher } from '../src/node'
 
 describe.sequential('projectDetector', (it) => {
   const mockPath = path.resolve(__dirname, '..', 'mock')
@@ -14,7 +14,7 @@ describe.sequential('projectDetector', (it) => {
   it.sequential('projectDetector.create', async () => {
     projectDetector = ProjectDetector.create(Uri.file(mockPath).toString())
     expect(projectDetector.getWorkspaceFolder().fsPath).toBe(mockPath)
-    watcher = await Chokidar.create(projectDetector)
+    watcher = await Watcher.fromChokidar(projectDetector)
     watcher.on('all', (event, path) => console.warn(`[FILE EVENT] ${event} ${path}`))
   })
 
@@ -45,8 +45,32 @@ describe.sequential('projectDetector', (it) => {
     expect(projects().length).toBe(2)
   })
 
+  let harmonyProject1Module: Module
+
   it.sequential('module.findAll', async () => {
     const modules = Module.findAll(harmonyProject1)
-    console.warn(modules())
+    expect(modules().length).toBe(1)
+    const bakFilePath = path.resolve(modules()[0].getUri().fsPath, 'build-profile.json5.bak')
+    const buildProfileFilePath = modules()[0].getBuildProfileUri().fsPath
+
+    // when the build-profile.json5 file is deleted, the module should be removed
+    fs.renameSync(buildProfileFilePath, bakFilePath)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(modules().length).toBe(0)
+
+    // when the build-profile.json5 file is created, the module should be added
+    fs.renameSync(bakFilePath, buildProfileFilePath)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(modules().length).toBe(1)
+
+    harmonyProject1Module = modules()[0]
+  })
+
+  it.sequential('product.findAll', async () => {
+    const products = Product.findAll(harmonyProject1Module)
+
+    for (const product of products) {
+      console.warn(product.getName(), product.getCurrentTargetConfig())
+    }
   })
 })

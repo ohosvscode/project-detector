@@ -1,4 +1,5 @@
-export * from './chokidar'
 export * from './module'
+export * from './product'
 export * from './project'
 export * from './project-detector'
+export * from './watcher'

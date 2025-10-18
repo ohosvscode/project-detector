@@ -31,10 +31,11 @@ import { DisposableSignal } from './types'
  */
 export interface Module extends RustModule {
   getUnderlyingModule(): RustModule
+  getProject(): Project
 }
 
 export namespace Module {
-  function fromRustModule(module: RustModule): Module {
+  function fromRustModule(module: RustModule, project: Project): Module {
     return {
       getBuildProfileContent: () => module.getBuildProfileContent(),
       getBuildProfileUri: () => module.getBuildProfileUri(),
@@ -42,7 +43,7 @@ export namespace Module {
       getUri: () => module.getUri(),
       getUnderlyingModule: () => module,
       getModuleName: () => module.getModuleName(),
-      getProject: () => module.getProject(),
+      getProject: () => project,
     }
   }
 
@@ -54,11 +55,11 @@ export namespace Module {
    * If you want to stop listening the file events, you can call the {@linkcode DisposableSignal.dispose} method.
    */
   export function findAll(project: Project): DisposableSignal<Module[]> {
-    const modules = signal(RustModule.findAll(project.getUnderlyingProject()).map(fromRustModule))
+    const modules = signal(RustModule.findAll(project.getUnderlyingProject()).map(module => fromRustModule(module, project)))
     const handle = createProjectModuleHandler(
       modules,
       uri => RustModule.create(project.getUnderlyingProject(), uri.fsPath),
-      module => fromRustModule(module),
+      module => fromRustModule(module, project),
     )
     project.getProjectDetector().on('*', handle)
     return DisposableSignal.fromSignal(modules, () => project.getProjectDetector().off('*', handle))
