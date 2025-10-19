@@ -52,7 +52,7 @@
     "artifacts": "napi artifacts",
     "bench": "node --import @oxc-node/core/register benchmark/bench.ts",
     "build": "napi build --platform --release",
-    "postbuild": "tsdown",
+    "postbuild": "tsdown --config-loader unconfig",
     "build:debug": "napi build --platform",
     "format:toml": "taplo format",
     "format:rs": "cargo fmt",
