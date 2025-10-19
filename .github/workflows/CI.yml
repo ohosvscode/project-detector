@@ -74,34 +74,34 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: [self-hosted, macos]
+          - host: [self-hosted, macos, macos-latest]
             target: x86_64-apple-darwin
             build: pnpm build --target x86_64-apple-darwin
-          - host: [self-hosted, windows, x64]
+          - host: [self-hosted, windows, x64, windows-latest]
             build: pnpm build --target x86_64-pc-windows-msvc
             target: x86_64-pc-windows-msvc
-          - host: [self-hosted, windows, x64]
+          - host: [self-hosted, windows, x64, windows-latest]
             build: pnpm build --target i686-pc-windows-msvc
             target: i686-pc-windows-msvc
-          - host: [self-hosted, linux, x64]
+          - host: [self-hosted, linux, x64, ubuntu-latest]
             target: x86_64-unknown-linux-gnu
             build: pnpm build --target x86_64-unknown-linux-gnu --use-napi-cross
-          - host: [self-hosted, linux, x64]
+          - host: [self-hosted, linux, x64, ubuntu-latest]
             target: x86_64-unknown-linux-musl
             build: pnpm build --target x86_64-unknown-linux-musl -x
-          - host: [self-hosted, macos]
+          - host: [self-hosted, macos, macos-latest]
             target: aarch64-apple-darwin
             build: pnpm build --target aarch64-apple-darwin
-          - host: [self-hosted, linux, x64]
+          - host: [self-hosted, linux, x64, ubuntu-latest]
             target: aarch64-unknown-linux-gnu
             build: pnpm build --target aarch64-unknown-linux-gnu --use-napi-cross
-          - host: [self-hosted, linux, x64]
+          - host: [self-hosted, linux, x64, ubuntu-latest]
             target: armv7-unknown-linux-gnueabihf
             build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
-          - host: [self-hosted, linux, ARM]
+          - host: [self-hosted, linux, ARM, ubuntu-latest]
             target: aarch64-unknown-linux-musl
             build: pnpm build --target aarch64-unknown-linux-musl --use-napi-cross -x
-          - host: [self-hosted, windows, ARM]
+          - host: [self-hosted, windows, ARM, windows-latest]
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@20
@@ -201,13 +201,13 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - host: [self-hosted, windows]
+          - host: [self-hosted, windows, windows-latest]
             target: x86_64-pc-windows-msvc
             architecture: x64
-          - host: [self-hosted, macos]
+          - host: [self-hosted, macos, macos-latest]
             target: x86_64-apple-darwin
             architecture: x64
-          - host: [self-hosted, macos]
+          - host: [self-hosted, macos, macos-latest]
             target: aarch64-apple-darwin
             architecture: arm64
         node:
@@ -273,6 +273,7 @@ jobs:
     runs-on:
       - self-hosted
       - linux
+      - ubuntu-latest
       - ${{ contains(matrix.target, 'armv7') && 'x64' || (contains(matrix.target, 'x86_64') && 'x64' || 'arm64') }}
     steps:
       - name: Clean workspace (Linux/macOS)
@@ -369,7 +370,7 @@ jobs:
 
   publish:
     name: Publish
-    runs-on: [self-hosted, macOS, ARM]
+    runs-on: [self-hosted, macOS, ARM, macos-latest]
     needs:
       - lint
       - test-macOS-windows-binding
