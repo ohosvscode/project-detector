@@ -1,4 +1,6 @@
+import type { Uri } from '../../index'
 import type { Product } from './product'
+import type { ProjectDetector } from './project-detector'
 import { signal } from 'alien-signals'
 import { Resource as RustResource } from '../../index'
 import { DisposableSignal } from './types'
@@ -13,7 +15,6 @@ export namespace Resource {
     return {
       getProduct: () => product,
       getUri: () => resource.getUri(),
-      getQualifiedDirectories: () => resource.getQualifiedDirectories(),
       getUnderlyingResource: () => resource,
     }
   }
@@ -21,6 +22,13 @@ export namespace Resource {
   export function findAll(product: Product): DisposableSignal<Resource[]> {
     const resources = signal<Resource[]>(RustResource.findAll(product.getUnderlyingProduct()).map(resource => fromRustResource(resource, product)))
 
-    return DisposableSignal.fromSignal(resources)
+    const handle = (_event: keyof ProjectDetector.EventMap, uri: Uri) => {
+      if (product.getModule().getBuildProfileUri().isEqual(uri) || product.getModule().getProject().getBuildProfileUri().isEqual(uri)) {
+        resources(RustResource.findAll(product.getUnderlyingProduct()).map(resource => fromRustResource(resource, product)))
+      }
+    }
+
+    product.getModule().getProject().getProjectDetector().on('*', handle)
+    return DisposableSignal.fromSignal(resources, () => product.getModule().getProject().getProjectDetector().off('*', handle))
   }
 }

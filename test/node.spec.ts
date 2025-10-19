@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { afterAll, describe, expect } from 'vitest'
 import { Uri } from '../index'
-import { Module, Product, Project, ProjectDetector, Resource, Watcher } from '../src/node'
+import { ElementDirectory, ElementJsonFile, ElementJsonFileReference, Module, Product, Project, ProjectDetector, Resource, ResourceDirectory, Watcher } from '../src/node'
 
 describe.sequential('projectDetector', (it) => {
   const mockPath = path.resolve(__dirname, '..', 'mock')
@@ -71,11 +71,11 @@ describe.sequential('projectDetector', (it) => {
   it.sequential('product.findAll', async () => {
     const products = Product.findAll(harmonyProject1Module)
     expect(products().length).toBeGreaterThanOrEqual(2)
-    harmonyProject1MainProduct = products()[0]
+    const mainProduct = products()[0]
     const parsedBuildProfile = harmonyProject1Module.getParsedBuildProfile()
-    const currentTargetConfig = harmonyProject1MainProduct.getCurrentTargetConfig()
+    const currentTargetConfig = mainProduct.getCurrentTargetConfig()
     expect(currentTargetConfig).toBeDefined()
-    const filteredTargets = parsedBuildProfile.targets?.filter(target => target.name !== harmonyProject1MainProduct.getName()) ?? []
+    const filteredTargets = parsedBuildProfile.targets?.filter(target => target.name !== mainProduct.getName()) ?? []
     expect(filteredTargets.length).toBe(1)
     fs.writeFileSync(
       harmonyProject1Module.getBuildProfileUri().fsPath,
@@ -95,10 +95,120 @@ describe.sequential('projectDetector', (it) => {
     )
     await new Promise(resolve => setTimeout(resolve, 2000))
     expect(products().length).toBe(2)
+    harmonyProject1MainProduct = products().find(product => product.getName() === 'default')!
   })
 
+  let harmonyProject1MainResource: Resource
+
   it.sequential('resource.findAll', async () => {
-    Resource.findAll(harmonyProject1MainProduct)
-    // console.log(resources().map(resource => resource.getUri().toString()))
+    const resources = Resource.findAll(harmonyProject1MainProduct)
+    expect(resources().length).toBe(1)
+    const resource = resources()[0]
+    const targetName = resource.getProduct().getName()
+    const buildProfileUri = resource.getProduct().getModule().getBuildProfileUri()
+    const parsedBuildProfile = resource.getProduct().getModule().getParsedBuildProfile()
+    fs.writeFileSync(
+      buildProfileUri.fsPath,
+      JSON.stringify({
+        ...parsedBuildProfile,
+        targets: (parsedBuildProfile.targets ?? []).filter(target => target.name !== targetName),
+      }, null, 2),
+    )
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(resources().length).toBe(0)
+    fs.writeFileSync(
+      buildProfileUri.fsPath,
+      JSON.stringify({
+        ...parsedBuildProfile,
+        targets: [{ name: targetName }, ...(parsedBuildProfile.targets ?? []).filter(target => target.name !== targetName)],
+      }, null, 2),
+    )
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(resources().length).toBe(1)
+    harmonyProject1MainResource = resources()[0]
+  })
+
+  let baseResourceDirectory: ResourceDirectory
+
+  it.sequential('resourceDirectory.findAll', async () => {
+    const resourceDirectories = ResourceDirectory.findAll(harmonyProject1MainResource)
+    expect(resourceDirectories().length).toBe(3)
+    const resourceDirectory = resourceDirectories().find(resourceDirectory => resourceDirectory.getQualifiers() === 'base')!
+    expect(resourceDirectory).toBeDefined()
+    const uri = resourceDirectory.getUri()
+    fs.renameSync(uri.fsPath, path.resolve(Uri.dirname(uri).fsPath, 'base.bak'))
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(resourceDirectories().length).toBe(2)
+    expect(resourceDirectories().find(resourceDirectory => resourceDirectory.getQualifiers() === 'base')).toBeUndefined()
+    fs.renameSync(path.resolve(Uri.dirname(uri).fsPath, 'base.bak'), uri.fsPath)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(resourceDirectories().length).toBe(3)
+    expect(resourceDirectories().find(resourceDirectory => resourceDirectory.getQualifiers() === 'base')).toBeDefined()
+    baseResourceDirectory = resourceDirectories().find(resourceDirectory => resourceDirectory.getQualifiers() === 'base')!
+    expect(baseResourceDirectory).toBeDefined()
+  })
+
+  let baseElementDirectory: ElementDirectory
+
+  it.sequential('elementDirectory.from', async () => {
+    const elementDirectory = ElementDirectory.from(baseResourceDirectory)
+    expect(elementDirectory()).toBeDefined()
+    const elementDirectoryUri = elementDirectory()?.getUri()
+    expect(elementDirectoryUri).toBeDefined()
+    fs.renameSync(elementDirectoryUri!.fsPath, path.resolve(Uri.dirname(elementDirectoryUri!).fsPath, 'element.bak'))
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(elementDirectory()?.getUri()).toBeUndefined()
+    fs.renameSync(path.resolve(Uri.dirname(elementDirectoryUri!).fsPath, 'element.bak'), elementDirectoryUri!.fsPath)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(elementDirectory()?.getUri()).toBeDefined()
+    baseElementDirectory = elementDirectory()!
+  })
+
+  let baseElementStringJsonFile: ElementJsonFile
+
+  it.sequential('elementJsonFile.findAll', async () => {
+    const elementJsonFiles = ElementJsonFile.findAll(baseElementDirectory)
+    const currentElementJsonFileCount = elementJsonFiles().length
+    expect(currentElementJsonFileCount).toBeGreaterThanOrEqual(1)
+    const stringJsonFile = elementJsonFiles().find(elementJsonFile => Uri.basename(elementJsonFile.getUri()) === 'string.json')!
+    expect(stringJsonFile).toBeDefined()
+    fs.renameSync(stringJsonFile.getUri().fsPath, path.resolve(Uri.dirname(stringJsonFile.getUri()).fsPath, 'string.json.bak'))
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(elementJsonFiles().length).toBeLessThan(currentElementJsonFileCount)
+    expect(elementJsonFiles().find(elementJsonFile => Uri.basename(elementJsonFile.getUri()) === 'string.json')).toBeUndefined()
+    fs.renameSync(path.resolve(Uri.dirname(stringJsonFile.getUri()).fsPath, 'string.json.bak'), stringJsonFile.getUri().fsPath)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(elementJsonFiles().length).toBeGreaterThanOrEqual(currentElementJsonFileCount)
+    expect(elementJsonFiles().find(elementJsonFile => Uri.basename(elementJsonFile.getUri()) === 'string.json')).toBeDefined()
+    baseElementStringJsonFile = elementJsonFiles().find(elementJsonFile => Uri.basename(elementJsonFile.getUri()) === 'string.json')!
+    expect(stringJsonFile).toBeDefined()
+  })
+
+  it.sequential('ElementJsonFileReference.findAll', async () => {
+    const elementJsonFileReferences = ElementJsonFileReference.findAll(baseElementStringJsonFile)
+    const currentElementJsonFileReferenceCount = elementJsonFileReferences().length
+    const parsedContent = baseElementStringJsonFile.parse()
+    fs.writeFileSync(
+      baseElementStringJsonFile.getUri().fsPath,
+      JSON.stringify({
+        string: [
+          ...parsedContent?.string ?? [],
+          {
+            name: '6',
+            value: '6',
+          },
+        ],
+      }, null, 2),
+    )
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(elementJsonFileReferences().length).toBeGreaterThan(currentElementJsonFileReferenceCount)
+    expect(elementJsonFileReferences().find(elementJsonFileReference => elementJsonFileReference.getNameText() === '6')).toBeDefined()
+    fs.writeFileSync(
+      baseElementStringJsonFile.getUri().fsPath,
+      JSON.stringify(parsedContent, null, 2),
+    )
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(elementJsonFileReferences().length).toBe(currentElementJsonFileReferenceCount)
+    expect(elementJsonFileReferences().find(elementJsonFileReference => elementJsonFileReference.getNameText() === '6')).toBeUndefined()
   })
 })

@@ -8,7 +8,7 @@ use crate::utils::qualifier::region_code::RegionCode;
 use crate::utils::qualifier::screen_density::ScreenDensity;
 use napi_derive::napi;
 
-#[napi]
+#[napi(string_enum)]
 #[derive(serde::Serialize)]
 pub enum QualifierType {
   MCC,

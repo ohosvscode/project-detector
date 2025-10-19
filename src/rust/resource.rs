@@ -1,9 +1,7 @@
-use std::fs;
+use std::{fs, path::Path};
 
-use crate::{
-  product::Product,
-  utils::{qualifier::utils_impl::QualifierUtils, uri::Uri},
-};
+use crate::utils::uri::Uri;
+use crate::product::Product;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 
@@ -18,16 +16,56 @@ impl Resource {
   #[napi]
   pub fn find_all(product: Reference<Product>, env: Env) -> Vec<Resource> {
     let mut resources = Vec::new();
-    let resource_directories = product.get_resource_directories();
+    let current_target_config = product.get_current_target_config();
+    let name = product.get_name();
+    let module_uri = product.get_module(env).get_uri();
 
-    for resource_directory in resource_directories {
-      resources.push(Resource {
-        product: product.clone(env).unwrap(),
-        uri: resource_directory,
-      })
+    if current_target_config.is_null() {
+      return resources;
     }
 
+    let default_child_path = if name == "default" { "main" } else { &name };
+    let default_resource_root = Path::new(&module_uri.fs_path()).join("src").join(default_child_path).join("resources");
+    let resource_roots = current_target_config
+      .get("resource")
+      .and_then(|resource| resource.get("directories"))
+      .and_then(|resource_roots| resource_roots.as_array());
+
+      if let Some(resource_roots) = resource_roots {
+        if !resource_roots.is_empty() {
+          for resource_root in resource_roots {
+            let resource_root_path = path_clean::clean(Path::new(&module_uri.fs_path()).join(resource_root.as_str().unwrap_or_default()));
+            if let Some(resource) = Self::create(product.clone(env).unwrap(), resource_root_path.to_string_lossy().to_string(), env) {
+              resources.push(resource);
+            }
+          }
+          return resources;
+        }
+      }
+      
+      resources.push(
+        Resource {
+          product: product.clone(env).unwrap(),
+          uri: Uri::file(default_resource_root.to_string_lossy().to_string())
+        }
+      );
+
     resources
+  }
+
+  #[napi]
+  pub fn create(product: Reference<Product>, resource_uri: String, env: Env) -> Option<Resource> {
+    let uri = Uri::file(resource_uri);
+    if fs::metadata(uri.fs_path()).map(|metadata| metadata.is_dir()).unwrap_or(false) {
+      Some(
+        Resource {
+          product: product.clone(env).unwrap(),
+          uri,
+        }
+      )
+    } else {
+      None
+    }
   }
 
   #[napi]
@@ -38,28 +76,5 @@ impl Resource {
   #[napi]
   pub fn get_uri(&self) -> Uri {
     self.uri.clone()
-  }
-
-  #[napi]
-  pub fn get_qualified_directories(&self) -> Vec<Uri> {
-    let mut qualified_directories = Vec::new();
-    let resource_directory = self.get_uri();
-
-    let dirs = match fs::read_dir(resource_directory.fs_path()) {
-      Ok(dirs) => dirs,
-      Err(_) => return qualified_directories,
-    };
-
-    for dir in dirs.flatten() {
-      if dir.metadata().map(|metadata| metadata.is_dir()).unwrap_or(false) {
-        let dir_name = dir.file_name().to_string_lossy().to_string();
-        if dir_name != "base" && dir_name != "rawfile" && dir_name != "resfile" && QualifierUtils::analyze_qualifier(dir_name).is_empty() {
-          continue;
-        }
-        qualified_directories.push(Uri::file(dir.path().to_string_lossy().to_string()))
-      }
-    }
-
-    qualified_directories
   }
 }

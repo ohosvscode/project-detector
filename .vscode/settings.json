@@ -56,5 +56,11 @@
     "comments": "off",
     "strings": "on"
   },
-  "oxc.enable": true
+  "oxc.enable": true,
+  "files.readonlyInclude": {
+    "index.js": true,
+    "index.d.ts": true,
+    "**/dist/**/*": true,
+    "**/node_modules/**/*": true
+  }
 }

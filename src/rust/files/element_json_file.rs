@@ -6,7 +6,6 @@ use napi::bindgen_prelude::Reference;
 #[cfg(not(test))]
 use napi::Env;
 use napi_derive::napi;
-#[cfg(not(test))]
 use std::fs;
 use std::sync::{Arc, Mutex};
 use tree_sitter::Parser;
@@ -23,7 +22,8 @@ pub struct ElementJsonFile {
 #[napi]
 impl ElementJsonFile {
   #[cfg(test)]
-  pub fn new(uri: &Uri, source_code: String) -> Self {
+  pub fn create(element_json_file_uri: String, source_code: String) -> Self {
+    let uri = Uri::file(element_json_file_uri);
     let mut parser = Parser::new();
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
 
@@ -34,17 +34,33 @@ impl ElementJsonFile {
     }
   }
 
+  #[napi]
   #[cfg(not(test))]
-  pub fn new(element_directory: Reference<ElementDirectory>, uri: &Uri, source_code: String) -> Self {
+  pub fn create(element_directory: Reference<ElementDirectory>, element_json_file_uri: String) -> Option<ElementJsonFile> {
+    let uri = Uri::file(element_json_file_uri);
+    if !uri.fs_path().ends_with(".json") {
+      return None;
+    }
+
     let mut parser = Parser::new();
     parser.set_language(&tree_sitter_json::LANGUAGE.into()).unwrap();
-
-    Self {
-      parser: Arc::new(Mutex::new(parser)),
-      source_code,
-      uri: uri.clone(),
-      element_directory,
+    if !fs::metadata(uri.fs_path()).map(|m| m.is_file()).unwrap_or(false) {
+      return None;
     }
+
+    Some(
+      Self {
+        parser: Arc::new(Mutex::new(parser)),
+        source_code: fs::read_to_string(uri.fs_path()).unwrap_or_default(),
+        uri,
+        element_directory,
+      }
+    )
+  }
+
+  #[napi]
+  pub fn reload(element_json_file: &mut ElementJsonFile) {
+    element_json_file.set_content(fs::read_to_string(element_json_file.get_uri().fs_path()).unwrap_or_default());
   }
 
   #[napi]
@@ -61,8 +77,9 @@ impl ElementJsonFile {
 
     for file_entry in resource_files {
       let file_path = file_entry.path().to_string_lossy().to_string();
-      let file_content = fs::read_to_string(file_path.clone()).unwrap_or_default();
-      element_json_files.push(Self::new(element_directory.clone(env).unwrap(), &Uri::file(file_path), file_content));
+      if let Some(element_json_file) = Self::create(element_directory.clone(env).unwrap(), file_path) {
+        element_json_files.push(element_json_file);
+      }
     }
 
     element_json_files
@@ -82,6 +99,10 @@ impl ElementJsonFile {
   #[napi]
   pub fn get_content(&self) -> String {
     self.source_code.clone()
+  }
+
+  pub fn set_content(&mut self, source_code: String) {
+    self.source_code = source_code;
   }
 
   #[napi]
@@ -118,7 +139,7 @@ mod tests {
   #[test]
   fn test_get_reference() {
     let mock_str = String::from("{ \"string\": [{ \"name\": \"test1\", \"value\": \"test1-value\" }] }");
-    let element_json_file = ElementJsonFile::new(&Uri::file("test.json".to_string()), mock_str.clone());
+    let element_json_file = ElementJsonFile::create("test.json".to_string(), mock_str.clone());
     let references = ElementJsonFileReference::find_all(element_json_file);
     assert_eq!(references.len(), 1);
     assert_eq!(references[0].get_name_full_text(), "\"test1\"");

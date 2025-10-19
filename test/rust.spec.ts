@@ -79,7 +79,8 @@ describe.sequential('projectDetector', (it) => {
 
   it.sequential('elementDirectory & elementJsonFile.findAll', () => {
     const elementDirectory = ElementDirectory.from(harmonyProject1MainBaseResource)
-    const elementJsonFiles = ElementJsonFile.findAll(elementDirectory)
+    expect(elementDirectory).toBeDefined()
+    const elementJsonFiles = ElementJsonFile.findAll(elementDirectory!)
     expect(elementJsonFiles.length).toBeGreaterThanOrEqual(1)
     stringJsonFile = elementJsonFiles.find(elementJsonFile => elementJsonFile.getUri().toString().includes('string.json'))!
     expect(stringJsonFile).toBeDefined()

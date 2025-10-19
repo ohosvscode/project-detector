@@ -11,6 +11,8 @@ export namespace Watcher {
     watcher.on('change', path => projectDetector.emit('file-changed', Uri.file(path)))
     watcher.on('unlink', path => projectDetector.emit('file-deleted', Uri.file(path)))
     watcher.on('add', path => projectDetector.emit('file-created', Uri.file(path)))
+    watcher.on('addDir', path => projectDetector.emit('file-created', Uri.file(path)))
+    watcher.on('unlinkDir', path => projectDetector.emit('file-deleted', Uri.file(path)))
     await new Promise<void>(resolve => watcher.on('ready', resolve))
     return watcher
   }

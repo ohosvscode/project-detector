@@ -58,15 +58,10 @@ export namespace Product {
           }
           break
         }
-        case 'file-created': {
-          if (module.getBuildProfileUri().isEqual(uri)) {
-            products(RustProduct.findAll(module.getUnderlyingModule()).map(product => fromRustProduct(product, module)))
-          }
-          break
-        }
+        case 'file-created':
         case 'file-deleted': {
           if (module.getBuildProfileUri().isEqual(uri)) {
-            products([])
+            products(RustProduct.findAll(module.getUnderlyingModule()).map(product => fromRustProduct(product, module)))
           }
           break
         }

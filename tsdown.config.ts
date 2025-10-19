@@ -17,4 +17,13 @@ export default defineConfig({
         }),
       ),
   ],
+  outputOptions: {
+    advancedChunks: {
+      groups: [
+        // handle .d.ts files
+        { test: /module-build-profile.*\.d\.[cm]?ts$/, name: 'module-build-profile.d' },
+        { test: /project-build-profile.*\.d\.[cm]?ts$/, name: 'project-build-profile.d' },
+      ],
+    },
+  },
 })

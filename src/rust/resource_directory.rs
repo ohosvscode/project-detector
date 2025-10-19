@@ -2,6 +2,7 @@ use crate::resource::Resource;
 use crate::utils::qualifier::utils_impl::QualifierUtils;
 use crate::utils::uri::Uri;
 use core::str;
+use std::fs;
 use napi::bindgen_prelude::Reference;
 use napi::Env;
 use napi_derive::napi;
@@ -19,16 +20,48 @@ impl ResourceDirectory {
   #[napi]
   pub fn find_all(resource: Reference<Resource>, env: Env) -> Vec<ResourceDirectory> {
     let mut resource_directories = Vec::new();
-    let qualified_directories = resource.get_qualified_directories();
+    let resource_directory = resource.get_uri();
 
-    for qualified_directory in qualified_directories {
-      resource_directories.push(ResourceDirectory {
-        uri: qualified_directory,
-        resource: resource.clone(env).unwrap(),
-      })
+    let dirs = match fs::read_dir(resource_directory.fs_path()) {
+      Ok(dirs) => dirs,
+      Err(_) => return resource_directories,
+    };
+
+    for dir in dirs.flatten() {
+      if dir.metadata().map(|metadata| metadata.is_dir()).unwrap_or(false) {
+        let dir_name = dir.file_name().to_string_lossy().to_string();
+        if dir_name != "base" && dir_name != "rawfile" && dir_name != "resfile" && QualifierUtils::analyze_qualifier(dir_name).is_empty() {
+          continue;
+        }
+        resource_directories.push(
+          ResourceDirectory {
+            uri: Uri::file(dir.path().to_string_lossy().to_string()),
+            resource: resource.clone(env).unwrap(),
+          }
+        )
+      }
     }
 
     resource_directories
+  }
+
+  #[napi]
+  pub fn create(resource: Reference<Resource>, resource_directory_uri: String) -> Option<ResourceDirectory> {
+    let uri = Uri::file(resource_directory_uri);
+    if fs::metadata(uri.fs_path()).map(|metadata| metadata.is_dir()).unwrap_or(false) {
+      let dir_name = Uri::base_name(&uri);
+      if dir_name != "base" && dir_name != "rawfile" && dir_name != "resfile" && QualifierUtils::analyze_qualifier(dir_name).is_empty() {
+        return None;
+      }
+      Some(
+        ResourceDirectory {
+          uri,
+          resource,
+        }
+      )
+    } else {
+      None
+    }
   }
 
   #[napi]

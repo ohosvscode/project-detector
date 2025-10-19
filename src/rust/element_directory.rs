@@ -3,6 +3,7 @@ use crate::utils::uri::Uri;
 use napi::bindgen_prelude::Reference;
 use napi::Env;
 use napi_derive::napi;
+use std::fs;
 use std::path::Path;
 
 #[napi]
@@ -14,11 +15,18 @@ pub struct ElementDirectory {
 #[napi]
 impl ElementDirectory {
   #[napi]
-  pub fn from(resource_directory: Reference<ResourceDirectory>) -> Self {
-    Self {
-      uri: Uri::file(Path::new(&resource_directory.get_uri().fs_path()).join("element").to_string_lossy().to_string()),
-      resource_directory,
+  pub fn from(resource_directory: Reference<ResourceDirectory>) -> Option<ElementDirectory> {
+    let uri = Uri::file(Path::new(&resource_directory.get_uri().fs_path()).join("element").to_string_lossy().to_string());
+    if !fs::metadata(uri.fs_path()).map(|metadata| metadata.is_dir()).unwrap_or(false) {
+      return None;
     }
+
+    Some(
+      Self {
+        uri,
+        resource_directory,
+      }
+    )
   }
 
   #[napi]
