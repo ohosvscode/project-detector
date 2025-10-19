@@ -98,7 +98,7 @@ describe.sequential('projectDetector', (it) => {
   })
 
   it.sequential('resource.findAll', async () => {
-    const resources = Resource.findAll(harmonyProject1MainProduct)
-    console.log(resources().map(resource => resource.getUri().toString()))
+    Resource.findAll(harmonyProject1MainProduct)
+    // console.log(resources().map(resource => resource.getUri().toString()))
   })
 })
