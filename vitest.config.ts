@@ -24,6 +24,7 @@ export default defineConfig({
         '**/mock/**',
         'index.d.ts',
         'index.js',
+        './scripts/**',
       ],
     },
   },

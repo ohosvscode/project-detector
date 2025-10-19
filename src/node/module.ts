@@ -1,3 +1,4 @@
+import type { ModuleLevelBuildProfile } from './interfaces/module-build-profile'
 import type { Project } from './project'
 import { signal } from 'alien-signals'
 import { Module as RustModule } from '../../index'
@@ -31,6 +32,7 @@ import { DisposableSignal } from './types'
  */
 export interface Module extends RustModule {
   getUnderlyingModule(): RustModule
+  getParsedBuildProfile(): ModuleLevelBuildProfile
   getProject(): Project
 }
 
@@ -60,6 +62,7 @@ export namespace Module {
       modules,
       uri => RustModule.create(project.getUnderlyingProject(), uri.fsPath),
       module => fromRustModule(module, project),
+      module => RustModule.reload(module.getUnderlyingModule()),
     )
     project.getProjectDetector().on('*', handle)
     return DisposableSignal.fromSignal(modules, () => project.getProjectDetector().off('*', handle))

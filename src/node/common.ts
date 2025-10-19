@@ -12,6 +12,7 @@ export function createProjectModuleHandler<InputCompatibleObject extends Compati
   signal: Signal<OutputCompatibleObject[]>,
   rawCreator: (uri: Uri) => InputCompatibleObject | null | undefined,
   toTsSideObject: (object: InputCompatibleObject) => OutputCompatibleObject,
+  reload: (object: OutputCompatibleObject) => void,
 ) {
   return (event: keyof ProjectDetector.EventMap, uri: Uri) => {
     if (event === 'file-created' && uri.fsPath.endsWith('build-profile.json5')) {
@@ -39,8 +40,7 @@ export function createProjectModuleHandler<InputCompatibleObject extends Compati
       const projects = signal()
       const existingProjectIndex = projects.findIndex(project => project.getUri().isEqual(uri) || project.getBuildProfileUri().isEqual(uri))
       if (existingProjectIndex !== -1) {
-        projects[existingProjectIndex] = toTsSideObject(rawCreator(uri)!) as OutputCompatibleObject
-        signal(projects)
+        reload(projects[existingProjectIndex])
       }
     }
   }

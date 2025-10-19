@@ -99,6 +99,25 @@ impl Project {
   }
 
   #[napi]
+  #[cfg(not(test))]
+  pub fn reload(project: &mut Project) {
+    let project_uri = project.get_uri();
+    let build_profile_path = Path::new(&project_uri.fs_path()).join("build-profile.json5");
+    let build_profile_content = fs::read_to_string(build_profile_path).unwrap_or_default();
+    let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
+    if !parsed_build_profile.is_object()
+      || !parsed_build_profile
+        .get("app")
+        .is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").and_then(|modules| modules.as_array()).is_some())
+    {
+      return;
+    }
+
+    project.update_parsed_build_profile(parsed_build_profile);
+    project.update_build_profile_content(build_profile_content);
+  }
+
+  #[napi]
   pub fn get_uri(&self) -> Uri {
     self.uri.clone()
   }
@@ -106,6 +125,10 @@ impl Project {
   #[napi]
   pub fn get_parsed_build_profile(&self) -> serde_json::Value {
     self.parsed_build_profile.clone()
+  }
+
+  pub fn update_parsed_build_profile(&mut self, parsed_build_profile: serde_json::Value) {
+    self.parsed_build_profile = parsed_build_profile;
   }
 
   #[napi]
@@ -116,5 +139,9 @@ impl Project {
   #[napi]
   pub fn get_build_profile_content(&self) -> String {
     self.build_profile_content.clone()
+  }
+
+  pub fn update_build_profile_content(&mut self, build_profile_content: String) {
+    self.build_profile_content = build_profile_content;
   }
 }

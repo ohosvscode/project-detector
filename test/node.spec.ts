@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { afterAll, describe, expect } from 'vitest'
 import { Uri } from '../index'
-import { Module, Product, Project, ProjectDetector, Watcher } from '../src/node'
+import { Module, Product, Project, ProjectDetector, Resource, Watcher } from '../src/node'
 
 describe.sequential('projectDetector', (it) => {
   const mockPath = path.resolve(__dirname, '..', 'mock')
@@ -66,11 +66,39 @@ describe.sequential('projectDetector', (it) => {
     harmonyProject1Module = modules()[0]
   })
 
+  let harmonyProject1MainProduct: Product
+
   it.sequential('product.findAll', async () => {
     const products = Product.findAll(harmonyProject1Module)
+    expect(products().length).toBeGreaterThanOrEqual(2)
+    harmonyProject1MainProduct = products()[0]
+    const parsedBuildProfile = harmonyProject1Module.getParsedBuildProfile()
+    const currentTargetConfig = harmonyProject1MainProduct.getCurrentTargetConfig()
+    expect(currentTargetConfig).toBeDefined()
+    const filteredTargets = parsedBuildProfile.targets?.filter(target => target.name !== harmonyProject1MainProduct.getName()) ?? []
+    expect(filteredTargets.length).toBe(1)
+    fs.writeFileSync(
+      harmonyProject1Module.getBuildProfileUri().fsPath,
+      JSON.stringify({
+        ...parsedBuildProfile,
+        targets: filteredTargets,
+      }, null, 2),
+    )
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(products().length).toBe(1)
+    fs.writeFileSync(
+      harmonyProject1Module.getBuildProfileUri().fsPath,
+      JSON.stringify({
+        ...parsedBuildProfile,
+        targets: parsedBuildProfile.targets,
+      }, null, 2),
+    )
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(products().length).toBe(2)
+  })
 
-    for (const product of products) {
-      console.warn(product.getName(), product.getCurrentTargetConfig())
-    }
+  it.sequential('resource.findAll', async () => {
+    const resources = Resource.findAll(harmonyProject1MainProduct)
+    console.log(resources().map(resource => resource.getUri().toString()))
   })
 })

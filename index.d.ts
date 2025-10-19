@@ -34,6 +34,7 @@ export declare class ElementJsonFileReference {
 export declare class Module {
   static create(project: Project, moduleUri: string): Module | null
   static findAll(project: Project): Array<Module>
+  static reload(module: Module): void
   getUri(): Uri
   getModuleName(): string
   getProject(): Project
@@ -55,6 +56,7 @@ export declare class Project {
   getProjectDetector(): ProjectDetector
   static findAll(projectDetector: ProjectDetector): Array<Project>
   static create(projectDetector: ProjectDetector, projectUri: string): Project | null
+  static reload(project: Project): void
   getUri(): Uri
   getParsedBuildProfile(): any
   getBuildProfileUri(): Uri

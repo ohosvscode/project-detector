@@ -1,5 +1,10 @@
+import type { Uri } from '../../index'
+import type { ModuleLevelBuildProfile } from './interfaces/module-build-profile'
 import type { Module } from './module'
+import type { ProjectDetector } from './project-detector'
+import { signal } from 'alien-signals'
 import { Product as RustProduct } from '../../index'
+import { DisposableSignal } from './types'
 
 /**
  * Single {@linkcode Module} contain multiple products.
@@ -25,7 +30,11 @@ import { Product as RustProduct } from '../../index'
  *
  * @see https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-customized-multi-targets-and-products-guides#section1011341611469
  */
-export interface Product extends RustProduct {}
+export interface Product extends RustProduct {
+  getCurrentTargetConfig(): ModuleLevelBuildProfile.Target
+  getModule(): Module
+  getUnderlyingProduct(): RustProduct
+}
 
 export namespace Product {
   function fromRustProduct(product: RustProduct, module: Module): Product {
@@ -35,10 +44,39 @@ export namespace Product {
       getCurrentTargetConfig: () => product.getCurrentTargetConfig(),
       getSourceDirectories: () => product.getSourceDirectories(),
       getResourceDirectories: () => product.getResourceDirectories(),
+      getUnderlyingProduct: () => product,
     }
   }
 
-  export function findAll(module: Module): Product[] {
-    return RustProduct.findAll(module.getUnderlyingModule()).map(product => fromRustProduct(product, module))
+  export function findAll(module: Module): DisposableSignal<Product[]> {
+    const products = signal<Product[]>(RustProduct.findAll(module.getUnderlyingModule()).map(product => fromRustProduct(product, module)))
+    const handle = (event: keyof ProjectDetector.EventMap, uri: Uri) => {
+      switch (event) {
+        case 'file-changed': {
+          if (module.getBuildProfileUri().isEqual(uri)) {
+            products(RustProduct.findAll(module.getUnderlyingModule()).map(product => fromRustProduct(product, module)))
+          }
+          break
+        }
+        case 'file-created': {
+          if (module.getBuildProfileUri().isEqual(uri)) {
+            products(RustProduct.findAll(module.getUnderlyingModule()).map(product => fromRustProduct(product, module)))
+          }
+          break
+        }
+        case 'file-deleted': {
+          if (module.getBuildProfileUri().isEqual(uri)) {
+            products([])
+          }
+          break
+        }
+        default: {
+          break
+        }
+      }
+    }
+
+    module.getProject().getProjectDetector().on('*', handle)
+    return DisposableSignal.fromSignal(products, () => module.getProject().getProjectDetector().off('*', handle))
   }
 }

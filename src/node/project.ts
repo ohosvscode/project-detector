@@ -1,3 +1,4 @@
+import type { ProjectLevelBuildProfile } from './interfaces/project-build-profile'
 import type { ProjectDetector } from './project-detector'
 import { signal } from 'alien-signals'
 import { Project as RustProject } from '../../index'
@@ -26,6 +27,7 @@ import { DisposableSignal } from './types'
  */
 export interface Project extends RustProject {
   getUnderlyingProject(): RustProject
+  getParsedBuildProfile(): ProjectLevelBuildProfile
   getProjectDetector(): ProjectDetector
 }
 
@@ -55,6 +57,7 @@ export namespace Project {
       projects,
       uri => RustProject.create(underlyingProjectDetector, uri.fsPath),
       project => fromRustProject(project, projectDetector),
+      project => RustProject.reload(project.getUnderlyingProject()),
     )
     projectDetector.on('*', handler)
     return DisposableSignal.fromSignal(projects, () => projectDetector.off('*', handler))
