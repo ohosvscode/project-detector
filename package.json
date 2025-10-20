@@ -59,7 +59,7 @@
     "lint": "eslint",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "vitest",
-    "version": "node --import @oxc-node/core/register scripts/version.ts"
+    "version": "napi version"
   },
   "dependencies": {
     "alien-signals": "^3.0.0",
