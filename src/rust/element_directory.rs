@@ -21,12 +21,7 @@ impl ElementDirectory {
       return None;
     }
 
-    Some(
-      Self {
-        uri,
-        resource_directory,
-      }
-    )
+    Some(Self { uri, resource_directory })
   }
 
   #[napi]

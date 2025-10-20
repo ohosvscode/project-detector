@@ -48,14 +48,12 @@ impl ElementJsonFile {
       return None;
     }
 
-    Some(
-      Self {
-        parser: Arc::new(Mutex::new(parser)),
-        source_code: fs::read_to_string(uri.fs_path()).unwrap_or_default(),
-        uri,
-        element_directory,
-      }
-    )
+    Some(Self {
+      parser: Arc::new(Mutex::new(parser)),
+      source_code: fs::read_to_string(uri.fs_path()).unwrap_or_default(),
+      uri,
+      element_directory,
+    })
   }
 
   #[napi]

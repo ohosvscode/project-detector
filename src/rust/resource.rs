@@ -1,7 +1,7 @@
 use std::{fs, path::Path};
 
-use crate::utils::uri::Uri;
 use crate::product::Product;
+use crate::utils::uri::Uri;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 
@@ -31,24 +31,22 @@ impl Resource {
       .and_then(|resource| resource.get("directories"))
       .and_then(|resource_roots| resource_roots.as_array());
 
-      if let Some(resource_roots) = resource_roots {
-        if !resource_roots.is_empty() {
-          for resource_root in resource_roots {
-            let resource_root_path = path_clean::clean(Path::new(&module_uri.fs_path()).join(resource_root.as_str().unwrap_or_default()));
-            if let Some(resource) = Self::create(product.clone(env).unwrap(), resource_root_path.to_string_lossy().to_string(), env) {
-              resources.push(resource);
-            }
+    if let Some(resource_roots) = resource_roots {
+      if !resource_roots.is_empty() {
+        for resource_root in resource_roots {
+          let resource_root_path = path_clean::clean(Path::new(&module_uri.fs_path()).join(resource_root.as_str().unwrap_or_default()));
+          if let Some(resource) = Self::create(product.clone(env).unwrap(), resource_root_path.to_string_lossy().to_string(), env) {
+            resources.push(resource);
           }
-          return resources;
         }
+        return resources;
       }
-      
-      resources.push(
-        Resource {
-          product: product.clone(env).unwrap(),
-          uri: Uri::file(default_resource_root.to_string_lossy().to_string())
-        }
-      );
+    }
+
+    resources.push(Resource {
+      product: product.clone(env).unwrap(),
+      uri: Uri::file(default_resource_root.to_string_lossy().to_string()),
+    });
 
     resources
   }
@@ -57,12 +55,10 @@ impl Resource {
   pub fn create(product: Reference<Product>, resource_uri: String, env: Env) -> Option<Resource> {
     let uri = Uri::file(resource_uri);
     if fs::metadata(uri.fs_path()).map(|metadata| metadata.is_dir()).unwrap_or(false) {
-      Some(
-        Resource {
-          product: product.clone(env).unwrap(),
-          uri,
-        }
-      )
+      Some(Resource {
+        product: product.clone(env).unwrap(),
+        uri,
+      })
     } else {
       None
     }

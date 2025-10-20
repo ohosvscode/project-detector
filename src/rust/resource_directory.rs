@@ -2,11 +2,11 @@ use crate::resource::Resource;
 use crate::utils::qualifier::utils_impl::QualifierUtils;
 use crate::utils::uri::Uri;
 use core::str;
-use std::fs;
 use napi::bindgen_prelude::Reference;
 use napi::Env;
 use napi_derive::napi;
 use serde_json::Value;
+use std::fs;
 use std::path::Path;
 
 #[napi]
@@ -33,12 +33,10 @@ impl ResourceDirectory {
         if dir_name != "base" && dir_name != "rawfile" && dir_name != "resfile" && QualifierUtils::analyze_qualifier(dir_name).is_empty() {
           continue;
         }
-        resource_directories.push(
-          ResourceDirectory {
-            uri: Uri::file(dir.path().to_string_lossy().to_string()),
-            resource: resource.clone(env).unwrap(),
-          }
-        )
+        resource_directories.push(ResourceDirectory {
+          uri: Uri::file(dir.path().to_string_lossy().to_string()),
+          resource: resource.clone(env).unwrap(),
+        })
       }
     }
 
@@ -53,12 +51,7 @@ impl ResourceDirectory {
       if dir_name != "base" && dir_name != "rawfile" && dir_name != "resfile" && QualifierUtils::analyze_qualifier(dir_name).is_empty() {
         return None;
       }
-      Some(
-        ResourceDirectory {
-          uri,
-          resource,
-        }
-      )
+      Some(ResourceDirectory { uri, resource })
     } else {
       None
     }
