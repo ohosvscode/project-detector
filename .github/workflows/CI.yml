@@ -412,6 +412,8 @@ jobs:
         run: pnpm artifacts
       - name: List packages
         run: ls -R ./npm
+      - name: Build
+        run: pnpm postbuild
       - name: Publish
         run: |
           # 自托管运行器不支持provenance，禁用此功能
