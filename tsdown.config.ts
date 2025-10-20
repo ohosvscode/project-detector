@@ -1,14 +1,16 @@
 import path from 'node:path'
 import { dts } from 'rolldown-plugin-dts'
 import { defineConfig } from 'tsdown/config'
+import { IndexExternalResolvePlugin } from './scripts/index-external-plugin'
 import { createDtsResolvePlugin } from './scripts/resolve-plugin'
 
 export default defineConfig([
   {
     entry: './src/node/index.ts',
-    external: [/\.node$/, path.resolve('index.js')],
+    external: [/\.node$/, path.resolve('index.js'), path.resolve('index')],
     dts: false,
-    format: ['esm', 'cjs'],
+    format: 'cjs',
+    plugins: [IndexExternalResolvePlugin(path.resolve('index'), '../index.js')],
   },
   {
     entry: './src/node/index.ts',
@@ -16,6 +18,7 @@ export default defineConfig([
     dts: false,
     format: 'esm',
     plugins: [
+      IndexExternalResolvePlugin(path.resolve('index'), '../index.js'),
       dts()
         .filter(plugin => plugin.name !== 'rolldown-plugin-dts:resolver')
         .concat(
