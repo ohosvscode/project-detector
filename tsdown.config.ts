@@ -4,38 +4,29 @@ import { defineConfig } from 'tsdown/config'
 import { IndexExternalResolvePlugin } from './scripts/index-external-plugin'
 import { createDtsResolvePlugin } from './scripts/resolve-plugin'
 
-export default defineConfig([
-  {
-    entry: './src/node/index.ts',
-    external: [/\.node$/, path.resolve('index.js'), path.resolve('index')],
-    dts: false,
-    format: 'cjs',
-    plugins: [IndexExternalResolvePlugin(path.resolve('index'), '../index.js')],
-  },
-  {
-    entry: './src/node/index.ts',
-    external: [/\.node$/, path.resolve('index.js')],
-    dts: false,
-    format: 'esm',
-    plugins: [
-      IndexExternalResolvePlugin(path.resolve('index'), '../index.js'),
-      dts()
-        .filter(plugin => plugin.name !== 'rolldown-plugin-dts:resolver')
-        .concat(
-          createDtsResolvePlugin({
-            tsconfig: path.resolve('tsconfig.json'),
-            resolve: false,
-          }),
-        ),
-    ],
-    outputOptions: {
-      advancedChunks: {
-        groups: [
+export default defineConfig({
+  entry: './src/node/index.ts',
+  external: [/\.node$/, path.resolve('index.js')],
+  dts: false,
+  format: 'esm',
+  plugins: [
+    IndexExternalResolvePlugin(path.resolve('index'), '../index.js'),
+    dts()
+      .filter(plugin => plugin.name !== 'rolldown-plugin-dts:resolver')
+      .concat(
+        createDtsResolvePlugin({
+          tsconfig: path.resolve('tsconfig.json'),
+          resolve: false,
+        }),
+      ),
+  ],
+  outputOptions: {
+    advancedChunks: {
+      groups: [
         // handle .d.ts files
-          { test: /module-build-profile.*\.d\.[cm]?ts$/, name: 'module-build-profile.d' },
-          { test: /project-build-profile.*\.d\.[cm]?ts$/, name: 'project-build-profile.d' },
-        ],
-      },
+        { test: /module-build-profile.*\.d\.[cm]?ts$/, name: 'module-build-profile.d' },
+        { test: /project-build-profile.*\.d\.[cm]?ts$/, name: 'project-build-profile.d' },
+      ],
     },
   },
-])
+})
