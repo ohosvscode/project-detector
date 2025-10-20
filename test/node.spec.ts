@@ -136,11 +136,30 @@ describe.sequential('projectDetector', (it) => {
     const resourceDirectory = resourceDirectories().find(resourceDirectory => resourceDirectory.getQualifiers() === 'base')!
     expect(resourceDirectory).toBeDefined()
     const uri = resourceDirectory.getUri()
-    fs.renameSync(uri.fsPath, path.resolve(Uri.dirname(uri).fsPath, 'base.bak'))
+    const backupPath = path.resolve(Uri.dirname(uri).fsPath, 'base.bak')
+
+    // On Windows, use copy+delete instead of rename to avoid EPERM errors with watcher
+    const isWindows = process.platform === 'win32'
+    if (isWindows) {
+      fs.cpSync(uri.fsPath, backupPath, { recursive: true })
+      fs.rmSync(uri.fsPath, { recursive: true })
+    }
+    else {
+      fs.renameSync(uri.fsPath, backupPath)
+    }
+
     await new Promise(resolve => setTimeout(resolve, 2000))
     expect(resourceDirectories().length).toBe(2)
     expect(resourceDirectories().find(resourceDirectory => resourceDirectory.getQualifiers() === 'base')).toBeUndefined()
-    fs.renameSync(path.resolve(Uri.dirname(uri).fsPath, 'base.bak'), uri.fsPath)
+
+    if (isWindows) {
+      fs.cpSync(backupPath, uri.fsPath, { recursive: true })
+      fs.rmSync(backupPath, { recursive: true })
+    }
+    else {
+      fs.renameSync(backupPath, uri.fsPath)
+    }
+
     await new Promise(resolve => setTimeout(resolve, 2000))
     expect(resourceDirectories().length).toBe(3)
     expect(resourceDirectories().find(resourceDirectory => resourceDirectory.getQualifiers() === 'base')).toBeDefined()
@@ -155,10 +174,29 @@ describe.sequential('projectDetector', (it) => {
     expect(elementDirectory()).toBeDefined()
     const elementDirectoryUri = elementDirectory()?.getUri()
     expect(elementDirectoryUri).toBeDefined()
-    fs.renameSync(elementDirectoryUri!.fsPath, path.resolve(Uri.dirname(elementDirectoryUri!).fsPath, 'element.bak'))
+    const backupPath = path.resolve(Uri.dirname(elementDirectoryUri!).fsPath, 'element.bak')
+
+    // On Windows, use copy+delete instead of rename to avoid EPERM errors with watcher
+    const isWindows = process.platform === 'win32'
+    if (isWindows) {
+      fs.cpSync(elementDirectoryUri!.fsPath, backupPath, { recursive: true })
+      fs.rmSync(elementDirectoryUri!.fsPath, { recursive: true })
+    }
+    else {
+      fs.renameSync(elementDirectoryUri!.fsPath, backupPath)
+    }
+
     await new Promise(resolve => setTimeout(resolve, 2000))
     expect(elementDirectory()?.getUri()).toBeUndefined()
-    fs.renameSync(path.resolve(Uri.dirname(elementDirectoryUri!).fsPath, 'element.bak'), elementDirectoryUri!.fsPath)
+
+    if (isWindows) {
+      fs.cpSync(backupPath, elementDirectoryUri!.fsPath, { recursive: true })
+      fs.rmSync(backupPath, { recursive: true })
+    }
+    else {
+      fs.renameSync(backupPath, elementDirectoryUri!.fsPath)
+    }
+
     await new Promise(resolve => setTimeout(resolve, 2000))
     expect(elementDirectory()?.getUri()).toBeDefined()
     baseElementDirectory = elementDirectory()!
