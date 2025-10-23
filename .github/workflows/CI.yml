@@ -169,7 +169,12 @@ jobs:
             export CFLAGS_wasm32_wasip1_threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
             export CXXFLAGS_wasm32_wasip1_threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
             export LDFLAGS_wasm32_wasip1_threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            export NAPI_RS_WASI_RUNTIME=emnapi
             pnpm build --target ${{ matrix.settings.target }}
+            echo "=== Generated files ==="
+            ls -la *.wasm
+            ls -la *.cjs
+            ls -la project-detector.*
           else
             ${{ matrix.settings.build }}
           fi
@@ -182,11 +187,11 @@ jobs:
           path: '*.node'
           if-no-files-found: error
 
-      - name: Upload artifact
+      - name: Upload WASI artifact
         uses: actions/upload-artifact@v4
         if: matrix.settings.target == 'wasm32-wasip1-threads'
         with:
-          name: bindings-${{ matrix.settings.target }}
+          name: bindings-wasm32-wasip1-threads
           path: '*.wasm'
           if-no-files-found: error
   build-freebsd:
@@ -374,9 +379,13 @@ jobs:
         run: ls -R .
         shell: bash
       - name: Test bindings
-        run: pnpm test
+        run: |
+          export NAPI_RS_FORCE_WASI=1
+          export NODE_OPTIONS="--experimental-wasi-unstable-preview1"
+          pnpm test
         env:
           NAPI_RS_FORCE_WASI: 1
+          NODE_OPTIONS: "--experimental-wasi-unstable-preview1"
   publish:
     name: Publish
     runs-on: ubuntu-latest
