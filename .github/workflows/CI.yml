@@ -429,6 +429,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --force
+      - name: Build
+        run: pnpm build
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
