@@ -4,7 +4,6 @@ env:
   APP_NAME: project-detector
   MACOSX_DEPLOYMENT_TARGET: '10.13'
   CARGO_INCREMENTAL: '1'
-  MSVC_ARM64_PATH: 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat'
 permissions:
   contents: write
   id-token: write
@@ -20,7 +19,6 @@ on:
       - '**/*.gitignore'
       - .editorconfig
       - docs/**
-      - mock/**
   pull_request: null
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,44 +26,31 @@ concurrency:
 jobs:
   lint:
     name: Lint
-    runs-on: [macos]
+    runs-on: ubuntu-latest
     steps:
-      - name: Clean workspace (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          sudo mkdir -p ${{ github.workspace }}
-          # 动态获取当前用户组名称
-          CURRENT_USER=$(whoami)
-          CURRENT_GROUP=$(id -gn)
-          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
-          sudo chmod -R 755 ${{ github.workspace }}
-      - name: Clean workspace (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: 22
-          package-manager-cache: false
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: |
-            - args: [--force,--registry=https://registry.npmmirror.com]
-      - name: Install Rust
+          cache: pnpm
+
+      - name: Install
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: ESLint
         run: pnpm lint
+
       - name: Cargo fmt
         run: cargo fmt -- --check
+
       - name: Clippy
         run: cargo clippy
 
@@ -99,61 +84,50 @@ jobs:
             target: armv7-unknown-linux-gnueabihf
             build: pnpm build --target armv7-unknown-linux-gnueabihf --use-napi-cross
           - host: ubuntu-latest
+            target: aarch64-linux-android
+            build: pnpm build --target aarch64-linux-android
+          - host: ubuntu-latest
+            target: armv7-linux-androideabi
+            build: pnpm build --target armv7-linux-androideabi
+          - host: ubuntu-latest
             target: aarch64-unknown-linux-musl
-            build: pnpm build --target aarch64-unknown-linux-musl --use-napi-cross -x
+            build: pnpm build --target aarch64-unknown-linux-musl -x
           - host: windows-latest
             target: aarch64-pc-windows-msvc
             build: pnpm build --target aarch64-pc-windows-msvc
+          - host: ubuntu-latest
+            target: wasm32-wasip1-threads
+            build: pnpm build --target wasm32-wasip1-threads
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - name: Clean workspace (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          sudo mkdir -p ${{ github.workspace }}
-          # 动态获取当前用户组名称
-          CURRENT_USER=$(whoami)
-          CURRENT_GROUP=$(id -gn)
-          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
-          sudo chmod -R 755 ${{ github.workspace }}
-      - name: Clean workspace (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: 22
-          package-manager-cache: false
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: |
-            - args: [--force,--registry=https://registry.npmmirror.com]
-      - name: Install Rust (Windows)
-        if: ${{ contains(matrix.settings.host, 'windows') }}
-        run: |
-          curl -o rustup-init.exe https://win.rustup.rs/x86_64
-          .\rustup-init.exe -y --default-toolchain stable --default-host x86_64-pc-windows-msvc
-          "%USERPROFILE%\.cargo\bin\rustup.exe" target add ${{ matrix.settings.target }}
-          "%USERPROFILE%\.cargo\bin\rustup.exe" component add rustfmt clippy
-        shell: cmd
-      - name: Install Rust (Non-Windows)
-        if: ${{ !contains(matrix.settings.host, 'windows') }}
+          cache: pnpm
+      - name: Install
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: ${{ matrix.settings.target }}
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.napi-rs
+            .cargo-cache
+            target/
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
       - uses: mlugg/setup-zig@v2
         if: ${{ contains(matrix.settings.target, 'musl') }}
         with:
-          use-cache: false
-          use-tool-cache: false
           version: 0.15.1
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
@@ -162,37 +136,84 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           tool: cargo-zigbuild
+      - name: Setup toolchain
+        run: ${{ matrix.settings.setup }}
+        if: ${{ matrix.settings.setup }}
+        shell: bash
+      - name: Install dependencies
+        run: pnpm install
       - name: Setup node x86
         uses: actions/setup-node@v5
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: 22
+          cache: pnpm
           architecture: x86
-          package-manager-cache: false
-      - name: Build (Windows ARM64)
-        if: ${{ contains(matrix.settings.host, 'ARM') && contains(matrix.settings.host, 'windows') }}
-        run: |
-          call "%MSVC_ARM64_PATH%" arm64
-          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-          ${{ matrix.settings.build }}
-        shell: cmd
-      - name: Build (Windows)
-        if: ${{ contains(matrix.settings.host, 'windows') && !contains(matrix.settings.host, 'ARM') }}
-        run: |
-          set PATH=%PATH%;%USERPROFILE%\.cargo\bin
-          ${{ matrix.settings.build }}
-        shell: cmd
-      - name: Build (Non-Windows)
-        if: ${{ !contains(matrix.settings.host, 'windows') }}
+      - name: Build
         run: ${{ matrix.settings.build }}
         shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
+        if: matrix.settings.target != 'wasm32-wasip1-threads'
         with:
           name: bindings-${{ matrix.settings.target }}
           path: '*.node'
           if-no-files-found: error
 
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: matrix.settings.target == 'wasm32-wasip1-threads'
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: '*.wasm'
+          if-no-files-found: error
+  build-freebsd:
+    runs-on: ubuntu-latest
+    name: Build FreeBSD
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build
+        id: build
+        uses: cross-platform-actions/action@v0.29.0
+        env:
+          DEBUG: napi:*
+          RUSTUP_IO_THREADS: 1
+        with:
+          operating_system: freebsd
+          version: '14.3'
+          memory: 8G
+          cpu_count: 3
+          environment_variables: DEBUG RUSTUP_IO_THREADS
+          shell: bash
+          run: |
+            sudo pkg install -y -f curl node libnghttp2 npm
+            sudo npm install -g corepack
+            curl https://sh.rustup.rs -sSf --output rustup.sh
+            sh rustup.sh -y --profile minimal --default-toolchain beta
+            corepack prepare
+            corepack enable
+            source "$HOME/.cargo/env"
+            echo "~~~~ rustc --version ~~~~"
+            rustc --version
+            echo "~~~~ node -v ~~~~"
+            node -v
+            echo "~~~~ pnpm --version ~~~~"
+            pnpm --version
+            pwd
+            ls -lah
+            whoami
+            env
+            freebsd-version
+            pnpm install
+            pnpm build
+            rm -rf node_modules
+            rm -rf target
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-freebsd
+          path: ${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
   test-macOS-windows-binding:
     name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs:
@@ -215,35 +236,17 @@ jobs:
           - '22'
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - name: Clean workspace (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          sudo mkdir -p ${{ github.workspace }}
-          # 动态获取当前用户组名称
-          CURRENT_USER=$(whoami)
-          CURRENT_GROUP=$(id -gn)
-          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
-          sudo chmod -R 755 ${{ github.workspace }}
-      - name: Clean workspace (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
+          cache: pnpm
           architecture: ${{ matrix.settings.architecture }}
-          package-manager-cache: false
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: |
-            - args: [--force,--registry=https://registry.npmmirror.com]
+      - name: Install dependencies
+        run: pnpm install
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -251,9 +254,9 @@ jobs:
           path: .
       - name: List packages
         run: ls -R .
+        shell: bash
       - name: Test bindings
         run: pnpm test
-
   test-linux-binding:
     name: Test ${{ matrix.target }} - node@${{ matrix.node }}
     needs:
@@ -270,38 +273,16 @@ jobs:
         node:
           - '20'
           - '22'
-    runs-on:
-      - ubuntu-latest
-      - ${{ contains(matrix.target, 'armv7') && 'x64' || (contains(matrix.target, 'x86_64') && 'x64' || 'arm64') }}
+    runs-on: ${{ contains(matrix.target, 'aarch64') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
-      - name: Clean workspace (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          sudo mkdir -p ${{ github.workspace }}
-          # 动态获取当前用户组名称
-          CURRENT_USER=$(whoami)
-          CURRENT_GROUP=$(id -gn)
-          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
-          sudo chmod -R 755 ${{ github.workspace }}
-      - name: Clean workspace (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
-          package-manager-cache: false
-      - name: setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: |
-            - args: [--force,--registry=https://registry.npmmirror.com]
+          cache: pnpm
       - name: Output docker params
         id: docker
         run: |
@@ -317,13 +298,14 @@ jobs:
           node -e "
             if ('${{ matrix.target }}'.endsWith('-musl')) {
               console.log('IMAGE=node:${{ matrix.node }}-alpine')
-            } else if ('${{ matrix.target }}' === 'armv7-unknown-linux-gnueabihf') {
-              console.log('IMAGE=node:${{ matrix.node }}-bullseye')
             } else {
               console.log('IMAGE=node:${{ matrix.node }}-slim')
             }
           " >> $GITHUB_OUTPUT
           echo "PNPM_STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+      # use --force to download the all platform/arch dependencies
+      - name: Install dependencies
+        run: pnpm install --force
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -331,12 +313,12 @@ jobs:
           path: .
       - name: List packages
         run: ls -R .
+        shell: bash
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         if: ${{ contains(matrix.target, 'armv7') }}
         with:
           platforms: all
-          cache-image: false
       - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         if: ${{ contains(matrix.target, 'armv7') }}
       - name: Test bindings
@@ -344,64 +326,55 @@ jobs:
         with:
           image: ${{ steps.docker.outputs.IMAGE }}
           options: -v ${{ steps.docker.outputs.PNPM_STORE_PATH }}:${{ steps.docker.outputs.PNPM_STORE_PATH }} -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --platform ${{ steps.docker.outputs.PLATFORM }}
-          run: |
-            if ! echo "${{ steps.docker.outputs.IMAGE }}" | grep -q alpine; then
-              apt-get update && apt-get install -y libc6-dev
-              # 为需要 libbsd 的架构安装 libbsd0，提供 le16toh 等符号
-              if [ "${{ matrix.target }}" = "armv7-unknown-linux-gnueabihf" ] || [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-                apt-get install -y libbsd0
-              fi
-            fi
-            # 安装 pnpm 并清理重新安装依赖项以确保正确的架构模块
-            npm install -g pnpm --registry=https://registry.npmmirror.com
-            rm -rf node_modules
-            # 为需要 libbsd 的架构设置库路径与预加载
-            if [ "${{ matrix.target }}" = "armv7-unknown-linux-gnueabihf" ]; then
-              export LD_LIBRARY_PATH=/lib/arm-linux-gnueabihf:${LD_LIBRARY_PATH}
-              export LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libbsd.so.0
-            elif [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-              export LD_LIBRARY_PATH=/lib/aarch64-linux-gnu:${LD_LIBRARY_PATH}
-              export LD_PRELOAD=/usr/lib/aarch64-linux-gnu/libbsd.so.0
-            fi
-            pnpm install --force --registry=https://registry.npmmirror.com
-            pnpm test
-
-  publish:
-    name: Publish
-    runs-on: macos-latest
+          run: npm run test
+  test-wasi:
+    name: Test WASI target
     needs:
-      - lint
-      - test-macOS-windows-binding
-      - test-linux-binding
+      - build
+    runs-on: ubuntu-latest
     steps:
-      - name: Clean workspace (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: |
-          sudo find ${{ github.workspace }} -mindepth 1 -delete 2>/dev/null || true
-          sudo rm -rf ${{ github.workspace }}/* ${{ github.workspace }}/.[^.]* ${{ github.workspace }}/..?* 2>/dev/null || true
-          sudo mkdir -p ${{ github.workspace }}
-          # 动态获取当前用户组名称
-          CURRENT_USER=$(whoami)
-          CURRENT_GROUP=$(id -gn)
-          sudo chown -R $CURRENT_USER:$CURRENT_GROUP ${{ github.workspace }} || true
-          sudo chmod -R 755 ${{ github.workspace }}
-      - name: Clean workspace (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Remove-Item -Path "${{ github.workspace }}\*" -Recurse -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path "${{ github.workspace }}\.*" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path "${{ github.workspace }}" -Force | Out-Null
       - uses: actions/checkout@v5
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup node
         uses: actions/setup-node@v5
         with:
           node-version: 22
-          package-manager-cache: false
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Download artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: bindings-wasm32-wasip1-threads
+          path: .
+      - name: List packages
+        run: ls -R .
+        shell: bash
+      - name: Test bindings
+        run: pnpm test
+        env:
+          NAPI_RS_FORCE_WASI: 1
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - build-freebsd
+      - test-macOS-windows-binding
+      - test-linux-binding
+      - test-wasi
+    steps:
+      - uses: actions/checkout@v5
       - name: setup pnpm
         uses: pnpm/action-setup@v4
+      - name: Setup node
+        uses: actions/setup-node@v5
         with:
-          run_install: |
-            - args: [--force,--registry=https://registry.npmmirror.com]
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
@@ -412,12 +385,10 @@ jobs:
         run: pnpm artifacts
       - name: List packages
         run: ls -R ./npm
-      - name: Build
-        run: pnpm postbuild
+        shell: bash
       - name: Publish
         run: |
-          # 自托管运行器不支持provenance，禁用此功能
-          npm config set provenance false
+          npm config set provenance true
           if git log -1 --pretty=%B | grep "^v\?[0-9]\+\.[0-9]\+\.[0-9]\+$";
           then
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
