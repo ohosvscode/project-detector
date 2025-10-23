@@ -353,7 +353,7 @@ jobs:
               fi
             fi
             # 安装 pnpm 并清理重新安装依赖项以确保正确的架构模块
-            npm install -g pnpm
+            npm install -g pnpm --registry=https://registry.npmmirror.com
             rm -rf node_modules
             # 为需要 libbsd 的架构设置库路径与预加载
             if [ "${{ matrix.target }}" = "armv7-unknown-linux-gnueabihf" ]; then
