@@ -425,6 +425,12 @@ jobs:
           find artifacts -type f | head -20
           echo "=== WASI artifacts ==="
           find artifacts -name "*wasi*" -o -name "*wasm*" | head -10
+      - name: Copy WASI files to root
+        run: |
+          echo "=== Copying WASI files to root directory ==="
+          cp artifacts/bindings-wasm32-wasip1-threads/project-detector.wasi.cjs . || echo "WASI CJS file not found"
+          cp artifacts/bindings-wasm32-wasip1-threads/project-detector.wasi-browser.js . || echo "WASI browser file not found"
+          ls -la project-detector.wasi.* || echo "No WASI files in root"
       - name: create npm dirs
         run: pnpm napi create-npm-dirs
       - name: Move artifacts
