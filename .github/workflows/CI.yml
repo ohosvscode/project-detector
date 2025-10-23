@@ -385,7 +385,7 @@ jobs:
           pnpm test
         env:
           NAPI_RS_FORCE_WASI: 1
-          NODE_OPTIONS: "--experimental-wasi-unstable-preview1"
+          NODE_OPTIONS: --experimental-wasi-unstable-preview1
   publish:
     name: Publish
     runs-on: ubuntu-latest
