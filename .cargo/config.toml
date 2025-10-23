@@ -1,17 +1,10 @@
-[target.x86_64-pc-windows-msvc]
+[target.wasm32-wasip1-threads]
+linker = "clang"
 rustflags = [
-  "-C",
-  "target-feature=+crt-static"
+  "-C", "link-arg=--target=wasm32-wasip1-threads",
+  "-C", "link-arg=--sysroot=${WASI_SYSROOT}",
 ]
 
-[target.i686-pc-windows-msvc]
-rustflags = [
-  "-C",
-  "target-feature=+crt-static"
-]
-
-[target.aarch64-pc-windows-msvc]
-rustflags = [
-  "-C",
-  "target-feature=+crt-static"
-]
+[env]
+WASI_SDK_PATH = { value = "", relative = false }
+WASI_SYSROOT = { value = "", relative = false }
