@@ -195,9 +195,10 @@ jobs:
         with:
           name: bindings-wasm32-wasip1-threads
           path: |
-            *.wasm
-            *.cjs
-            project-detector.*
+            project-detector.wasm32-wasi.wasm
+            project-detector.wasm32-wasi.debug.wasm
+            project-detector.wasi.cjs
+            project-detector.wasi-browser.js
           if-no-files-found: error
   build-freebsd:
     runs-on: ubuntu-latest
@@ -418,6 +419,12 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           path: artifacts
+      - name: List downloaded artifacts
+        run: |
+          echo "=== Downloaded artifacts ==="
+          find artifacts -type f | head -20
+          echo "=== WASI artifacts ==="
+          find artifacts -name "*wasi*" -o -name "*wasm*" | head -10
       - name: create npm dirs
         run: pnpm napi create-npm-dirs
       - name: Move artifacts
