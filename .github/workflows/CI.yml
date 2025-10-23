@@ -119,15 +119,9 @@ jobs:
         run: |
           wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-20/wasi-sdk-20.0-linux.tar.gz
           tar -xzf wasi-sdk-20.0-linux.tar.gz
+          ls -la wasi-sdk-20.0/
           echo "WASI_SDK_PATH=$PWD/wasi-sdk-20.0" >> $GITHUB_ENV
           echo "WASI_SYSROOT=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
-          echo "CC_wasm32-wasip1-threads=$PWD/wasi-sdk-20.0/bin/clang" >> $GITHUB_ENV
-          echo "CXX_wasm32-wasip1-threads=$PWD/wasi-sdk-20.0/bin/clang++" >> $GITHUB_ENV
-          echo "AR_wasm32-wasip1-threads=$PWD/wasi-sdk-20.0/bin/llvm-ar" >> $GITHUB_ENV
-          echo "RANLIB_wasm32-wasip1-threads=$PWD/wasi-sdk-20.0/bin/llvm-ranlib" >> $GITHUB_ENV
-          echo "CFLAGS_wasm32-wasip1-threads=--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
-          echo "CXXFLAGS_wasm32-wasip1-threads=--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
-          echo "LDFLAGS_wasm32-wasip1-threads=--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
       - name: Cache cargo
         uses: actions/cache@v4
         with:
@@ -168,13 +162,13 @@ jobs:
           if [[ "${{ matrix.settings.target }}" == "wasm32-wasip1-threads" ]]; then
             export WASI_SDK_PATH="$PWD/wasi-sdk-20.0"
             export WASI_SYSROOT="$PWD/wasi-sdk-20.0/share/wasi-sysroot"
-            export CC_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/clang"
-            export CXX_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/clang++"
-            export AR_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/llvm-ar"
-            export RANLIB_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/llvm-ranlib"
-            export CFLAGS_wasm32-wasip1-threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
-            export CXXFLAGS_wasm32-wasip1-threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
-            export LDFLAGS_wasm32-wasip1-threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            export CC_wasm32_wasip1_threads="$PWD/wasi-sdk-20.0/bin/clang"
+            export CXX_wasm32_wasip1_threads="$PWD/wasi-sdk-20.0/bin/clang++"
+            export AR_wasm32_wasip1_threads="$PWD/wasi-sdk-20.0/bin/llvm-ar"
+            export RANLIB_wasm32_wasip1_threads="$PWD/wasi-sdk-20.0/bin/llvm-ranlib"
+            export CFLAGS_wasm32_wasip1_threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            export CXXFLAGS_wasm32_wasip1_threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            export LDFLAGS_wasm32_wasip1_threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
             pnpm build --target ${{ matrix.settings.target }}
           else
             ${{ matrix.settings.build }}
