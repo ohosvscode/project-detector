@@ -175,6 +175,8 @@ jobs:
             ls -la *.wasm
             ls -la *.cjs
             ls -la project-detector.*
+            echo "=== Checking for WASI binding files ==="
+            find . -name "*.cjs" -o -name "*wasi*" -o -name "*wasm*" | head -20
           else
             ${{ matrix.settings.build }}
           fi
@@ -192,7 +194,10 @@ jobs:
         if: matrix.settings.target == 'wasm32-wasip1-threads'
         with:
           name: bindings-wasm32-wasip1-threads
-          path: '*.wasm'
+          path: |
+            *.wasm
+            *.cjs
+            project-detector.*
           if-no-files-found: error
   build-freebsd:
     runs-on: ubuntu-latest
@@ -382,6 +387,9 @@ jobs:
         run: |
           export NAPI_RS_FORCE_WASI=1
           export NODE_OPTIONS="--experimental-wasi-unstable-preview1"
+          echo "=== Files before test ==="
+          ls -la *.wasm *.cjs project-detector.* 2>/dev/null || echo "No matching files found"
+          echo "=== Running test ==="
           pnpm test
         env:
           NAPI_RS_FORCE_WASI: 1
