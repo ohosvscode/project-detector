@@ -199,6 +199,7 @@ jobs:
             project-detector.wasm32-wasi.debug.wasm
             project-detector.wasi.cjs
             project-detector.wasi-browser.js
+            wasi-worker.mjs
           if-no-files-found: error
   build-freebsd:
     runs-on: ubuntu-latest
@@ -430,7 +431,8 @@ jobs:
           echo "=== Copying WASI files to root directory ==="
           cp artifacts/bindings-wasm32-wasip1-threads/project-detector.wasi.cjs . || echo "WASI CJS file not found"
           cp artifacts/bindings-wasm32-wasip1-threads/project-detector.wasi-browser.js . || echo "WASI browser file not found"
-          ls -la project-detector.wasi.* || echo "No WASI files in root"
+          cp artifacts/bindings-wasm32-wasip1-threads/wasi-worker.mjs . || echo "WASI worker file not found"
+          ls -la project-detector.wasi.* wasi-worker.mjs || echo "No WASI files in root"
       - name: create npm dirs
         run: pnpm napi create-npm-dirs
       - name: Move artifacts
