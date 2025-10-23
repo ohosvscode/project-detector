@@ -176,7 +176,7 @@ jobs:
             ls -la *.cjs
             ls -la project-detector.*
             echo "=== Checking for WASI binding files ==="
-            find . -name "*.cjs" -o -name "*wasi*" -o -name "*wasm*" 2>/dev/null | head -20 || echo "No additional files found"
+            find . -name "*.cjs" -o -name "*wasi*" -o -name "*wasm*" -o -name "*worker*" 2>/dev/null | head -20 || echo "No additional files found"
           else
             ${{ matrix.settings.build }}
           fi
@@ -200,6 +200,10 @@ jobs:
             project-detector.wasi.cjs
             project-detector.wasi-browser.js
             wasi-worker.mjs
+            wasi-worker-browser.mjs
+            wasi-worker.*
+            browser.js
+            *.browser.*
           if-no-files-found: error
   build-freebsd:
     runs-on: ubuntu-latest
@@ -432,7 +436,11 @@ jobs:
           cp artifacts/bindings-wasm32-wasip1-threads/project-detector.wasi.cjs . || echo "WASI CJS file not found"
           cp artifacts/bindings-wasm32-wasip1-threads/project-detector.wasi-browser.js . || echo "WASI browser file not found"
           cp artifacts/bindings-wasm32-wasip1-threads/wasi-worker.mjs . || echo "WASI worker file not found"
-          ls -la project-detector.wasi.* wasi-worker.mjs || echo "No WASI files in root"
+          cp artifacts/bindings-wasm32-wasip1-threads/wasi-worker-browser.mjs . || echo "WASI browser worker file not found"
+          cp artifacts/bindings-wasm32-wasip1-threads/wasi-worker.* . || echo "No additional WASI worker files found"
+          cp artifacts/bindings-wasm32-wasip1-threads/browser.js . || echo "Browser JS file not found"
+          cp artifacts/bindings-wasm32-wasip1-threads/*.browser.* . || echo "No additional browser files found"
+          ls -la project-detector.wasi.* wasi-worker* browser.js *.browser.* || echo "No WASI files in root"
       - name: create npm dirs
         run: pnpm napi create-npm-dirs
       - name: Move artifacts
