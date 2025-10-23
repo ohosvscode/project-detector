@@ -5,6 +5,8 @@ export default antfu({
     'mock/**',
     'index.d.ts',
     '*.js',
+    '*.cjs',
+    '*.mjs',
   ],
 
   rules: {
