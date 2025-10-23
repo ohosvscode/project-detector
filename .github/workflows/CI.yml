@@ -127,6 +127,7 @@ jobs:
           echo "RANLIB_wasm32-wasip1-threads=$PWD/wasi-sdk-20.0/bin/llvm-ranlib" >> $GITHUB_ENV
           echo "CFLAGS_wasm32-wasip1-threads=--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
           echo "CXXFLAGS_wasm32-wasip1-threads=--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
+          echo "LDFLAGS_wasm32-wasip1-threads=--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
       - name: Cache cargo
         uses: actions/cache@v4
         with:
@@ -163,7 +164,21 @@ jobs:
           cache: pnpm
           architecture: x86
       - name: Build
-        run: ${{ matrix.settings.build }}
+        run: |
+          if [[ "${{ matrix.settings.target }}" == "wasm32-wasip1-threads" ]]; then
+            export WASI_SDK_PATH="$PWD/wasi-sdk-20.0"
+            export WASI_SYSROOT="$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            export CC_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/clang"
+            export CXX_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/clang++"
+            export AR_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/llvm-ar"
+            export RANLIB_wasm32-wasip1-threads="$PWD/wasi-sdk-20.0/bin/llvm-ranlib"
+            export CFLAGS_wasm32-wasip1-threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            export CXXFLAGS_wasm32-wasip1-threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            export LDFLAGS_wasm32-wasip1-threads="--sysroot=$PWD/wasi-sdk-20.0/share/wasi-sysroot"
+            pnpm build --target ${{ matrix.settings.target }}
+          else
+            ${{ matrix.settings.build }}
+          fi
         shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4

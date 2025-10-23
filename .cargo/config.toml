@@ -1,11 +1,5 @@
 [target.wasm32-wasip1-threads]
 linker = "clang"
-rustflags = [
-  "-C",
-  "link-arg=--target=wasm32-wasip1-threads",
-  "-C",
-  "link-arg=--sysroot=${WASI_SYSROOT}",
-]
 
 [env]
 WASI_SDK_PATH = { value = "", relative = false }
