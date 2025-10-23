@@ -101,6 +101,9 @@ jobs:
           - host: ubuntu-latest
             target: aarch64-unknown-linux-ohos
             build: pnpm build --target aarch64-unknown-linux-ohos
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-ohos
+            build: pnpm build --target x86_64-unknown-linux-ohos
     name: stable - ${{ matrix.settings.target }} - node@20
     runs-on: ${{ matrix.settings.host }}
     steps:
