@@ -430,7 +430,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --force
       - name: Build
-        run: pnpm build
+        run: pnpm postbuild
       - name: Download all artifacts
         uses: actions/download-artifact@v5
         with:
