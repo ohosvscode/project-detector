@@ -46,6 +46,8 @@ export namespace ElementJsonFile {
         case 'file-changed': {
           const files = elementJsonFiles()
           const index = files.findIndex(file => file.getUri().isEqual(uri))
+          if (index === -1)
+            return
           RustElementJsonFile.reload(files[index].getUnderlyingElementJsonFile())
           break
         }
