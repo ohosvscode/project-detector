@@ -176,7 +176,7 @@ jobs:
             ls -la *.cjs
             ls -la project-detector.*
             echo "=== Checking for WASI binding files ==="
-            find . -name "*.cjs" -o -name "*wasi*" -o -name "*wasm*" | head -20
+            find . -name "*.cjs" -o -name "*wasi*" -o -name "*wasm*" 2>/dev/null | head -20 || echo "No additional files found"
           else
             ${{ matrix.settings.build }}
           fi
