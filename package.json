@@ -56,7 +56,8 @@
       "aarch64-unknown-linux-musl",
       "aarch64-pc-windows-msvc",
       "armv7-linux-androideabi",
-      "wasm32-wasip1-threads"
+      "wasm32-wasip1-threads",
+      "aarch64-unknown-linux-ohos"
     ]
   },
   "engines": {
