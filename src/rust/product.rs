@@ -91,6 +91,28 @@ impl Product {
   }
 
   #[napi]
+  pub fn get_current_target_directory(&self) -> Uri {
+    let name = self.get_name();
+    let default_child_path = if name == "default" { "main" } else { &name };
+    let target_directory = Path::new(&self.module.get_uri().fs_path()).join("src").join(default_child_path);
+    Uri::file(target_directory.to_string_lossy().to_string())
+  }
+
+  #[napi]
+  pub fn get_module_json5_path(&self) -> Uri {
+    let target_directory = self.get_current_target_directory();
+    let module_json5_path = Path::new(&target_directory.fs_path()).join("module.json5");
+    Uri::file(module_json5_path.to_string_lossy().to_string())
+  }
+  
+  #[napi]
+  pub fn get_config_json_path(&self) -> Uri {
+    let target_directory = self.get_current_target_directory();
+    let config_json_path = Path::new(&target_directory.fs_path()).join("config.json");
+    Uri::file(config_json_path.to_string_lossy().to_string())
+  }
+
+  #[napi]
   pub fn get_resource_directories(&self) -> Vec<Uri> {
     let mut target_directories = Vec::new();
     let current_target_config = self.get_current_target_config();
