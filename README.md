@@ -1,4 +1,10 @@
+<div align="center">
+
+![ArkTS Project Detector](https://github.com/ohosvscode/project-detector/blob/main/logo.svg?raw=true)
+
 # ArkTS Project Detector
+
+</div>
 
 > 准确的来说，这应该是一个 Hvigor Project Detector. (QWQ)
 

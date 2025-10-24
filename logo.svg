@@ -1,0 +1,16 @@
+<svg width="70" height="79" viewBox="0 0 70 79" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M63 31.5C63 48.897 48.897 63 31.5 63C14.103 63 0 48.897 0 31.5C0 14.103 14.103 0 31.5 0C48.897 0 63 14.103 63 31.5ZM11.025 31.5C11.025 42.808 20.192 51.975 31.5 51.975C42.808 51.975 51.975 42.808 51.975 31.5C51.975 20.192 42.808 11.025 31.5 11.025C20.192 11.025 11.025 20.192 11.025 31.5Z" fill="black"/>
+<line x1="10" y1="74.5" x2="54" y2="74.5" stroke="#1F6AFF" stroke-width="9"/>
+<line class="search-handle" x1="49.2716" y1="48.9102" x2="66.2716" y2="66.9102" stroke="black" stroke-width="9"/>
+<style>
+    @media (prefers-color-scheme: dark) { 
+        path {
+            fill: #fff;
+            stroke: #000;
+        }
+        .search-handle {
+            stroke: #fff;
+        }
+    }
+</style>
+</svg>
