@@ -104,7 +104,7 @@ impl Product {
     let module_json5_path = Path::new(&target_directory.fs_path()).join("module.json5");
     Uri::file(module_json5_path.to_string_lossy().to_string())
   }
-  
+
   #[napi]
   pub fn get_config_json_path(&self) -> Uri {
     let target_directory = self.get_current_target_directory();
