@@ -29,8 +29,8 @@ export declare class ElementJsonFileReference {
   getValueFullText(): string
   getElementType(): string
   getFullElementType(): string
-  toEtsFormat(): string
-  toJsonFormat(): string
+  toEtsFormat(): `app.${string}.${string}`
+  toJsonFormat(): `$${string}:${string}`
 }
 
 export declare class Module {

@@ -331,13 +331,13 @@ impl ElementJsonFileReference {
     self.element_type.clone()
   }
 
-  #[napi]
+  #[napi(ts_return_type = "`app.${string}.${string}`")]
   pub fn to_ets_format(&self) -> String {
     let text = self.get_name_text();
     format!("app.{}.{}", self.get_element_type(), text)
   }
 
-  #[napi]
+  #[napi(ts_return_type = "`$${string}:${string}`")]
   pub fn to_json_format(&self) -> String {
     let text = self.get_name_text();
     format!("${}:{}", self.get_element_type(), text)

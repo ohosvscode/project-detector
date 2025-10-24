@@ -45,6 +45,9 @@ export namespace Product {
       getSourceDirectories: () => product.getSourceDirectories(),
       getResourceDirectories: () => product.getResourceDirectories(),
       getUnderlyingProduct: () => product,
+      getCurrentTargetDirectory: () => product.getCurrentTargetDirectory(),
+      getModuleJson5Path: () => product.getModuleJson5Path(),
+      getConfigJsonPath: () => product.getConfigJsonPath(),
     }
   }
 
