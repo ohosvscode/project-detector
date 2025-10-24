@@ -51,6 +51,9 @@ export declare class Product {
   getName(): string
   getCurrentTargetConfig(): any
   getSourceDirectories(): Array<Uri>
+  getCurrentTargetDirectory(): Uri
+  getModuleJson5Path(): Uri
+  getConfigJsonPath(): Uri
   getResourceDirectories(): Array<Uri>
 }
 
