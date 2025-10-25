@@ -59,11 +59,14 @@ export default __napiModule.exports
 export const ElementDirectory = __napiModule.exports.ElementDirectory
 export const ElementJsonFile = __napiModule.exports.ElementJsonFile
 export const ElementJsonFileReference = __napiModule.exports.ElementJsonFileReference
+export const MediaDirectory = __napiModule.exports.MediaDirectory
 export const Module = __napiModule.exports.Module
 export const Product = __napiModule.exports.Product
 export const Project = __napiModule.exports.Project
 export const ProjectDetector = __napiModule.exports.ProjectDetector
 export const QualifierUtils = __napiModule.exports.QualifierUtils
+export const RawfileDirectory = __napiModule.exports.RawfileDirectory
+export const ResfileDirectory = __napiModule.exports.ResfileDirectory
 export const Resource = __napiModule.exports.Resource
 export const ResourceDirectory = __napiModule.exports.ResourceDirectory
 export const Uri = __napiModule.exports.Uri

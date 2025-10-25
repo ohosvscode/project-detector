@@ -33,6 +33,13 @@ export declare class ElementJsonFileReference {
   toJsonFormat(): `$${string}:${string}`
 }
 
+export declare class MediaDirectory {
+  static from(resource: Resource): MediaDirectory | null
+  getUri(): Uri
+  getResource(): Resource
+  findAll(): Array<Uri>
+}
+
 export declare class Module {
   static create(project: Project, moduleUri: string): Module | null
   static findAll(project: Project): Array<Module>
@@ -134,6 +141,20 @@ export declare class QualifierUtils {
    * **注意**：如果任何一个限定词无法识别或顺序错误，将返回空向量，表示整个限定词字符串无效。
    */
   static analyzeQualifier(qualifiers: string): Array<Qualifier>
+}
+
+export declare class RawfileDirectory {
+  static from(resource: Resource): RawfileDirectory | null
+  getUri(): Uri
+  getResource(): Resource
+  findAll(): Array<Uri>
+}
+
+export declare class ResfileDirectory {
+  static from(resource: Resource): ResfileDirectory | null
+  getUri(): Uri
+  getResource(): Resource
+  findAll(): Array<Uri>
 }
 
 export declare class Resource {
