@@ -22,14 +22,14 @@ export namespace ResfileDirectory {
   }
 
   export function from(resource: Resource): DisposableSignal<ResfileDirectory | null> {
-    const resfileDirectory = signal<ResfileDirectory | null>(fromRustResfileDirectory(RustResfileDirectory.from(resource)))
+    const resfileDirectory = signal<ResfileDirectory | null>(fromRustResfileDirectory(RustResfileDirectory.from(resource.getUnderlyingResource())))
 
     const handle = (event: keyof ProjectDetector.EventMap, uri: Uri) => {
       if (uri.isEqual(resource.getUri())) {
         switch (event) {
           case 'file-created':
           case 'file-changed':
-            resfileDirectory(fromRustResfileDirectory(RustResfileDirectory.from(resource)))
+            resfileDirectory(fromRustResfileDirectory(RustResfileDirectory.from(resource.getUnderlyingResource())))
             break
           case 'file-deleted':
             resfileDirectory(null)
@@ -41,7 +41,7 @@ export namespace ResfileDirectory {
       const resfileUris = resfileDirectory()?.findAll() ?? []
       const existingResfileIndex = resfileUris.findIndex(resfileUri => resfileUri.isEqual(uri))
       if (existingResfileIndex !== -1) {
-        resfileDirectory(fromRustResfileDirectory(RustResfileDirectory.from(resource)))
+        resfileDirectory(fromRustResfileDirectory(RustResfileDirectory.from(resource.getUnderlyingResource())))
       }
     }
 

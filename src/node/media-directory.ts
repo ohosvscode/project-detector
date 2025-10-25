@@ -22,14 +22,14 @@ export namespace MediaDirectory {
   }
 
   export function from(resource: Resource): DisposableSignal<MediaDirectory | null> {
-    const mediaDirectory = signal<MediaDirectory | null>(fromRustMediaDirectory(RustMediaDirectory.from(resource)))
+    const mediaDirectory = signal<MediaDirectory | null>(fromRustMediaDirectory(RustMediaDirectory.from(resource.getUnderlyingResource())))
 
     const handle = (event: keyof ProjectDetector.EventMap, uri: Uri) => {
       if (uri.isEqual(resource.getUri())) {
         switch (event) {
           case 'file-created':
           case 'file-changed':
-            mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resource)))
+            mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resource.getUnderlyingResource())))
             break
           case 'file-deleted':
             mediaDirectory(null)
@@ -41,7 +41,7 @@ export namespace MediaDirectory {
       const mediaFileUris = mediaDirectory()?.findAll() ?? []
       const existingMediaFileIndex = mediaFileUris.findIndex(mediaFileUri => mediaFileUri.isEqual(uri))
       if (existingMediaFileIndex !== -1) {
-        mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resource)))
+        mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resource.getUnderlyingResource())))
       }
     }
 
