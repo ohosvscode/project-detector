@@ -40,7 +40,7 @@ impl ProfileDirectory {
     };
 
     for profile in profiles.flatten() {
-      if profile.metadata().map(|metadata| metadata.is_dir()).unwrap_or(false) {
+      if profile.metadata().map(|metadata| metadata.is_file()).unwrap_or(false) {
         profile_directories.push(Uri::file(profile.path().to_string_lossy().to_string()));
       }
     }
