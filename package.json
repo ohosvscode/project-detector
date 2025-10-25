@@ -1,7 +1,7 @@
 {
   "name": "@arkts/project-detector",
   "type": "module",
-  "version": "1.1.3-alpha.28",
+  "version": "1.1.3-alpha.29",
   "packageManager": "pnpm@10.18.0",
   "description": "A native Rust-based project detector for HarmonyOS/OpenHarmony projects",
   "license": "MIT",
