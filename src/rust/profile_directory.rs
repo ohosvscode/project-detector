@@ -1,7 +1,7 @@
-use std::{fs, path::Path};
 use crate::{resource_directory::ResourceDirectory, utils::uri::Uri};
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
+use std::{fs, path::Path};
 
 #[napi]
 pub struct ProfileDirectory {
