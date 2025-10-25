@@ -62,6 +62,7 @@ export const ElementJsonFileReference = __napiModule.exports.ElementJsonFileRefe
 export const MediaDirectory = __napiModule.exports.MediaDirectory
 export const Module = __napiModule.exports.Module
 export const Product = __napiModule.exports.Product
+export const ProfileDirectory = __napiModule.exports.ProfileDirectory
 export const Project = __napiModule.exports.Project
 export const ProjectDetector = __napiModule.exports.ProjectDetector
 export const QualifierUtils = __napiModule.exports.QualifierUtils

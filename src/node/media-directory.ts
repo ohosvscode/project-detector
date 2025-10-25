@@ -1,6 +1,6 @@
 import type { Uri } from '../../index'
 import type { ProjectDetector } from './project-detector'
-import type { Resource } from './resource'
+import type { ResourceDirectory } from './resource-directory'
 import { signal } from 'alien-signals'
 import { MediaDirectory as RustMediaDirectory } from '../../index'
 import { DisposableSignal } from './types'
@@ -15,21 +15,21 @@ export namespace MediaDirectory {
       return null
     return {
       getUri: () => mediaDirectory.getUri(),
-      getResource: () => mediaDirectory.getResource(),
+      getResourceDirectory: () => mediaDirectory.getResourceDirectory(),
       findAll: () => mediaDirectory.findAll(),
       getUnderlyingMediaDirectory: () => mediaDirectory,
     }
   }
 
-  export function from(resource: Resource): DisposableSignal<MediaDirectory | null> {
-    const mediaDirectory = signal<MediaDirectory | null>(fromRustMediaDirectory(RustMediaDirectory.from(resource.getUnderlyingResource())))
+  export function from(resourceDirectory: ResourceDirectory): DisposableSignal<MediaDirectory | null> {
+    const mediaDirectory = signal<MediaDirectory | null>(fromRustMediaDirectory(RustMediaDirectory.from(resourceDirectory.getUnderlyingResourceDirectory())))
 
     const handle = (event: keyof ProjectDetector.EventMap, uri: Uri) => {
-      if (uri.isEqual(resource.getUri())) {
+      if (uri.isEqual(resourceDirectory.getUri())) {
         switch (event) {
           case 'file-created':
           case 'file-changed':
-            mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resource.getUnderlyingResource())))
+            mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resourceDirectory.getUnderlyingResourceDirectory())))
             break
           case 'file-deleted':
             mediaDirectory(null)
@@ -41,11 +41,11 @@ export namespace MediaDirectory {
       const mediaFileUris = mediaDirectory()?.findAll() ?? []
       const existingMediaFileIndex = mediaFileUris.findIndex(mediaFileUri => mediaFileUri.isEqual(uri))
       if (existingMediaFileIndex !== -1) {
-        mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resource.getUnderlyingResource())))
+        mediaDirectory(fromRustMediaDirectory(RustMediaDirectory.from(resourceDirectory.getUnderlyingResourceDirectory())))
       }
     }
 
-    resource.getProduct().getModule().getProject().getProjectDetector().on('*', handle)
-    return DisposableSignal.fromSignal(mediaDirectory, () => resource.getProduct().getModule().getProject().getProjectDetector().off('*', handle))
+    resourceDirectory.getResource().getProduct().getModule().getProject().getProjectDetector().on('*', handle)
+    return DisposableSignal.fromSignal(mediaDirectory, () => resourceDirectory.getResource().getProduct().getModule().getProject().getProjectDetector().off('*', handle))
   }
 }

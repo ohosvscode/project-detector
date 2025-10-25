@@ -557,13 +557,14 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { ElementDirectory, ElementJsonFile, ElementJsonFileReference, MediaDirectory, Module, Product, Project, ProjectDetector, QualifierUtils, RawfileDirectory, ResfileDirectory, Resource, ResourceDirectory, Uri, QualifierType } = nativeBinding
+const { ElementDirectory, ElementJsonFile, ElementJsonFileReference, MediaDirectory, Module, Product, ProfileDirectory, Project, ProjectDetector, QualifierUtils, RawfileDirectory, ResfileDirectory, Resource, ResourceDirectory, Uri, QualifierType } = nativeBinding
 export { ElementDirectory }
 export { ElementJsonFile }
 export { ElementJsonFileReference }
 export { MediaDirectory }
 export { Module }
 export { Product }
+export { ProfileDirectory }
 export { Project }
 export { ProjectDetector }
 export { QualifierUtils }

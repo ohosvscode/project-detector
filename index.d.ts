@@ -34,9 +34,9 @@ export declare class ElementJsonFileReference {
 }
 
 export declare class MediaDirectory {
-  static from(resource: Resource): MediaDirectory | null
+  static from(resourceDirectory: ResourceDirectory): MediaDirectory | null
   getUri(): Uri
-  getResource(): Resource
+  getResourceDirectory(): ResourceDirectory
   findAll(): Array<Uri>
 }
 
@@ -62,6 +62,13 @@ export declare class Product {
   getModuleJson5Path(): Uri
   getConfigJsonPath(): Uri
   getResourceDirectories(): Array<Uri>
+}
+
+export declare class ProfileDirectory {
+  static from(resourceDirectory: ResourceDirectory): ProfileDirectory | null
+  getUri(): Uri
+  getResourceDirectory(): ResourceDirectory
+  findAll(): Array<Uri>
 }
 
 export declare class Project {

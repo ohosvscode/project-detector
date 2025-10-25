@@ -114,6 +114,7 @@ module.exports.ElementJsonFileReference = __napiModule.exports.ElementJsonFileRe
 module.exports.MediaDirectory = __napiModule.exports.MediaDirectory
 module.exports.Module = __napiModule.exports.Module
 module.exports.Product = __napiModule.exports.Product
+module.exports.ProfileDirectory = __napiModule.exports.ProfileDirectory
 module.exports.Project = __napiModule.exports.Project
 module.exports.ProjectDetector = __napiModule.exports.ProjectDetector
 module.exports.QualifierUtils = __napiModule.exports.QualifierUtils

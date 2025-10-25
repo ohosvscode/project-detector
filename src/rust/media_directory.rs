@@ -1,4 +1,4 @@
-use crate::{resource::Resource, utils::uri::Uri};
+use crate::{resource_directory::ResourceDirectory, utils::uri::Uri};
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 use std::{fs, path::Path};
@@ -6,19 +6,19 @@ use std::{fs, path::Path};
 #[napi]
 pub struct MediaDirectory {
   uri: Uri,
-  resource: Reference<Resource>,
+  resource_directory: Reference<ResourceDirectory>,
 }
 
 #[napi]
 impl MediaDirectory {
   #[napi]
-  pub fn from(resource: Reference<Resource>) -> Option<MediaDirectory> {
-    let uri = Uri::file(Path::new(&resource.get_uri().fs_path()).join("media").to_string_lossy().to_string());
+  pub fn from(resource_directory: Reference<ResourceDirectory>) -> Option<MediaDirectory> {
+    let uri = Uri::file(Path::new(&resource_directory.get_uri().fs_path()).join("media").to_string_lossy().to_string());
     if !fs::metadata(uri.fs_path()).map(|metadata| metadata.is_dir()).unwrap_or(false) {
       return None;
     }
 
-    Some(Self { uri, resource })
+    Some(Self { uri, resource_directory })
   }
 
   #[napi]
@@ -27,8 +27,8 @@ impl MediaDirectory {
   }
 
   #[napi]
-  pub fn get_resource(&self, env: Env) -> Reference<Resource> {
-    self.resource.clone(env).unwrap()
+  pub fn get_resource_directory(&self, env: Env) -> Reference<ResourceDirectory> {
+    self.resource_directory.clone(env).unwrap()
   }
 
   #[napi]
