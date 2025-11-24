@@ -77,6 +77,10 @@ export declare class Project {
   static create(projectDetector: ProjectDetector, projectUri: string): Project | null
   static reload(project: Project): void
   getUri(): Uri
+  getAppScopeUri(): Uri
+  getAppScopeResourceUri(): Uri
+  getAppScopeResourceConfigUri(): Uri
+  getAppScopeConfig(): unknown
   getParsedBuildProfile(): any
   getBuildProfileUri(): Uri
   getBuildProfileContent(): string

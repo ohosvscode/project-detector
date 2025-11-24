@@ -4,8 +4,7 @@ use crate::utils::uri::Uri;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 #[cfg(not(test))]
-use std::fs;
-#[cfg(not(test))]
+use std::{fs, rc::Rc};
 use std::path::Path;
 #[cfg(not(test))]
 use walkdir::WalkDir;
@@ -13,13 +12,16 @@ use walkdir::WalkDir;
 #[napi]
 pub struct Project {
   #[cfg(not(test))]
-  project_detector: Reference<ProjectDetector>,
+  project_detector: Rc<Reference<ProjectDetector>>,
   #[cfg(test)]
   project_detector: ProjectDetector,
   uri: Uri,
   parsed_build_profile: serde_json::Value,
   build_profile_uri: Uri,
   build_profile_content: String,
+  app_scope_uri: Uri,
+  app_scope_config_uri: Uri,
+  app_scope_config_content: String,
 }
 
 #[napi]
@@ -27,7 +29,10 @@ impl Project {
   #[napi]
   #[cfg(not(test))]
   pub fn get_project_detector(&self, env: Env) -> Reference<ProjectDetector> {
-    self.project_detector.clone(env).unwrap()
+    match self.project_detector.as_ref().clone(env) {
+      Ok(cloned_project_detector) => cloned_project_detector,
+      Err(_) => panic!("Failed to get cloned project detector, please check your project detector is valid in Project.getProjectDetector()."),
+    }
   }
 
   #[cfg(test)]
@@ -48,8 +53,14 @@ impl Project {
   #[napi]
   #[cfg(not(test))]
   pub fn find_all(project_detector: Reference<ProjectDetector>, env: Env) -> Vec<Project> {
+    let cloned_project_detector = Rc::new(
+      match project_detector.clone(env) {
+        Ok(cloned_project_detector) => cloned_project_detector,
+        Err(_) => panic!("Failed to get cloned project detector, please check your project detector is valid in Project.findAll()."),
+      }
+    );
     let mut projects = Vec::new();
-    let workspace_folder = project_detector.get_workspace_folder().fs_path();
+    let workspace_folder = cloned_project_detector.get_workspace_folder().fs_path();
     let entries: Vec<_> = WalkDir::new(workspace_folder)
       .into_iter()
       .filter_entry(|entry| !Self::is_in_exclude_dirs(entry))
@@ -60,7 +71,7 @@ impl Project {
       let path = entry.path();
       if path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name == "build-profile.json5") && entry.file_type().is_file() {
         let project_dir = path.parent().unwrap_or(Path::new("")).to_string_lossy().to_string();
-        if let Some(project) = Self::create(project_detector.clone(env).unwrap(), env, project_dir) {
+        if let Some(project) = Self::create(Rc::clone(&cloned_project_detector), project_dir) {
           projects.push(project);
         }
       }
@@ -71,7 +82,7 @@ impl Project {
 
   #[napi]
   #[cfg(not(test))]
-  pub fn create(project_detector: Reference<ProjectDetector>, env: Env, project_uri: String) -> Option<Project> {
+  pub fn create(project_detector: Rc<Reference<ProjectDetector>>, project_uri: String) -> Option<Project> {
     let uri = Uri::file(project_uri);
     if !fs::metadata(uri.fs_path()).map(|m| m.is_dir()).unwrap_or(false) {
       return None;
@@ -80,6 +91,10 @@ impl Project {
     let build_profile_uri = Uri::file(build_profile_path.to_string_lossy().to_string());
     let build_profile_content = fs::read_to_string(build_profile_uri.fs_path()).unwrap_or_default();
     let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
+    let app_scope_uri = Uri::file(Path::new(&uri.fs_path()).join("AppScope").to_string_lossy().to_string());
+    let app_scope_config_uri = Uri::file(Path::new(&app_scope_uri.fs_path()).join("config.json5").to_string_lossy().to_string());
+    let app_scope_config_content = fs::read_to_string(app_scope_config_uri.fs_path()).unwrap_or_default();
+    
 
     if parsed_build_profile.is_object()
       && parsed_build_profile
@@ -87,11 +102,14 @@ impl Project {
         .is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").and_then(|modules| modules.as_array()).is_some())
     {
       Some(Project {
-        project_detector: project_detector.clone(env).unwrap(),
+        project_detector: Rc::clone(&project_detector),
         uri,
         parsed_build_profile,
         build_profile_uri,
         build_profile_content,
+        app_scope_uri,
+        app_scope_config_uri,
+        app_scope_config_content,
       })
     } else {
       None
@@ -120,6 +138,26 @@ impl Project {
   #[napi]
   pub fn get_uri(&self) -> Uri {
     self.uri.clone()
+  }
+
+  #[napi]
+  pub fn get_app_scope_uri(&self) -> Uri {
+    self.app_scope_uri.clone()
+  }
+
+  #[napi]
+  pub fn get_app_scope_resource_uri(&self) -> Uri {
+    Uri::file(Path::new(&self.app_scope_uri.fs_path()).join("resources").to_string_lossy().to_string())
+  }
+
+  #[napi]
+  pub fn get_app_scope_resource_config_uri(&self) -> Uri {
+    self.app_scope_config_uri.clone()
+  }
+
+  #[napi(ts_return_type = "unknown")]
+  pub fn get_app_scope_config(&self) -> serde_json::Value {
+    serde_json5::from_str(&self.app_scope_config_content).unwrap_or_default()
   }
 
   #[napi]

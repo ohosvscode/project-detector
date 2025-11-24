@@ -1,5 +1,4 @@
-use std::{fs, path::Path};
-
+use std::{fs, path::Path, rc::Rc};
 use crate::product::Product;
 use crate::utils::uri::Uri;
 use napi::{bindgen_prelude::Reference, Env};
@@ -7,7 +6,7 @@ use napi_derive::napi;
 
 #[napi]
 pub struct Resource {
-  product: Reference<Product>,
+  product: Rc<Reference<Product>>,
   uri: Uri,
 }
 
@@ -15,6 +14,12 @@ pub struct Resource {
 impl Resource {
   #[napi]
   pub fn find_all(product: Reference<Product>, env: Env) -> Vec<Resource> {
+    let cloned_product = Rc::new(
+      match product.clone(env) {
+        Ok(cloned_product) => cloned_product,
+        Err(_) => panic!("Failed to get cloned product, please check your product is valid in Resource.findAll()."),
+      }
+    );
     let mut resources = Vec::new();
     let current_target_config = product.get_current_target_config();
     let name = product.get_name();
@@ -35,7 +40,7 @@ impl Resource {
       if !resource_roots.is_empty() {
         for resource_root in resource_roots {
           let resource_root_path = path_clean::clean(Path::new(&module_uri.fs_path()).join(resource_root.as_str().unwrap_or_default()));
-          if let Some(resource) = Self::create(product.clone(env).unwrap(), resource_root_path.to_string_lossy().to_string(), env) {
+          if let Some(resource) = Self::create(Rc::clone(&cloned_product), resource_root_path.to_string_lossy().to_string()) {
             resources.push(resource);
           }
         }
@@ -44,7 +49,7 @@ impl Resource {
     }
 
     resources.push(Resource {
-      product: product.clone(env).unwrap(),
+      product: cloned_product,
       uri: Uri::file(default_resource_root.to_string_lossy().to_string()),
     });
 
@@ -52,11 +57,11 @@ impl Resource {
   }
 
   #[napi]
-  pub fn create(product: Reference<Product>, resource_uri: String, env: Env) -> Option<Resource> {
+  pub fn create(product: Rc<Reference<Product>>, resource_uri: String) -> Option<Resource> {
     let uri = Uri::file(resource_uri);
     if fs::metadata(uri.fs_path()).map(|metadata| metadata.is_dir()).unwrap_or(false) {
       Some(Resource {
-        product: product.clone(env).unwrap(),
+        product: Rc::clone(&product),
         uri,
       })
     } else {
@@ -66,7 +71,10 @@ impl Resource {
 
   #[napi]
   pub fn get_product(&self, env: Env) -> Reference<Product> {
-    self.product.clone(env).unwrap()
+    match self.product.as_ref().clone(env) {
+      Ok(cloned_product) => cloned_product,
+      Err(_) => panic!("Failed to get cloned product, please check your product is valid in Resource.getProduct()."),
+    }
   }
 
   #[napi]

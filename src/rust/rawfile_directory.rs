@@ -29,7 +29,10 @@ impl RawfileDirectory {
 
   #[napi]
   pub fn get_resource(&self, env: Env) -> Reference<Resource> {
-    self.resource.clone(env).unwrap()
+    match self.resource.clone(env) {
+      Ok(cloned_resource) => cloned_resource,
+      Err(_) => panic!("Failed to get cloned resource, please check your resource is valid in RawfileDirectory.getResource()."),
+    }
   }
 
   #[napi]

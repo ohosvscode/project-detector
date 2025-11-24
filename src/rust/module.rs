@@ -19,6 +19,10 @@ pub struct Module {
 impl Module {
   #[napi]
   pub fn create(project: Reference<Project>, module_uri: String, env: Env) -> Option<Module> {
+    let cloned_project = match project.clone(env) {
+      Ok(cloned_project) => cloned_project,
+      Err(_) => panic!("Failed to get cloned project, please check your project is valid in Module.create()."),
+    };
     let uri = Uri::file(module_uri);
     let build_profile_path = Path::new(&uri.fs_path()).join("build-profile.json5");
     let build_profile_uri = Uri::file(build_profile_path.to_string_lossy().to_string());
@@ -31,7 +35,7 @@ impl Module {
     Some(Module {
       module_name: Self::extract_module_name(&parsed_build_profile),
       uri,
-      project: project.clone(env).unwrap(),
+      project: cloned_project,
       parsed_build_profile,
       build_profile_uri,
       build_profile_content,
@@ -49,9 +53,12 @@ impl Module {
     };
 
     for module_config in modules_array {
-      let project_ref = project.clone(env).unwrap();
-      let uri = Self::build_module_uri(project_ref, module_config);
-      if let Some(module) = Self::create(project.clone(env).unwrap(), uri.to_string(), env) {
+      let cloned_project = match project.clone(env) {
+        Ok(cloned_project) => cloned_project,
+        Err(_) => panic!("Failed to get cloned project, please check your project is valid in Module.find_all()."),
+      };
+      let uri = Self::build_module_uri(&cloned_project, module_config);
+      if let Some(module) = Self::create(cloned_project, uri.to_string(), env) {
         modules.push(module);
       }
     }
@@ -85,7 +92,10 @@ impl Module {
 
   #[napi]
   pub fn get_project(&self, env: Env) -> Reference<Project> {
-    self.project.clone(env).unwrap()
+    match self.project.clone(env) {
+      Ok(cloned_project) => cloned_project,
+      Err(_) => panic!("Failed to get cloned project, please check your project is valid in Module.getProject()."),
+    }
   }
 
   #[napi]
@@ -117,7 +127,7 @@ impl Module {
     module_config.get("name").and_then(|name| name.as_str()).unwrap_or("").to_string()
   }
 
-  fn build_module_uri(project: Reference<Project>, module_config: &serde_json::Value) -> Uri {
+  fn build_module_uri(project: &Reference<Project>, module_config: &serde_json::Value) -> Uri {
     let project_path = project.get_uri().fs_path();
     let src_path = module_config.get("srcPath").and_then(|path| path.as_str()).unwrap_or("");
     let full_path = path_clean::clean(Path::new(&project_path).join(src_path).to_string_lossy().to_string());
