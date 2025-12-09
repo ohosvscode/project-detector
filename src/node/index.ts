@@ -1,4 +1,5 @@
 export { type Qualifier, QualifierType, QualifierUtils, Uri } from '../../index'
+export * from './app-scope'
 export * from './element-directory'
 export * from './files/element-json-file'
 export * from './interfaces'

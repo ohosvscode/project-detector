@@ -58,94 +58,86 @@ impl QualifierUtils {
     MCC::is(mcc)
   }
 
-  /**
-   * Check if the mcc is a valid MCC code with string `mcc`.
-   * For example: "mcc310" => true, "mcc3100" => false
-   */
-  #[napi]
+  /// Check if the mcc is a valid MCC code with string `mcc`.
+  /// 
+  /// For example: "mcc310" => true, "mcc3100" => false
+  #[napi(ts_args_type = "mcc: `mcc${number}` | (string & {})")]
   pub fn is_mcc_code(mcc: String) -> bool {
     MCC::is_code(mcc)
   }
 
-  /**
-   * Check if the language code is a valid language code.
-   * For example: "en" => true, "en-US" => false
-   */
+  /// Check if the language code is a valid language code.
+  /// 
+  /// For example: "en" => true, "en-US" => false
   #[napi]
   pub fn is_language_code(language_code: String) -> bool {
     LanguageCode::is(language_code)
   }
 
-  /**
-   * Check if the device type is a valid device type.
-   * - phone
-   * - tablet
-   * - tv
-   * - car
-   * - wearable
-   * - 2in1
-   */
-  #[napi]
+  /// Check if the device type is a valid device type.
+  /// 
+  /// - `phone`
+  /// - `tablet`
+  /// - `tv`
+  /// - `car`
+  /// - `wearable`
+  /// - `2in1`
+  #[napi(ts_args_type = "deviceType: 'phone' | 'tablet' | 'tv' | 'car' | 'wearable' | '2in1' | (string & {})")]
   pub fn is_device_type(device_type: String) -> bool {
     DeviceType::is(device_type)
   }
 
-  /**
-   * Check if the color mode is a valid color mode.
-   * - dark
-   * - light
-   */
-  #[napi]
+  /// Check if the color mode is a valid color mode.
+  /// 
+  /// - `dark`
+  /// - `light`
+  #[napi(ts_args_type = "colorMode: 'dark' | 'light' | (string & {})")]
   pub fn is_color_mode(color_mode: String) -> bool {
     ColorMode::is(color_mode)
   }
 
-  /**
-   * Check if the mnc is a valid MNC code with value.
-   */
+  /// Check if the mnc is a valid MNC code with value.
+  /// 
+  /// For example: 00 => true, 000 => false
   #[napi]
   pub fn is_mnc(mnc: u32, mcc: u32) -> bool {
     MNC::is(mcc, mnc)
   }
 
-  /**
-   * Check if the mnc is a valid MNC code with string `mnc` and `mcc`.
-   * For example: "mnc00" => true, "mnc000" => false
-   */
+  /// Check if the mnc is a valid MNC code with string `mnc` and `mcc`.
+  /// 
+  /// For example: "mnc00" => true, "mnc000" => false
   #[napi]
   pub fn is_mnc_code(mnc: String, mcc: u32) -> bool {
     MNC::is_code(mnc, mcc)
   }
 
-  /**
-   * Check if the region code is a valid region code.
-   * For example: "CN" => true, "US" => true, "AAA" => false
-   */
+  /// Check if the region code is a valid region code.
+  /// 
+  /// For example: "CN" => true, "US" => true, "AAA" => false
   #[napi]
   pub fn is_region_code(region_code: String) -> bool {
     RegionCode::is(region_code)
   }
 
-  /**
-   * Check if the orientation is a valid orientation.
-   * - vertical
-   * - horizontal
-   */
-  #[napi]
+  /// Check if the orientation is a valid orientation.
+  /// 
+  /// - `vertical`
+  /// - `horizontal`
+  #[napi(ts_args_type = "orientation: 'vertical' | 'horizontal' | (string & {})")]
   pub fn is_orientation(orientation: String) -> bool {
     Orientation::is(orientation)
   }
 
-  /**
-   * Check if the screen density is a valid screen density.
-   * - sdpi
-   * - mdpi
-   * - ldpi
-   * - xldpi
-   * - xxldpi
-   * - xxxldpi
-   */
-  #[napi]
+  /// Check if the screen density is a valid screen density.
+  /// 
+  /// - `sdpi`
+  /// - `mdpi`
+  /// - `ldpi`
+  /// - `xldpi`
+  /// - `xxldpi`
+  /// - `xxxldpi`
+  #[napi(ts_args_type = "screenDensity: 'sdpi' | 'mdpi' | 'ldpi' | 'xldpi' | 'xxldpi' | 'xxxldpi' | (string & {})")]
   pub fn is_screen_density(screen_density: String) -> bool {
     ScreenDensity::is(screen_density)
   }

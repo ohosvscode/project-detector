@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { afterAll, describe, expect } from 'vitest'
 import { Uri } from '../index'
-import { ElementDirectory, ElementJsonFile, ElementJsonFileReference, Module, Product, Project, ProjectDetector, Resource, ResourceDirectory, Watcher } from '../src/node'
+import { AppScope, ElementDirectory, ElementJsonFile, ElementJsonFileReference, Module, Product, Project, ProjectDetector, Resource, ResourceDirectory, Watcher } from '../src/node'
 
 describe.sequential('projectDetector', (it) => {
   const mockPath = path.resolve(__dirname, '..', 'mock')
@@ -43,6 +43,24 @@ describe.sequential('projectDetector', (it) => {
     fs.renameSync(path.resolve(harmonyProject1.getUri().fsPath, 'build-profile.json5.bak'), harmonyProject1.getBuildProfileUri().fsPath)
     await new Promise(resolve => setTimeout(resolve, 2000))
     expect(projects().length).toBe(2)
+  })
+
+  it.sequential('AppScope.from', async () => {
+    const appScope = AppScope.from(harmonyProject1)
+    expect(appScope()).toBeDefined()
+
+    // test the file event listener:
+    // when the app.json5 file is deleted, the app scope should be removed
+    const appScopePath = appScope()!.getUri().fsPath
+    const appJson5Path = appScope()!.getConfigUri().fsPath
+    fs.renameSync(appJson5Path, path.resolve(appScopePath, 'app.json5.bak'))
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(appScope()).toBeNull()
+
+    // when the app.json5 file is created, the app scope should be added
+    fs.renameSync(path.resolve(appScopePath, 'app.json5.bak'), appJson5Path)
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    expect(appScope()).toBeDefined()
   })
 
   let harmonyProject1Module: Module

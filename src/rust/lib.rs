@@ -12,3 +12,4 @@ pub mod resfile_directory;
 pub mod resource;
 pub mod resource_directory;
 pub mod utils;
+pub mod app_scope;

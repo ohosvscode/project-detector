@@ -108,6 +108,7 @@ const { instance: __napiInstance, module: __wasiModule, napiModule: __napiModule
   },
 })
 module.exports = __napiModule.exports
+module.exports.AppScope = __napiModule.exports.AppScope
 module.exports.ElementDirectory = __napiModule.exports.ElementDirectory
 module.exports.ElementJsonFile = __napiModule.exports.ElementJsonFile
 module.exports.ElementJsonFileReference = __napiModule.exports.ElementJsonFileReference
@@ -124,3 +125,4 @@ module.exports.Resource = __napiModule.exports.Resource
 module.exports.ResourceDirectory = __napiModule.exports.ResourceDirectory
 module.exports.Uri = __napiModule.exports.Uri
 module.exports.QualifierType = __napiModule.exports.QualifierType
+module.exports.ResourceType = __napiModule.exports.ResourceType

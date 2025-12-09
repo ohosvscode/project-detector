@@ -5,9 +5,10 @@ use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 #[cfg(not(test))]
 use std::{fs, rc::Rc};
-use std::path::Path;
 #[cfg(not(test))]
 use walkdir::WalkDir;
+#[cfg(not(test))]
+use std::path::Path;
 
 #[napi]
 pub struct Project {
@@ -19,9 +20,6 @@ pub struct Project {
   parsed_build_profile: serde_json::Value,
   build_profile_uri: Uri,
   build_profile_content: String,
-  app_scope_uri: Uri,
-  app_scope_config_uri: Uri,
-  app_scope_config_content: String,
 }
 
 #[napi]
@@ -40,7 +38,8 @@ impl Project {
     self.project_detector.clone()
   }
 
-  pub fn is_in_exclude_dirs(entry: &walkdir::DirEntry) -> bool {
+  #[cfg(not(test))]
+  fn is_in_exclude_dirs(entry: &walkdir::DirEntry) -> bool {
     entry.path().iter().any(|component| {
       if let Some(component_str) = component.to_str() {
         component_str == "node_modules" || component_str == "oh_modules" || component_str.starts_with('.')
@@ -91,11 +90,7 @@ impl Project {
     let build_profile_uri = Uri::file(build_profile_path.to_string_lossy().to_string());
     let build_profile_content = fs::read_to_string(build_profile_uri.fs_path()).unwrap_or_default();
     let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
-    let app_scope_uri = Uri::file(Path::new(&uri.fs_path()).join("AppScope").to_string_lossy().to_string());
-    let app_scope_config_uri = Uri::file(Path::new(&app_scope_uri.fs_path()).join("config.json5").to_string_lossy().to_string());
-    let app_scope_config_content = fs::read_to_string(app_scope_config_uri.fs_path()).unwrap_or_default();
     
-
     if parsed_build_profile.is_object()
       && parsed_build_profile
         .get("app")
@@ -107,9 +102,6 @@ impl Project {
         parsed_build_profile,
         build_profile_uri,
         build_profile_content,
-        app_scope_uri,
-        app_scope_config_uri,
-        app_scope_config_content,
       })
     } else {
       None
@@ -138,26 +130,6 @@ impl Project {
   #[napi]
   pub fn get_uri(&self) -> Uri {
     self.uri.clone()
-  }
-
-  #[napi]
-  pub fn get_app_scope_uri(&self) -> Uri {
-    self.app_scope_uri.clone()
-  }
-
-  #[napi]
-  pub fn get_app_scope_resource_uri(&self) -> Uri {
-    Uri::file(Path::new(&self.app_scope_uri.fs_path()).join("resources").to_string_lossy().to_string())
-  }
-
-  #[napi]
-  pub fn get_app_scope_resource_config_uri(&self) -> Uri {
-    self.app_scope_config_uri.clone()
-  }
-
-  #[napi(ts_return_type = "unknown")]
-  pub fn get_app_scope_config(&self) -> serde_json::Value {
-    serde_json5::from_str(&self.app_scope_config_content).unwrap_or_default()
   }
 
   #[napi]
