@@ -4,11 +4,11 @@ use crate::utils::uri::Uri;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 #[cfg(not(test))]
+use std::path::Path;
+#[cfg(not(test))]
 use std::{fs, rc::Rc};
 #[cfg(not(test))]
 use walkdir::WalkDir;
-#[cfg(not(test))]
-use std::path::Path;
 
 #[napi]
 pub struct Project {
@@ -52,12 +52,10 @@ impl Project {
   #[napi]
   #[cfg(not(test))]
   pub fn find_all(project_detector: Reference<ProjectDetector>, env: Env) -> Vec<Project> {
-    let cloned_project_detector = Rc::new(
-      match project_detector.clone(env) {
-        Ok(cloned_project_detector) => cloned_project_detector,
-        Err(_) => panic!("Failed to get cloned project detector, please check your project detector is valid in Project.findAll()."),
-      }
-    );
+    let cloned_project_detector = Rc::new(match project_detector.clone(env) {
+      Ok(cloned_project_detector) => cloned_project_detector,
+      Err(_) => panic!("Failed to get cloned project detector, please check your project detector is valid in Project.findAll()."),
+    });
     let mut projects = Vec::new();
     let workspace_folder = cloned_project_detector.get_workspace_folder().fs_path();
     let entries: Vec<_> = WalkDir::new(workspace_folder)
@@ -90,7 +88,7 @@ impl Project {
     let build_profile_uri = Uri::file(build_profile_path.to_string_lossy().to_string());
     let build_profile_content = fs::read_to_string(build_profile_uri.fs_path()).unwrap_or_default();
     let parsed_build_profile: serde_json::Value = serde_json5::from_str(&build_profile_content).unwrap_or_default();
-    
+
     if parsed_build_profile.is_object()
       && parsed_build_profile
         .get("app")

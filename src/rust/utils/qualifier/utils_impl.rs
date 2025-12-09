@@ -59,7 +59,7 @@ impl QualifierUtils {
   }
 
   /// Check if the mcc is a valid MCC code with string `mcc`.
-  /// 
+  ///
   /// For example: "mcc310" => true, "mcc3100" => false
   #[napi(ts_args_type = "mcc: `mcc${number}` | (string & {})")]
   pub fn is_mcc_code(mcc: String) -> bool {
@@ -67,7 +67,7 @@ impl QualifierUtils {
   }
 
   /// Check if the language code is a valid language code.
-  /// 
+  ///
   /// For example: "en" => true, "en-US" => false
   #[napi]
   pub fn is_language_code(language_code: String) -> bool {
@@ -75,7 +75,7 @@ impl QualifierUtils {
   }
 
   /// Check if the device type is a valid device type.
-  /// 
+  ///
   /// - `phone`
   /// - `tablet`
   /// - `tv`
@@ -88,7 +88,7 @@ impl QualifierUtils {
   }
 
   /// Check if the color mode is a valid color mode.
-  /// 
+  ///
   /// - `dark`
   /// - `light`
   #[napi(ts_args_type = "colorMode: 'dark' | 'light' | (string & {})")]
@@ -97,7 +97,7 @@ impl QualifierUtils {
   }
 
   /// Check if the mnc is a valid MNC code with value.
-  /// 
+  ///
   /// For example: 00 => true, 000 => false
   #[napi]
   pub fn is_mnc(mnc: u32, mcc: u32) -> bool {
@@ -105,7 +105,7 @@ impl QualifierUtils {
   }
 
   /// Check if the mnc is a valid MNC code with string `mnc` and `mcc`.
-  /// 
+  ///
   /// For example: "mnc00" => true, "mnc000" => false
   #[napi]
   pub fn is_mnc_code(mnc: String, mcc: u32) -> bool {
@@ -113,7 +113,7 @@ impl QualifierUtils {
   }
 
   /// Check if the region code is a valid region code.
-  /// 
+  ///
   /// For example: "CN" => true, "US" => true, "AAA" => false
   #[napi]
   pub fn is_region_code(region_code: String) -> bool {
@@ -121,7 +121,7 @@ impl QualifierUtils {
   }
 
   /// Check if the orientation is a valid orientation.
-  /// 
+  ///
   /// - `vertical`
   /// - `horizontal`
   #[napi(ts_args_type = "orientation: 'vertical' | 'horizontal' | (string & {})")]
@@ -130,7 +130,7 @@ impl QualifierUtils {
   }
 
   /// Check if the screen density is a valid screen density.
-  /// 
+  ///
   /// - `sdpi`
   /// - `mdpi`
   /// - `ldpi`

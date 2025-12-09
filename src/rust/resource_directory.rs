@@ -2,13 +2,13 @@ use crate::resource::Resource;
 use crate::utils::qualifier::utils_impl::QualifierUtils;
 use crate::utils::uri::Uri;
 use core::str;
-use std::rc::Rc;
 use napi::bindgen_prelude::Reference;
 use napi::Env;
 use napi_derive::napi;
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
+use std::rc::Rc;
 
 #[napi]
 pub struct ResourceDirectory {
@@ -20,12 +20,10 @@ pub struct ResourceDirectory {
 impl ResourceDirectory {
   #[napi]
   pub fn find_all(resource: Reference<Resource>, env: Env) -> Vec<ResourceDirectory> {
-    let cloned_resource = Rc::new(
-      match resource.clone(env) {
-        Ok(cloned_resource) => cloned_resource,
-        Err(_) => panic!("Failed to get cloned resource, please check your resource is valid in ResourceDirectory.findAll()."),
-      }
-    );
+    let cloned_resource = Rc::new(match resource.clone(env) {
+      Ok(cloned_resource) => cloned_resource,
+      Err(_) => panic!("Failed to get cloned resource, please check your resource is valid in ResourceDirectory.findAll()."),
+    });
     let mut resource_directories = Vec::new();
     let resource_directory = resource.get_uri();
 

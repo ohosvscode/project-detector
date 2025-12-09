@@ -1,7 +1,7 @@
-use std::{fs, path::Path};
+use crate::{project::Project, utils::uri::Uri};
 use napi::bindgen_prelude::Reference;
 use napi_derive::napi;
-use crate::{project::Project, utils::uri::Uri};
+use std::{fs, path::Path};
 
 #[napi]
 pub struct AppScope {

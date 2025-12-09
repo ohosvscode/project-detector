@@ -1,8 +1,8 @@
-use std::{fs, path::Path, rc::Rc};
-use crate::{app_scope::AppScope, product::Product};
 use crate::utils::uri::Uri;
+use crate::{app_scope::AppScope, product::Product};
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
+use std::{fs, path::Path, rc::Rc};
 
 #[napi]
 #[derive(Clone)]
@@ -23,12 +23,10 @@ pub struct Resource {
 impl Resource {
   #[napi]
   pub fn find_all(product: Reference<Product>, env: Env) -> Vec<Resource> {
-    let cloned_product = Rc::new(
-      match product.clone(env) {
-        Ok(cloned_product) => cloned_product,
-        Err(_) => panic!("Failed to get cloned product, please check your product is valid in Resource.findAll()."),
-      }
-    );
+    let cloned_product = Rc::new(match product.clone(env) {
+      Ok(cloned_product) => cloned_product,
+      Err(_) => panic!("Failed to get cloned product, please check your product is valid in Resource.findAll()."),
+    });
     let mut resources = Vec::new();
     let current_target_config = product.get_current_target_config();
     let name = product.get_name();
@@ -96,7 +94,7 @@ impl Resource {
   }
 
   /// If the resource created by {@linkcode Product}, this method will return the product.
-  /// 
+  ///
   /// @throw If the resource is not created by {@linkcode Product}, this method will throw an error.
   #[napi]
   pub fn get_product(&self, env: Env) -> Reference<Product> {
@@ -110,7 +108,7 @@ impl Resource {
   }
 
   /// If the resource created by {@linkcode AppScope}, this method will return the app scope.
-  /// 
+  ///
   /// @throw If the resource is not created by {@linkcode AppScope}, this method will throw an error.
   #[napi]
   pub fn get_app_scope(&self, env: Env) -> Reference<AppScope> {
@@ -128,8 +126,8 @@ impl Resource {
     self.uri.clone()
   }
 
-  /// Get the type of current resource. 
-  /// 
+  /// Get the type of current resource.
+  ///
   /// - If created by {@link Product}, return {@link ResourceType.Product}.
   /// - If created by {@link AppScope}, return {@link ResourceType.AppScope}.
   #[napi(getter)]
