@@ -45,21 +45,15 @@
       "pattern": "."
     }
   ],
-  "editor.gotoLocation.alternativeDeclarationCommand": "editor.action.revealDefinition",
-  "editor.gotoLocation.alternativeDefinitionCommand": "editor.action.revealDefinition",
-  "editor.gotoLocation.alternativeTypeDefinitionCommand": "editor.action.revealDefinition",
-  "editor.selectionHighlight": false,
-  "files.autoSave": "onFocusChange",
-  "editor.suggest.snippetsPreventQuickSuggestions": false,
-  "editor.quickSuggestions": {
-    "other": "on",
-    "comments": "off",
-    "strings": "on"
-  },
-  "oxc.enable": true,
+
   "files.readonlyInclude": {
     "index.js": true,
     "index.d.ts": true,
+    "project-detector.wasi-browser.js": true,
+    "project-detector.wasi.cjs": true,
+    "browser.js": true,
+    "wasi-worker-browser.mjs": true,
+    "wasi-worker.mjs": true,
     "**/dist/**/*": true,
     "**/node_modules/**/*": true
   }

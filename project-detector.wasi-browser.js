@@ -56,6 +56,7 @@ const {
   },
 })
 export default __napiModule.exports
+export const AppScope = __napiModule.exports.AppScope
 export const ElementDirectory = __napiModule.exports.ElementDirectory
 export const ElementJsonFile = __napiModule.exports.ElementJsonFile
 export const ElementJsonFileReference = __napiModule.exports.ElementJsonFileReference
@@ -72,3 +73,4 @@ export const Resource = __napiModule.exports.Resource
 export const ResourceDirectory = __napiModule.exports.ResourceDirectory
 export const Uri = __napiModule.exports.Uri
 export const QualifierType = __napiModule.exports.QualifierType
+export const ResourceType = __napiModule.exports.ResourceType

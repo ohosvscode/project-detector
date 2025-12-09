@@ -14,8 +14,10 @@ export namespace Resource {
   function fromRustResource(resource: RustResource, product: Product): Resource {
     return {
       getProduct: () => product,
+      getAppScope: () => resource.getAppScope(),
       getUri: () => resource.getUri(),
       getUnderlyingResource: () => resource,
+      resourceType: resource.resourceType,
     }
   }
 

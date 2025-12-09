@@ -4,16 +4,16 @@ use crate::utils::uri::Uri;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 #[cfg(not(test))]
-use std::fs;
-#[cfg(not(test))]
 use std::path::Path;
+#[cfg(not(test))]
+use std::{fs, rc::Rc};
 #[cfg(not(test))]
 use walkdir::WalkDir;
 
 #[napi]
 pub struct Project {
   #[cfg(not(test))]
-  project_detector: Reference<ProjectDetector>,
+  project_detector: Rc<Reference<ProjectDetector>>,
   #[cfg(test)]
   project_detector: ProjectDetector,
   uri: Uri,
@@ -27,7 +27,10 @@ impl Project {
   #[napi]
   #[cfg(not(test))]
   pub fn get_project_detector(&self, env: Env) -> Reference<ProjectDetector> {
-    self.project_detector.clone(env).unwrap()
+    match self.project_detector.as_ref().clone(env) {
+      Ok(cloned_project_detector) => cloned_project_detector,
+      Err(_) => panic!("Failed to get cloned project detector, please check your project detector is valid in Project.getProjectDetector()."),
+    }
   }
 
   #[cfg(test)]
@@ -35,7 +38,8 @@ impl Project {
     self.project_detector.clone()
   }
 
-  pub fn is_in_exclude_dirs(entry: &walkdir::DirEntry) -> bool {
+  #[cfg(not(test))]
+  fn is_in_exclude_dirs(entry: &walkdir::DirEntry) -> bool {
     entry.path().iter().any(|component| {
       if let Some(component_str) = component.to_str() {
         component_str == "node_modules" || component_str == "oh_modules" || component_str.starts_with('.')
@@ -48,8 +52,12 @@ impl Project {
   #[napi]
   #[cfg(not(test))]
   pub fn find_all(project_detector: Reference<ProjectDetector>, env: Env) -> Vec<Project> {
+    let cloned_project_detector = Rc::new(match project_detector.clone(env) {
+      Ok(cloned_project_detector) => cloned_project_detector,
+      Err(_) => panic!("Failed to get cloned project detector, please check your project detector is valid in Project.findAll()."),
+    });
     let mut projects = Vec::new();
-    let workspace_folder = project_detector.get_workspace_folder().fs_path();
+    let workspace_folder = cloned_project_detector.get_workspace_folder().fs_path();
     let entries: Vec<_> = WalkDir::new(workspace_folder)
       .into_iter()
       .filter_entry(|entry| !Self::is_in_exclude_dirs(entry))
@@ -60,7 +68,7 @@ impl Project {
       let path = entry.path();
       if path.file_name().and_then(|name| name.to_str()).is_some_and(|name| name == "build-profile.json5") && entry.file_type().is_file() {
         let project_dir = path.parent().unwrap_or(Path::new("")).to_string_lossy().to_string();
-        if let Some(project) = Self::create(project_detector.clone(env).unwrap(), env, project_dir) {
+        if let Some(project) = Self::create(Rc::clone(&cloned_project_detector), project_dir) {
           projects.push(project);
         }
       }
@@ -71,7 +79,7 @@ impl Project {
 
   #[napi]
   #[cfg(not(test))]
-  pub fn create(project_detector: Reference<ProjectDetector>, env: Env, project_uri: String) -> Option<Project> {
+  pub fn create(project_detector: Rc<Reference<ProjectDetector>>, project_uri: String) -> Option<Project> {
     let uri = Uri::file(project_uri);
     if !fs::metadata(uri.fs_path()).map(|m| m.is_dir()).unwrap_or(false) {
       return None;
@@ -87,7 +95,7 @@ impl Project {
         .is_some_and(|app| app.is_object() && parsed_build_profile.get("modules").and_then(|modules| modules.as_array()).is_some())
     {
       Some(Project {
-        project_detector: project_detector.clone(env).unwrap(),
+        project_detector: Rc::clone(&project_detector),
         uri,
         parsed_build_profile,
         build_profile_uri,

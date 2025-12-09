@@ -8,17 +8,22 @@ use napi_derive::napi;
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
+use std::rc::Rc;
 
 #[napi]
 pub struct ResourceDirectory {
   uri: Uri,
-  resource: Reference<Resource>,
+  resource: Rc<Reference<Resource>>,
 }
 
 #[napi]
 impl ResourceDirectory {
   #[napi]
   pub fn find_all(resource: Reference<Resource>, env: Env) -> Vec<ResourceDirectory> {
+    let cloned_resource = Rc::new(match resource.clone(env) {
+      Ok(cloned_resource) => cloned_resource,
+      Err(_) => panic!("Failed to get cloned resource, please check your resource is valid in ResourceDirectory.findAll()."),
+    });
     let mut resource_directories = Vec::new();
     let resource_directory = resource.get_uri();
 
@@ -35,7 +40,7 @@ impl ResourceDirectory {
         }
         resource_directories.push(ResourceDirectory {
           uri: Uri::file(dir.path().to_string_lossy().to_string()),
-          resource: resource.clone(env).unwrap(),
+          resource: Rc::clone(&cloned_resource),
         })
       }
     }
@@ -51,7 +56,7 @@ impl ResourceDirectory {
       if dir_name != "base" && dir_name != "rawfile" && dir_name != "resfile" && QualifierUtils::analyze_qualifier(dir_name).is_empty() {
         return None;
       }
-      Some(ResourceDirectory { uri, resource })
+      Some(ResourceDirectory { uri, resource: Rc::new(resource) })
     } else {
       None
     }
@@ -64,7 +69,10 @@ impl ResourceDirectory {
 
   #[napi]
   pub fn get_resource(&self, env: Env) -> Reference<Resource> {
-    self.resource.clone(env).unwrap()
+    match self.resource.as_ref().clone(env) {
+      Ok(cloned_resource) => cloned_resource,
+      Err(_) => panic!("Failed to get cloned resource, please check your resource is valid in ResourceDirectory.getResource()."),
+    }
   }
 
   #[napi(ts_return_type = "Array<Qualifier> | 'base' | 'rawfile' | 'resfile'")]

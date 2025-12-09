@@ -68,7 +68,13 @@ impl ElementJsonFileReference {
     let mut reference = Vec::new();
     let parser = element_json_file.get_parser();
     let source_code = element_json_file.get_content();
-    let tree = parser.lock().unwrap().parse(&source_code, None).unwrap();
+    let tree = match parser.lock() {
+      Ok(mut parser) => match parser.parse(&source_code, None) {
+        Some(tree) => tree,
+        None => panic!("Failed to parse source code, please check your source code is valid in ElementJsonFileReference.findAll()."),
+      },
+      Err(_) => panic!("Failed to lock parser, please check your parser is valid in ElementJsonFileReference.findAll()."),
+    };
 
     for child in tree.root_node().children(&mut tree.root_node().walk()) {
       if child.kind() != "object" {
@@ -170,7 +176,13 @@ impl ElementJsonFileReference {
     let mut reference = Vec::new();
     let parser = element_json_file.get_parser();
     let source_code = element_json_file.get_content();
-    let tree = parser.lock().unwrap().parse(&source_code, None).unwrap();
+    let tree = match parser.lock() {
+      Ok(mut parser) => match parser.parse(&source_code, None) {
+        Some(tree) => tree,
+        None => panic!("Failed to parse source code, please check your source code is valid in ElementJsonFileReference.findAll()."),
+      },
+      Err(_) => panic!("Failed to lock parser, please check your parser is valid in ElementJsonFileReference.findAll()."),
+    };
 
     for child in tree.root_node().children(&mut tree.root_node().walk()) {
       if child.kind() != "object" {

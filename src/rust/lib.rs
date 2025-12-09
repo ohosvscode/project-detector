@@ -1,3 +1,4 @@
+pub mod app_scope;
 pub mod element_directory;
 pub mod files;
 pub mod media_directory;

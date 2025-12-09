@@ -31,6 +31,9 @@ impl ElementDirectory {
 
   #[napi]
   pub fn get_resource_directory(&self, env: Env) -> Reference<ResourceDirectory> {
-    self.resource_directory.clone(env).unwrap()
+    match self.resource_directory.clone(env) {
+      Ok(cloned_resource_directory) => cloned_resource_directory,
+      Err(_) => panic!("Failed to get cloned resource directory, please check your resource directory is valid in ElementDirectory.getResourceDirectory()."),
+    }
   }
 }

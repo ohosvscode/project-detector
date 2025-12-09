@@ -3,10 +3,11 @@ use crate::utils::uri::Uri;
 use napi::{bindgen_prelude::Reference, Env};
 use napi_derive::napi;
 use std::path::Path;
+use std::rc::Rc;
 
 #[napi]
 pub struct Product {
-  module: Reference<Module>,
+  module: Rc<Reference<Module>>,
   name: String,
 }
 
@@ -21,11 +22,16 @@ impl Product {
       None => return products,
     };
 
+    let cloned_module = Rc::new(match module.clone(env) {
+      Ok(cloned_module) => cloned_module,
+      Err(_) => panic!("Failed to get cloned module, please check your module is valid in Product.findAll()."),
+    });
+
     for target_config in targets_array {
       let target_name = target_config.get("name").and_then(|name| name.as_str()).unwrap_or_default();
 
       products.push(Product {
-        module: module.clone(env).unwrap(),
+        module: Rc::clone(&cloned_module),
         name: target_name.to_string(),
       })
     }
@@ -35,7 +41,10 @@ impl Product {
 
   #[napi]
   pub fn get_module(&self, env: Env) -> Reference<Module> {
-    self.module.clone(env).unwrap()
+    match self.module.as_ref().clone(env) {
+      Ok(cloned_module) => cloned_module,
+      Err(_) => panic!("Failed to get cloned module, please check your module is valid in Product.getModule()."),
+    }
   }
 
   #[napi]
@@ -45,7 +54,7 @@ impl Product {
 
   #[napi]
   pub fn get_current_target_config(&self) -> serde_json::Value {
-    let parsed_build_profile = self.module.get_parsed_build_profile();
+    let parsed_build_profile = self.module.as_ref().get_parsed_build_profile();
     let targets_array = match parsed_build_profile.get("targets").and_then(|targets| targets.as_array()) {
       Some(array) => array,
       None => return serde_json::Value::Null,
@@ -61,7 +70,7 @@ impl Product {
     let mut target_directories = Vec::new();
     let current_target_config = self.get_current_target_config();
     let name = self.get_name();
-    let module_uri = self.module.get_uri();
+    let module_uri = self.module.as_ref().get_uri();
 
     if current_target_config.is_null() {
       return target_directories;
@@ -117,7 +126,7 @@ impl Product {
     let mut target_directories = Vec::new();
     let current_target_config = self.get_current_target_config();
     let name = self.get_name();
-    let module_uri = self.module.get_uri();
+    let module_uri = self.module.as_ref().get_uri();
 
     if current_target_config.is_null() {
       return target_directories;
