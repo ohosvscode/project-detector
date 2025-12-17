@@ -32,7 +32,7 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -111,7 +111,7 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -157,7 +157,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --force
       - name: Setup node x86
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: 22
@@ -287,7 +287,7 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
@@ -326,7 +326,7 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
@@ -384,7 +384,7 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -423,7 +423,7 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
