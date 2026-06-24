@@ -129,7 +129,7 @@ jobs:
           echo "WASI_SDK_PATH=$PWD/wasi-sdk-20.0" >> $GITHUB_ENV
           echo "WASI_SYSROOT=$PWD/wasi-sdk-20.0/share/wasi-sysroot" >> $GITHUB_ENV
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry/index/
