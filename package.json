@@ -90,7 +90,7 @@
   },
   "dependencies": {
     "alien-signals": "^3.0.0",
-    "chokidar": "^4.0.3",
+    "chokidar": "^5.0.0",
     "mitt": "^3.0.1"
   },
   "devDependencies": {
