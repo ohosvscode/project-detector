@@ -115,7 +115,7 @@
     "npm-run-all2": "^8.0.4",
     "rolldown": "1.0.0-beta.43",
     "rolldown-plugin-dts": "^0.16.12",
-    "tinybench": "^5.0.1",
+    "tinybench": "^6.0.0",
     "tsdown": "^0.15.6",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
