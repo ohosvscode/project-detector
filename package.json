@@ -105,7 +105,7 @@
     "@types/node": "^24.7.2",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "3.2.4",
-    "chalk": "^5.6.2",
+    "chalk": "^6.0.0",
     "dts-resolver": "^2.1.2",
     "emnapi": "^1.5.0",
     "eslint": "^9.37.0",
